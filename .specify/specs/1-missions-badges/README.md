@@ -1,11 +1,12 @@
 # Missions & Badges - Implementation Package
 
-**Version:** 1.0.0  
-**Status:** ✅ Ready for Implementation  
+**Version:** 2.0.0  
+**Status:** ✅ Ready for Implementation (.NET 9 Backend)  
 **Created:** 2024-10-29  
-**Total Effort:** 291 hours (~7-8 weeks, 2-person team)  
-**Backend:** 48 hours (12 tasks)  
-**Frontend:** 243 hours (remaining tasks)
+**Updated:** 2024-10-29 (Backend migrated from Node.js to .NET 9)  
+**Total Effort:** 303 hours (~7-9 weeks, 2-person team)  
+**Backend:** 60 hours (14 tasks, .NET 9/ASP.NET Core)  
+**Frontend:** 243 hours (remaining tasks, React/TypeScript)
 
 ---
 
@@ -15,12 +16,12 @@ This directory contains the complete implementation package for the Missions & B
 
 | Document | Purpose | Status |
 |----------|---------|--------|
-| **spec.md** | Feature specification with requirements & clarifications | ✅ Approved |
-| **architecture.md** | Technical design, patterns, and implementation details | ✅ Approved |
-| **tasks.md** | Detailed task breakdown with 58 tasks and estimates | ✅ Approved |
-| **BACKEND_TASKS_ADDENDUM.md** | Backend (Node.js/Express) tasks and architecture | ✅ Added |
-| **VALIDATION_REPORT.md** | Constitutional compliance validation | ✅ Passed |
-| **README.md** | This file - implementation guide | ✅ Current |
+| **spec.md** | Feature specification with requirements & clarifications | ✅ Approved (v1.1.0) |
+| **architecture.md** | Technical design for .NET 9 backend + React frontend | ✅ Approved (v2.0.0) |
+| **tasks.md** | Detailed task breakdown with 60+ tasks and estimates | ✅ Approved (303h) |
+| **BACKEND_TASKS_ADDENDUM.md** | .NET 9 backend tasks, NuGet packages, Docker setup | ✅ Updated |
+| **VALIDATION_REPORT.md** | Constitutional compliance validation (100% passed) | ✅ Passed (v2.0.0) |
+| **README.md** | This file - implementation guide for full-stack solution | ✅ Current (v2.0.0) |
 
 ---
 
@@ -57,46 +58,57 @@ This directory contains the complete implementation package for the Missions & B
 
 ## 🏗️ Implementation Timeline
 
-### 2-Person Team (5-6 weeks)
+### 2-Person Team (7-9 weeks)
 
 ```
-Week 1: Foundation
-├─ Setup project structure
-├─ Configure TypeScript, Redux
-├─ Create services (Mission, Badge)
-└─ Setup WebSocket manager
+Week 1-2: Foundation (Backend + Frontend)
+├─ .NET 9 backend initialization (TASK-007)
+├─ Clean Architecture setup (4 projects)
+├─ Frontend React/TypeScript setup
+├─ Configure Redux store
+├─ Domain models & interfaces
+└─ SignalR Hub setup
 
-Week 2: State Management
-├─ Implement Redux slices
-├─ Create memoized selectors
-├─ Setup caching
+Week 3: Backend Core Features
+├─ Smartico API client (HttpClient + Polly)
+├─ Mission/Badge controllers (REST API)
+├─ JWT authentication middleware
+├─ Caching layer (IMemoryCache + Redis)
+└─ JSON file storage
+
+Week 4: Frontend State Management
+├─ Redux slices (missions, badges, UI)
+├─ Memoized selectors
+├─ RTK Query integration
+├─ SignalR client integration
 └─ Error handling
 
-Week 3: UI Components (Presentational)
+Week 5: UI Components (Presentational)
 ├─ Design system base components
 ├─ Mission Card, Badge Card
 ├─ Tabs, Filters, Modals
 └─ Progress bars, loaders
 
-Week 4: UI Components (Containers)
+Week 6: UI Components (Containers)
 ├─ Mission List Container
 ├─ Badge Grid Container
 ├─ Mission Tabs Container
 └─ Connection status
 
-Week 5: Integration & Testing
-├─ Pages and routing
-├─ Unit tests (services, slices, selectors)
-├─ Component tests
-└─ Integration tests
+Week 7: Testing (Backend + Frontend)
+├─ Backend: xUnit + AAA pattern
+├─ Backend: Integration tests (WebApplicationFactory)
+├─ Frontend: Jest + React Testing Library
+└─ E2E tests (Playwright)
 
-Week 6: Polish & Launch
+Week 8: Polish & Launch
+├─ Docker multi-stage builds
 ├─ Performance optimization
-├─ Accessibility audit
+├─ Accessibility audit (WCAG 2.1 AA)
+├─ CI/CD pipeline (GitHub Actions)
 ├─ Documentation
-├─ CI/CD setup
 ├─ Final review
-└─ Deploy
+└─ Deploy to production
 ```
 
 ---
@@ -178,37 +190,113 @@ Week 6: Polish & Launch
 
 ## 🔧 Technology Stack
 
-### Core
+### Backend (.NET 9)
 
-- **Frontend Framework:** React 18+
+- **Runtime:** .NET 9 SDK and Runtime
+- **Framework:** ASP.NET Core 9.0 (Web API + SignalR)
+- **Language:** C# 12 with nullable reference types
+- **Architecture:** Clean Architecture with Vertical Slices
+- **HTTP Client:** HttpClient with Polly for resilience
+- **Caching:** IMemoryCache + StackExchange.Redis (optional)
+- **Real-time:** SignalR (automatic fallback: WebSocket → SSE → Long Polling)
+- **Authentication:** JWT Bearer tokens
+- **Validation:** FluentValidation
+- **Logging:** Serilog with structured logging
+- **API Docs:** Swagger/OpenAPI (Swashbuckle)
+- **Testing:** xUnit + FluentAssertions + Moq
+- **Storage:** JSON File Storage (MVP) → Database migration path
+
+### Frontend (React + TypeScript)
+
+- **Library:** React 18+
 - **Language:** TypeScript 5+ (strict mode)
-- **State Management:** Redux Toolkit
-- **API Client:** @smartico/public-api
+- **State Management:** Redux Toolkit with RTK Query
+- **Real-time Client:** @microsoft/signalr (JavaScript client)
+- **API Reference:** @smartico/public-api (TypeScript interfaces)
 - **Styling:** Styled-components / CSS Modules
-- **Build Tool:** Webpack / Vite
+- **Build Tool:** Vite / Webpack
+- **Forms:** React Hook Form + Zod validation
 
-### Testing
+### Testing (Full-Stack)
 
-- **Unit Tests:** Jest
-- **Component Tests:** React Testing Library
-- **Integration Tests:** MSW (Mock Service Worker)
-- **E2E Tests:** Cypress
+- **Backend Unit:** xUnit + FluentAssertions + Moq
+- **Backend Integration:** WebApplicationFactory
+- **Frontend Unit:** Jest + React Testing Library
+- **Frontend Integration:** MSW (Mock Service Worker)
+- **E2E Tests:** Playwright / Cypress
 - **Accessibility:** axe DevTools
+- **Coverage:** Coverlet (backend), Istanbul (frontend)
 
-### DevOps
+### DevOps & Deployment
 
-- **CI/CD:** GitHub Actions
-- **Linting:** ESLint
-- **Formatting:** Prettier
+- **Containerization:** Docker + Docker Compose
+- **CI/CD:** GitHub Actions / Azure DevOps
+- **Hosting:** Azure App Service / AWS ECS / Self-hosted Kubernetes
+- **Monitoring:** Application Insights / Prometheus + Grafana
+- **Logging:** Serilog → ELK Stack / Azure Log Analytics
+- **Linting:** ESLint (frontend), .editorconfig (backend)
+- **Formatting:** Prettier (frontend), .NET analyzers (backend)
 - **Git Hooks:** Husky + lint-staged
-- **Monitoring:** Lighthouse CI, Sentry
 
 ---
 
 ## 📁 Project Structure
 
+### Backend Structure (.NET 9)
+
 ```
-src/
+backend/
+├── Smartico.Missions.sln
+├── global.json
+├── Directory.Build.props
+├── Dockerfile
+├── docker-compose.yml
+│
+├── src/
+│   ├── Smartico.Missions.Api/          # API Layer
+│   │   ├── Controllers/
+│   │   │   ├── MissionsController.cs
+│   │   │   └── BadgesController.cs
+│   │   ├── Hubs/
+│   │   │   └── ProgressHub.cs          # SignalR
+│   │   ├── Middleware/
+│   │   ├── Program.cs
+│   │   └── appsettings.json
+│   │
+│   ├── Smartico.Missions.Application/  # Application Layer
+│   │   ├── Features/
+│   │   │   ├── Missions/
+│   │   │   │   ├── Commands/
+│   │   │   │   ├── Queries/
+│   │   │   │   └── MissionService.cs
+│   │   │   └── Badges/
+│   │   └── Common/
+│   │
+│   ├── Smartico.Missions.Domain/       # Domain Layer
+│   │   ├── Entities/
+│   │   │   ├── Mission.cs
+│   │   │   ├── Badge.cs
+│   │   │   └── MissionTask.cs
+│   │   ├── ValueObjects/
+│   │   └── Interfaces/
+│   │
+│   └── Smartico.Missions.Infrastructure/ # Infrastructure
+│       ├── SmarticoApi/
+│       │   ├── SmarticoApiClient.cs
+│       │   └── Mappers/
+│       ├── Caching/
+│       ├── Storage/
+│       └── SignalR/
+│
+└── tests/
+    ├── Smartico.Missions.UnitTests/
+    └── Smartico.Missions.IntegrationTests/
+```
+
+### Frontend Structure (React + TypeScript)
+
+```
+frontend/src/
 ├── presentation/              # UI Layer (React Components)
 │   ├── pages/                # Route pages
 │   │   ├── MissionsPage/
@@ -276,6 +364,12 @@ src/
 
 ### Prerequisites
 
+**Backend:**
+- .NET 9 SDK ([Download](https://dotnet.microsoft.com/download/dotnet/9.0))
+- Docker Desktop (for containerization)
+- Visual Studio 2022 or Visual Studio Code with C# extension
+
+**Frontend:**
 - Node.js 18+
 - npm 9+
 - @smartico/public-api package access
@@ -286,6 +380,56 @@ src/
 # Clone repository
 git clone [repository-url]
 cd smartico-missions
+```
+
+### Step 2: Setup Backend (.NET 9)
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Verify .NET installation
+dotnet --version  # Should show 9.0.x
+
+# Restore NuGet packages
+dotnet restore
+
+# Build solution
+dotnet build
+
+# Run backend
+dotnet run --project src/Smartico.Missions.Api
+
+# Backend will start at https://localhost:5001 and http://localhost:5000
+```
+
+### Step 3: Configure Backend Environment
+
+```bash
+# Edit appsettings.Development.json
+cd src/Smartico.Missions.Api
+
+# Add configuration:
+{
+  "Jwt": {
+    "Issuer": "https://yourapp.com",
+    "Audience": "smartico-missions-api",
+    "SecretKey": "your-secret-key-256-bit",
+    "ExpirationMinutes": 60
+  },
+  "Smartico": {
+    "ApiKey": "your_smartico_api_key",
+    "BrandKey": "your_brand_key",
+    "Environment": "development"
+  }
+}
+```
+
+### Step 4: Setup Frontend (React)
+
+```bash
+# Navigate to frontend directory
+cd ../../frontend
 
 # Install dependencies
 npm install
@@ -295,38 +439,56 @@ npm run type-check
 npm run lint
 ```
 
-### Step 2: Configure Environment
+### Step 5: Configure Frontend Environment
 
 ```bash
 # Create .env file
 cp .env.example .env
 
 # Add configuration
-REACT_APP_SMARTICO_API_KEY=your_api_key
-REACT_APP_BRAND_KEY=your_brand_key
+REACT_APP_API_URL=http://localhost:5000
+REACT_APP_WS_URL=http://localhost:5000/hubs/progress
 REACT_APP_ENV=development
 ```
 
-### Step 3: Start Development
+### Step 6: Start Full-Stack Development
 
 ```bash
-# Start dev server
+# Terminal 1: Start backend
+cd backend
+dotnet watch run --project src/Smartico.Missions.Api
+
+# Terminal 2: Start frontend
+cd frontend
 npm run dev
 
-# Run tests (watch mode)
-npm run test:watch
+# Terminal 3: Run tests
+cd backend
+dotnet watch test
 
-# Run linter
-npm run lint
+# Terminal 4: Frontend tests
+cd frontend
+npm run test:watch
 ```
 
-### Step 4: Start Implementing
+### Step 7: Using Docker Compose (Recommended)
+
+```bash
+# From project root
+docker-compose up
+
+# Backend: http://localhost:5000
+# Frontend: http://localhost:3000
+# Redis: localhost:6379
+```
+
+### Step 8: Start Implementing
 
 Follow the task order in `tasks.md`:
-1. TASK-001: Project Setup ✅ (Already done if prerequisites met)
-2. TASK-002: Define Project Structure
-3. TASK-003: Setup Redux Store
-4. Continue through Phase 1...
+1. **TASK-007**: Backend Project Initialization (.NET 9) ✅
+2. **TASK-008**: Backend Architecture & Folder Structure
+3. **TASK-001**: Frontend Project Setup
+4. Continue through Phase 1B (Backend) and Phase 1 (Frontend) in parallel...
 
 ---
 
@@ -575,11 +737,12 @@ dispatch(updateProgress(newValue)); // Then update UI
 ---
 
 **Last Updated:** 2024-10-29  
-**Version:** 1.0.0  
+**Version:** 2.0.0 (Backend: .NET 9)  
 **Status:** ✅ Ready for Implementation
 
 **Prepared by:** System Architect  
-**Approved by:** Pending Technical Lead & Product Owner sign-off
+**Approved by:** Pending Technical Lead & Product Owner sign-off  
+**Backend Migration:** Node.js → .NET 9 (Stakeholder requirement)
 
 ---
 

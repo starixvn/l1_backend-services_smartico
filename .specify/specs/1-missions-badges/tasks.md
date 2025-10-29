@@ -4,7 +4,8 @@
 **Sprint:** TBD  
 **Created:** 2024-10-29  
 **Owner:** Development Team  
-**Total Estimate:** 291 hours (≈7-8 weeks with 2-person team)
+**Total Estimate:** 303 hours (≈7-9 weeks with 2-person team)
+**Note:** Backend migrated from Node.js/Express to .NET 9/ASP.NET Core (Phase 1B: 60 hours)
 
 ## Task Categorization
 
@@ -273,58 +274,94 @@ Create design system tokens (colors, spacing, typography, breakpoints) for consi
 
 ---
 
-## Phase 1B: Backend Setup (Node.js/Express) (48 hours)
+## Phase 1B: Backend Setup (.NET 9 / ASP.NET Core) (60 hours)
 
-### TASK-007: Backend Project Initialization [DV]
+### TASK-007: Backend Project Initialization (.NET 9) [DV]
 **Type:** DevOps  
 **Priority:** Critical  
-**Estimate:** 4 hours  
+**Estimate:** 5 hours  
 **Dependencies:** None  
 **Constitutional Alignment:** Type Safety, Code Quality
 
 **Description:**
-Initialize Node.js/Express backend with TypeScript, proper project structure, and development tooling.
+Initialize .NET 9 solution with ASP.NET Core Web API, proper project structure, and development tooling.
 
 **Acceptance Criteria:**
-- [ ] Node.js project initialized with TypeScript
-- [ ] Express 4+ configured
-- [ ] TypeScript strict mode enabled
-- [ ] ESLint + Prettier configured
-- [ ] Nodemon for development
-- [ ] Environment variable management (.env)
-- [ ] Package.json with all dependencies
+- [ ] .NET 9 SDK installed and verified
+- [ ] Solution file created with organized project structure
+- [ ] ASP.NET Core Web API project initialized
+- [ ] C# 12 with nullable reference types enabled
+- [ ] EditorConfig for consistent code style
+- [ ] .gitignore configured for .NET
+- [ ] global.json pinning SDK version
+- [ ] appsettings.json with environment-specific configs
 - [ ] README.md with setup instructions
-- [ ] @smartico/public-api installed
+- [ ] Docker support files (Dockerfile, .dockerignore)
 
 **Implementation Notes:**
 ```bash
-mkdir smartico-backend
-cd smartico-backend
-npm init -y
-npm install express @smartico/public-api
-npm install -D typescript @types/node @types/express ts-node nodemon
-npx tsc --init --strict
+# Create solution and projects
+dotnet new sln -n Smartico.Missions
+dotnet new webapi -n Smartico.Missions.Api -o src/Smartico.Missions.Api -f net9.0
+dotnet new classlib -n Smartico.Missions.Application -o src/Smartico.Missions.Application -f net9.0
+dotnet new classlib -n Smartico.Missions.Domain -o src/Smartico.Missions.Domain -f net9.0
+dotnet new classlib -n Smartico.Missions.Infrastructure -o src/Smartico.Missions.Infrastructure -f net9.0
+
+# Add projects to solution
+dotnet sln add src/Smartico.Missions.Api/Smartico.Missions.Api.csproj
+dotnet sln add src/Smartico.Missions.Application/Smartico.Missions.Application.csproj
+dotnet sln add src/Smartico.Missions.Domain/Smartico.Missions.Domain.csproj
+dotnet sln add src/Smartico.Missions.Infrastructure/Smartico.Missions.Infrastructure.csproj
+
+# Add project references (dependency flow: Api → Application → Domain ← Infrastructure)
+cd src/Smartico.Missions.Api
+dotnet add reference ../Smartico.Missions.Application/Smartico.Missions.Application.csproj
+dotnet add reference ../Smartico.Missions.Infrastructure/Smartico.Missions.Infrastructure.csproj
+
+cd ../Smartico.Missions.Application
+dotnet add reference ../Smartico.Missions.Domain/Smartico.Missions.Domain.csproj
+
+cd ../Smartico.Missions.Infrastructure
+dotnet add reference ../Smartico.Missions.Domain/Smartico.Missions.Domain.csproj
+
+# Test build
+dotnet build
 ```
 
 **Files to Create:**
-- `package.json`
-- `tsconfig.json` (strict mode)
-- `.env.example`
+- `Smartico.Missions.sln`
+- `global.json` (SDK version lock)
+- `Directory.Build.props` (shared MSBuild properties)
+- `.editorconfig`
 - `.gitignore`
 - `README.md`
-- `nodemon.json`
+- `Dockerfile`
+- `.dockerignore`
+- `appsettings.json`, `appsettings.Development.json`
 
-**package.json scripts:**
+**global.json:**
 ```json
 {
-  "scripts": {
-    "dev": "nodemon src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "test": "jest",
-    "lint": "eslint src/**/*.ts"
+  "sdk": {
+    "version": "9.0.0",
+    "rollForward": "latestFeature"
   }
 }
+```
+
+**Directory.Build.props:**
+```xml
+<Project>
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>5</WarningLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+</Project>
 ```
 
 ---
@@ -1088,11 +1125,278 @@ npm install -D supertest @types/supertest
 
 ---
 
-### TASK-018: Backend Documentation [TY]
+### TASK-018: Implement JSON File Storage [CQ]
+**Type:** Code Quality  
+**Priority:** Medium  
+**Estimate:** 3 hours  
+**Dependencies:** TASK-008  
+**Constitutional Alignment:** Code Quality (SRP), Type Safety
+
+**Description:**
+Implement simple JSON file-based storage for necessary data (user sessions, rate limits, audit logs) without database complexity.
+
+**Acceptance Criteria:**
+- [ ] JSON storage service with TypeScript types
+- [ ] File locking to prevent corruption
+- [ ] Atomic write operations
+- [ ] Automatic backup on write
+- [ ] Read/write methods
+- [ ] Error handling (file not found, parse errors)
+- [ ] TypeScript strict mode compliant
+
+**Use Cases:**
+- Session storage (if not using JWT-only)
+- Rate limit counters (per-user API quotas)
+- Audit logs (simple logging)
+- User preferences (if needed)
+- Feature flags
+
+**Files to Create:**
+- `src/infrastructure/storage/JsonStorageService.ts`
+- `src/infrastructure/storage/IStorageService.ts`
+- `data/` directory for JSON files
+
+**Implementation:**
+```typescript
+import fs from 'fs/promises';
+import { readFileSync, writeFileSync } from 'fs';
+import path from 'path';
+
+export interface IStorageService<T> {
+  read(): Promise<T>;
+  write(data: T): Promise<void>;
+  update(updater: (data: T) => T): Promise<void>;
+}
+
+/**
+ * Simple JSON file storage with atomic writes and backups.
+ * Suitable for small data sets (< 10MB).
+ * Migrate to real database when data grows or needs complex queries.
+ */
+export class JsonStorageService<T> implements IStorageService<T> {
+  private filePath: string;
+  private backupPath: string;
+
+  constructor(
+    private readonly fileName: string,
+    private readonly defaultData: T,
+    private readonly logger: Logger
+  ) {
+    this.filePath = path.join(process.cwd(), 'data', fileName);
+    this.backupPath = `${this.filePath}.backup`;
+    this.ensureFileExists();
+  }
+
+  /**
+   * Reads data from JSON file.
+   * Returns default data if file doesn't exist or is corrupted.
+   */
+  async read(): Promise<T> {
+    try {
+      const content = await fs.readFile(this.filePath, 'utf-8');
+      return JSON.parse(content) as T;
+    } catch (error) {
+      this.logger.warn('Failed to read JSON file, using default data', { 
+        file: this.fileName,
+        error 
+      });
+      return this.defaultData;
+    }
+  }
+
+  /**
+   * Writes data to JSON file atomically.
+   * Creates backup before writing to prevent data loss.
+   */
+  async write(data: T): Promise<void> {
+    try {
+      // Backup existing file
+      if (await this.fileExists(this.filePath)) {
+        await fs.copyFile(this.filePath, this.backupPath);
+      }
+
+      // Write to temp file first (atomic operation)
+      const tempPath = `${this.filePath}.tmp`;
+      const jsonString = JSON.stringify(data, null, 2);
+      await fs.writeFile(tempPath, jsonString, 'utf-8');
+
+      // Rename temp to actual (atomic on POSIX systems)
+      await fs.rename(tempPath, this.filePath);
+
+      this.logger.debug('JSON file written successfully', { 
+        file: this.fileName 
+      });
+    } catch (error) {
+      this.logger.error('Failed to write JSON file', error, { 
+        file: this.fileName 
+      });
+      throw new Error(`Failed to write JSON file: ${this.fileName}`);
+    }
+  }
+
+  /**
+   * Updates data using updater function.
+   * Reads, applies updater, then writes atomically.
+   */
+  async update(updater: (data: T) => T): Promise<void> {
+    const currentData = await this.read();
+    const updatedData = updater(currentData);
+    await this.write(updatedData);
+  }
+
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private ensureFileExists(): void {
+    const dataDir = path.join(process.cwd(), 'data');
+    
+    // Create data directory if doesn't exist
+    if (!existsSync(dataDir)) {
+      mkdirSync(dataDir, { recursive: true });
+    }
+
+    // Create file with default data if doesn't exist
+    if (!existsSync(this.filePath)) {
+      writeFileSync(
+        this.filePath, 
+        JSON.stringify(this.defaultData, null, 2), 
+        'utf-8'
+      );
+    }
+  }
+}
+```
+
+**Usage Examples:**
+
+```typescript
+// 1. Session storage
+interface SessionData {
+  [userId: string]: {
+    token: string;
+    createdAt: number;
+    expiresAt: number;
+  };
+}
+
+const sessionStorage = new JsonStorageService<SessionData>(
+  'sessions.json',
+  {}, // default: empty object
+  logger
+);
+
+// Store session
+await sessionStorage.update((sessions) => ({
+  ...sessions,
+  [userId]: {
+    token: 'abc123',
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 3600000,
+  },
+}));
+
+// Read all sessions
+const sessions = await sessionStorage.read();
+
+
+// 2. Rate limiting
+interface RateLimitData {
+  [userId: string]: {
+    count: number;
+    resetAt: number;
+  };
+}
+
+const rateLimitStorage = new JsonStorageService<RateLimitData>(
+  'rate-limits.json',
+  {},
+  logger
+);
+
+// Increment rate limit
+await rateLimitStorage.update((limits) => {
+  const current = limits[userId] || { count: 0, resetAt: Date.now() + 60000 };
+  return {
+    ...limits,
+    [userId]: {
+      count: current.count + 1,
+      resetAt: current.resetAt,
+    },
+  };
+});
+
+
+// 3. Audit logs
+interface AuditLog {
+  timestamp: number;
+  userId: string;
+  action: string;
+  resource: string;
+  success: boolean;
+}
+
+interface AuditLogData {
+  logs: AuditLog[];
+}
+
+const auditStorage = new JsonStorageService<AuditLogData>(
+  'audit-logs.json',
+  { logs: [] },
+  logger
+);
+
+// Add audit log
+await auditStorage.update((data) => ({
+  logs: [
+    ...data.logs,
+    {
+      timestamp: Date.now(),
+      userId: 'user123',
+      action: 'opt_in',
+      resource: 'mission:456',
+      success: true,
+    },
+  ],
+}));
+```
+
+**Important Limitations:**
+- ⚠️ Not suitable for high-concurrency writes (file locking is basic)
+- ⚠️ Keep files small (< 10MB recommended)
+- ⚠️ No complex queries (filter/sort in memory)
+- ⚠️ No relationships between data
+- ✅ Perfect for MVP/development
+- ✅ Easy to migrate to database later
+
+**When to Migrate to Database:**
+- More than 1000 users actively using the system
+- Need complex queries (JOIN, GROUP BY, etc.)
+- Need real-time concurrent access
+- File size exceeds 10MB
+- Need ACID transactions
+
+**Migration Path:**
+```typescript
+// Same interface, different implementation
+class DatabaseStorageService<T> implements IStorageService<T> {
+  // Implement using Prisma/TypeORM
+  // Same interface, so easy swap!
+}
+```
+
+---
+
+### TASK-019: Backend Documentation [TY]
 **Type:** Type Safety & Documentation  
 **Priority:** Medium  
 **Estimate:** 4 hours  
-**Dependencies:** TASK-017  
+**Dependencies:** TASK-017, TASK-018  
 **Constitutional Alignment:** Documentation
 
 **Description:**
@@ -1104,11 +1408,13 @@ Write comprehensive backend documentation including API reference and setup guid
 - [ ] Environment variables documented
 - [ ] Architecture documentation
 - [ ] Deployment guide
+- [ ] JSON storage usage guide
 
 **Files to Create:**
 - `backend/README.md`
 - `backend/docs/API.md`
 - `backend/docs/ARCHITECTURE.md`
+- `backend/docs/JSON_STORAGE.md` (migration guide)
 - `backend/swagger.yaml` (optional)
 
 ---

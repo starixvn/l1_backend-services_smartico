@@ -1,0 +1,246 @@
+import { useState, useEffect } from 'react';
+import { api } from './services/api';
+import { signalRService } from './services/signalr';
+import { MissionList } from './components/MissionList';
+import type { Mission } from './types';
+
+// Hardcoded user ID for MVP testing
+const TEST_USER_ID = 'test-user-123';
+
+function App() {
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMissionId, setLoadingMissionId] = useState<number | undefined>();
+  const [error, setError] = useState<string | null>(null);
+  const [signalRConnected, setSignalRConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+
+  // Load missions on mount
+  useEffect(() => {
+    loadMissions();
+    connectSignalR();
+
+    // Cleanup on unmount
+    return () => {
+      signalRService.disconnect();
+    };
+  }, []);
+
+  const loadMissions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await api.getMissions(TEST_USER_ID);
+      setMissions(data);
+      console.log('✅ Loaded missions:', data.length);
+    } catch (err) {
+      console.error('❌ Failed to load missions:', err);
+      setError('Failed to load missions. Make sure the backend is running at http://localhost:5227');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const connectSignalR = async () => {
+    try {
+      await signalRService.connect(TEST_USER_ID);
+      setSignalRConnected(true);
+
+      // Subscribe to real-time updates
+      signalRService.onMissionProgressUpdated((updatedMission) => {
+        console.log('📊 Mission progress updated via SignalR:', updatedMission);
+        setLastUpdate(`Mission "${updatedMission.name}" progress: ${updatedMission.progress.toFixed(0)}%`);
+        
+        // Update the mission in the list
+        setMissions((prev) =>
+          prev.map((m) => (m.id === updatedMission.id ? updatedMission : m))
+        );
+      });
+
+      signalRService.onMissionCompleted((completedMission) => {
+        console.log('🎉 Mission completed via SignalR:', completedMission);
+        setLastUpdate(`Mission "${completedMission.name}" completed! 🎉`);
+        
+        // Update the mission in the list
+        setMissions((prev) =>
+          prev.map((m) => (m.id === completedMission.id ? completedMission : m))
+        );
+      });
+
+      signalRService.onBadgeEarned((badge) => {
+        console.log('🏆 Badge earned via SignalR:', badge);
+        setLastUpdate(`Badge "${badge.name}" earned! 🏆`);
+      });
+
+      console.log('✅ SignalR connected and subscribed to updates');
+    } catch (err) {
+      console.error('❌ SignalR connection failed:', err);
+      setSignalRConnected(false);
+    }
+  };
+
+  const handleOptIn = async (missionId: number) => {
+    try {
+      setLoadingMissionId(missionId);
+      console.log(`🎯 Opting into mission ${missionId}...`);
+      
+      const result = await api.optInToMission(TEST_USER_ID, missionId);
+      
+      if (result.success) {
+        console.log('✅ Opt-in successful:', result.message);
+        // Reload missions to get updated status
+        await loadMissions();
+      } else {
+        console.error('❌ Opt-in failed:', result.message);
+        setError(result.message);
+      }
+    } catch (err) {
+      console.error('❌ Opt-in error:', err);
+      setError('Failed to opt in to mission');
+    } finally {
+      setLoadingMissionId(undefined);
+    }
+  };
+
+  const handleClaim = async (missionId: number) => {
+    try {
+      setLoadingMissionId(missionId);
+      console.log(`💰 Claiming reward for mission ${missionId}...`);
+      
+      const result = await api.claimReward(TEST_USER_ID, missionId);
+      
+      if (result.success) {
+        console.log('✅ Claim successful:', result.message);
+        if (result.rewardAmount) {
+          alert(`🎉 You earned ${result.rewardAmount} ${result.rewardCurrency || 'points'}!`);
+        }
+        // Reload missions to get updated status
+        await loadMissions();
+      } else {
+        console.error('❌ Claim failed:', result.message);
+        setError(result.message);
+      }
+    } catch (err) {
+      console.error('❌ Claim error:', err);
+      setError('Failed to claim reward');
+    } finally {
+      setLoadingMissionId(undefined);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">🎯 Missions & Badges</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                MVP Frontend Demo - User ID: <code className="bg-gray-100 px-2 py-1 rounded">{TEST_USER_ID}</code>
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${signalRConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  <span className="text-sm text-gray-600">
+                    {signalRConnected ? 'Real-time Connected' : 'Disconnected'}
+                  </span>
+                </div>
+                {lastUpdate && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    Last update: {lastUpdate}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={loadMissions}
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {isLoading ? 'Loading...' : '🔄 Refresh'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <div>
+              <p className="font-medium">❌ Error</p>
+              <p className="text-sm">{error}</p>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800 font-bold"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-2xl font-bold text-gray-900">{missions.length}</div>
+            <div className="text-sm text-gray-600">Total Missions</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-2xl font-bold text-blue-600">
+              {missions.filter((m) => m.status === 1).length}
+            </div>
+            <div className="text-sm text-gray-600">Active Missions</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-2xl font-bold text-green-600">
+              {missions.filter((m) => m.status === 2).length}
+            </div>
+            <div className="text-sm text-gray-600">Completed</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-2xl font-bold text-purple-600">
+              {missions.filter((m) => m.status === 0).length}
+            </div>
+            <div className="text-sm text-gray-600">Available</div>
+          </div>
+        </div>
+
+        {/* Mission List */}
+        {isLoading && missions.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading missions...</p>
+          </div>
+        ) : (
+          <MissionList
+            missions={missions}
+            onOptIn={handleOptIn}
+            onClaim={handleClaim}
+            isLoading={!!loadingMissionId}
+            loadingMissionId={loadingMissionId}
+          />
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-12">
+        <div className="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-gray-600">
+          <p>
+            Backend API: <code className="bg-gray-100 px-2 py-1 rounded">http://localhost:5227</code>
+          </p>
+          <p className="mt-2">
+            SignalR Hub: <code className="bg-gray-100 px-2 py-1 rounded">ws://localhost:5227/hubs/progress</code>
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
+

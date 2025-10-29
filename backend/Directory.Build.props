@@ -1,0 +1,30 @@
+<Project>
+  <PropertyGroup>
+    <!-- C# Language Version -->
+    <LangVersion>12</LangVersion>
+    
+    <!-- Nullable Reference Types (strict null checking) -->
+    <Nullable>enable</Nullable>
+    
+    <!-- Treat warnings as errors in Release builds -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    
+    <!-- Warning Level -->
+    <WarningLevel>5</WarningLevel>
+    
+    <!-- Code Analysis -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    
+    <!-- Assembly Information -->
+    <Company>Smartico</Company>
+    <Product>Smartico Missions &amp; Badges</Product>
+    <Copyright>Copyright © 2024 Smartico</Copyright>
+    
+    <!-- Build Output -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn> <!-- Suppress missing XML comment warnings -->
+  </PropertyGroup>
+</Project>
+

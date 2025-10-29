@@ -1,9 +1,9 @@
 # Missions & Badges - Feature Specification
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Created:** 2024-10-29
 **Last Updated:** 2024-10-29
-**Status:** Draft
+**Status:** Draft - Backend Migration (.NET 9)
 **Author:** System Architect
 
 ## Constitution Alignment
@@ -392,20 +392,34 @@ The Missions & Badges feature implements a comprehensive gamification system tha
 
 6. **Infrastructure:**
    - Backend services can handle projected load
-   - WebSocket infrastructure supports real-time connections
+   - WebSocket infrastructure supports real-time connections (SignalR)
    - CDN is available for image/asset delivery
+   - File system access for JSON storage (sessions, rate limits, audit logs)
+   - Backup strategy for JSON files in production environment
 
 ## Dependencies
 
-### External Packages
-- **@smartico/public-api**: NPM package providing:
+### Backend Stack (.NET 9)
+- **Runtime:** .NET 9 SDK and Runtime
+- **Framework:** ASP.NET Core 9.0 (Web API + SignalR)
+- **Language:** C# 12 with nullable reference types enabled
+- **Architecture:** Clean Architecture with Vertical Slices (API, Application, Domain, Infrastructure layers)
+- **API Client:** HttpClient wrapper for Smartico API using @smartico/public-api TypeScript interfaces as reference for C# models
+- **WebSocket:** SignalR with automatic fallback (WebSocket → SSE → Long Polling)
+- **Caching:** IMemoryCache (built-in) + Redis support via StackExchange.Redis (optional)
+- **Persistence:** JSON File Storage for MVP (sessions, rate limits, audit logs) with atomic writes
+- **Authentication:** JWT Bearer tokens (Microsoft.AspNetCore.Authentication.JwtBearer)
+- **Testing:** xUnit + FluentAssertions + Moq + WebApplicationFactory (AAA pattern)
+- **Deployment:** Docker containers with multi-stage builds
+
+### Frontend Stack
+- **@smartico/public-api**: NPM package providing TypeScript interfaces (used as reference for backend C# models):
   - TypeScript interfaces (TMissionOrBadge, TMissionOrBadgeTask, etc.)
-  - API client methods (getMissions, getBadges, requestMissionOptIn, requestMissionClaimReward)
-  - WebSocket support for real-time updates (with automatic fallback to polling)
-  - Transformation utilities
+  - Type definitions for API contracts
+  - Reference for data structures and transformations
 
 ### External Systems
-- **Smartico API Backend:** Mission data, progress tracking, reward issuance (accessed via @smartico/public-api)
+- **Smartico API Backend:** Mission data, progress tracking, reward issuance (accessed via HTTP client from .NET backend)
 - **Authentication Service:** User identity and session management
 - **Reward System:** Reward crediting and balance updates
 - **Notification Service:** Push notifications for mission updates (optional)
@@ -480,6 +494,11 @@ The Missions & Badges feature implements a comprehensive gamification system tha
 - Q: How should badges be displayed when users might have 100+ badges? → A: Grid Gallery - Trophy case style with large badge icons, earned badges in color and locked badges greyed out. Click for details. Filters: "All" | "Recent" | "Rarity" | "Category". Visual impact and collection feel.
 - Q: When API calls fail, how should the system respond? → A: Smart Fallback - Auto-retry once silently, if fails show cached/stale data with warning banner and "Refresh" button. Graceful degradation for read operations. Critical actions (opt-in, claim) show error immediately with retry option.
 - Q: Should the design prioritize mobile or desktop experience? → A: Mobile-First Design - Design for mobile screens first with progressive enhancement for tablets/desktop. Touch-optimized interactions, simplified UI for small screens. Target: 60%+ users on mobile devices.
+- Q: Which .NET framework version should the backend use? → A: .NET 9 - Latest version with newest features and performance improvements.
+- Q: What architecture pattern should the .NET backend follow? → A: Clean Architecture with Vertical Slices - Feature-based folders with clear layers (API, Application, Domain, Infrastructure), pragmatic for BFF pattern, maintains SOLID principles.
+- Q: What data persistence strategy should the backend use for MVP? → A: JSON File Storage - Lightweight file-based storage for sessions, rate limits, and audit logs; atomic writes with backups; easy migration path to full database later.
+- Q: What WebSocket implementation should the .NET backend use? → A: SignalR - ASP.NET Core's built-in real-time framework with automatic fallback (WebSocket → Server-Sent Events → Long Polling), strongly-typed hubs, and native authentication support.
+- Q: What deployment platform should the .NET backend target? → A: Docker Containers - Cross-platform deployment flexibility, consistent dev/prod environments, supports any cloud provider or on-premises, enables easy horizontal scaling and CI/CD integration.
 
 ## Data Model
 
@@ -507,6 +526,7 @@ The Missions & Badges feature implements a comprehensive gamification system tha
 | Version | Date       | Author            | Changes                    |
 |---------|------------|-------------------|----------------------------|
 | 1.0.0   | 2024-10-29 | System Architect  | Initial specification      |
+| 1.1.0   | 2024-10-29 | System Architect  | Backend migration: Node.js → .NET 9; Added clarifications for .NET stack (framework, architecture, persistence, SignalR, Docker) |
 
 ## Approval
 

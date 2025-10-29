@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C79CB087-A574-4E2F-BA80-923796BACB6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.Missions.Api", "src\Smartico.Missions.Api\Smartico.Missions.Api.csproj", "{39F6287E-0B89-4A32-A53B-26DF6B7BF9D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.Missions.Application", "src\Smartico.Missions.Application\Smartico.Missions.Application.csproj", "{2020E7A8-20E3-451F-82EA-FEDC7CC94591}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.Missions.Domain", "src\Smartico.Missions.Domain\Smartico.Missions.Domain.csproj", "{549244B4-56FE-4941-B589-F632595E807A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.Missions.Infrastructure", "src\Smartico.Missions.Infrastructure\Smartico.Missions.Infrastructure.csproj", "{206CBE4F-031E-441B-8FB5-4AD15B45FC1A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{39F6287E-0B89-4A32-A53B-26DF6B7BF9D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39F6287E-0B89-4A32-A53B-26DF6B7BF9D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39F6287E-0B89-4A32-A53B-26DF6B7BF9D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39F6287E-0B89-4A32-A53B-26DF6B7BF9D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2020E7A8-20E3-451F-82EA-FEDC7CC94591}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2020E7A8-20E3-451F-82EA-FEDC7CC94591}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2020E7A8-20E3-451F-82EA-FEDC7CC94591}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2020E7A8-20E3-451F-82EA-FEDC7CC94591}.Release|Any CPU.Build.0 = Release|Any CPU
+		{549244B4-56FE-4941-B589-F632595E807A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{549244B4-56FE-4941-B589-F632595E807A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{549244B4-56FE-4941-B589-F632595E807A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{549244B4-56FE-4941-B589-F632595E807A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{206CBE4F-031E-441B-8FB5-4AD15B45FC1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{206CBE4F-031E-441B-8FB5-4AD15B45FC1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{206CBE4F-031E-441B-8FB5-4AD15B45FC1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{206CBE4F-031E-441B-8FB5-4AD15B45FC1A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{39F6287E-0B89-4A32-A53B-26DF6B7BF9D4} = {C79CB087-A574-4E2F-BA80-923796BACB6C}
+		{2020E7A8-20E3-451F-82EA-FEDC7CC94591} = {C79CB087-A574-4E2F-BA80-923796BACB6C}
+		{549244B4-56FE-4941-B589-F632595E807A} = {C79CB087-A574-4E2F-BA80-923796BACB6C}
+		{206CBE4F-031E-441B-8FB5-4AD15B45FC1A} = {C79CB087-A574-4E2F-BA80-923796BACB6C}
+	EndGlobalSection
+EndGlobal
