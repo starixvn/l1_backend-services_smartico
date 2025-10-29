@@ -1,0 +1,43 @@
+{
+	"compilerOptions": {
+		"module": "ESNext",
+		"esModuleInterop": true,
+		"target": "ESNext",
+		"noImplicitAny": false,
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"outDir": "dist",
+		"baseUrl": ".",
+		"allowJs": true
+	},
+	"include": ["src/**/*"],
+	"typedocOptions": {
+		"name": "Smartico API documentation",
+		"entryPoints": [
+			"src/WSAPI/WSAPI.ts",
+			"src/WSAPI/WSAPITypes.ts",
+			"src/Tournaments/TournamentRegistrationStatus.ts",
+			"src/Tournaments/TournamentRegistrationType.ts",
+			"src/Bonuses/BonusStatus.ts",
+			"src/MiniGames/index.ts",
+			"src/CustomSections/AchCustomSection.ts",
+			"src/Tournaments/TournamentRegistrationError.ts",
+			"src/Store/BuyStoreItemErrorCode.ts",
+			"src/Leaderboard/LeaderBoardPeriodType.ts",
+			"src/Base/AchRelatedGame.ts",
+			"src/Jackpots/index.ts",
+			"src/Raffle/index.ts",
+			"src/Missions/AchievementAvailabilityStatus.ts",
+		],
+		"out": "docs",
+		"plugin": ["typedoc-plugin-markdown", "typedoc-plugin-merge-modules"],
+		"entryDocument": "README.md",
+		"disableSources": true,
+		"excludePrivate": true,
+		"readme": "none",
+		"cleanOutputDir": true,
+		"hideBreadcrumbs": true,
+		"hideInPageTOC": true,
+		"sort": "source-order"
+	}
+}
