@@ -1,9 +1,9 @@
 # Missions & Badges - Feature Specification
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Created:** 2024-10-29
-**Last Updated:** 2024-10-29
-**Status:** Draft - Backend Migration (.NET 9)
+**Last Updated:** 2024-11-04
+**Status:** Ready for Implementation - .NET 9 Backend
 **Author:** System Architect
 
 ## Constitution Alignment
@@ -193,11 +193,11 @@ The Missions & Badges feature implements a comprehensive gamification system tha
 ### Non-Functional Requirements
 
 #### NFR-1: Performance
-- **Page Load:** Mission list appears within 1.5 seconds
-- **Search/Filter:** Results update within 300ms of user input
+- **Page Load:** Mission list appears within 1.5 seconds (on 4G connection: 10 Mbps, 50ms latency, mid-tier mobile device)
+- **Search/Filter:** Results update within 300ms of user input (with 300ms debounce delay)
 - **Real-time Updates:** Progress changes reflect within 2 seconds
-- **API Response:** Mission data retrieved within 200ms (p95)
-- **Image Loading:** Optimized images load progressively
+- **API Response (Backend):** GET requests < 200ms (p95), POST/PUT requests < 500ms (p95)
+- **Image Loading:** Optimized images load progressively (WebP/AVIF with JPEG fallback)
 - **Smooth Animations:** UI transitions maintain 60fps
 
 #### NFR-2: Scalability
@@ -211,7 +211,7 @@ The Missions & Badges feature implements a comprehensive gamification system tha
 - **Data Consistency:** Mission progress never reverts or loses data
 - **Error Recovery:** Graceful degradation if backend services are slow
 - **Offline Resilience:** Show cached data if connection lost
-- **WebSocket Fallback:** If WebSocket unavailable, automatically fall back to polling (10-30s intervals)
+- **WebSocket Fallback:** If WebSocket unavailable, automatically fall back to polling (15-second intervals, configurable 10-30s range)
 - **Connection Status:** Clear indicator showing real-time vs. polling mode
 
 #### NFR-4: Security
@@ -386,9 +386,9 @@ The Missions & Badges feature implements a comprehensive gamification system tha
    - Component library includes progress bars, cards, and badges
 
 5. **Browser Support:**
-   - Modern browsers (Chrome, Firefox, Safari, Edge) from last 2 years
-   - Mobile browsers (iOS Safari, Chrome Mobile) are supported
-   - Progressive enhancement for older browsers
+   - **Desktop:** Chrome 110+ (Feb 2023), Firefox 115+ ESR (July 2023), Safari 16+ (Sept 2022), Edge 110+ (Chromium-based)
+   - **Mobile:** iOS Safari 16+, Chrome Mobile 110+, Samsung Internet 20+
+   - Progressive enhancement for older browsers (graceful degradation)
 
 6. **Infrastructure:**
    - Backend services can handle projected load
@@ -412,11 +412,18 @@ The Missions & Badges feature implements a comprehensive gamification system tha
 - **Testing:** xUnit + FluentAssertions + Moq + WebApplicationFactory (AAA pattern)
 - **Deployment:** Docker containers with multi-stage builds
 
-### Frontend Stack
-- **@smartico/public-api**: NPM package providing TypeScript interfaces (used as reference for backend C# models):
-  - TypeScript interfaces (TMissionOrBadge, TMissionOrBadgeTask, etc.)
-  - Type definitions for API contracts
-  - Reference for data structures and transformations
+### Frontend Stack (React + TypeScript)
+- **Library:** React 18+
+- **Language:** TypeScript 5+ (strict mode enabled)
+- **State Management:** Redux Toolkit with RTK Query
+- **Real-time Communication:** SignalR JavaScript Client (@microsoft/signalr) connecting to .NET backend
+- **API Communication:** Fetch API / Axios to .NET 9 REST API endpoints
+- **UI Components:** Design system components (Material-UI / Chakra UI / Custom)
+- **Styling:** CSS Modules / TailwindCSS / Styled Components (to be determined)
+- **Forms:** React Hook Form + Zod validation
+- **Testing:** Jest + React Testing Library + MSW (Mock Service Worker)
+- **Build Tool:** Vite / Webpack
+- **Type Reference:** @smartico/public-api NPM package provides TypeScript interfaces used as reference for backend C# models (TMissionOrBadge, TMissionOrBadgeTask, TMissionOptInResult, TMissionClaimRewardResult, TAchCategory)
 
 ### External Systems
 - **Smartico API Backend:** Mission data, progress tracking, reward issuance (accessed via HTTP client from .NET backend)
@@ -515,7 +522,130 @@ The Missions & Badges feature implements a comprehensive gamification system tha
 - **TAchCategory**: Interface for mission/badge categories
   - Includes: id, name, description, image
 
-**Data Source:** All mission and badge data is retrieved from the Smartico API backend via the @smartico/public-api wrapper. The frontend and backend layers consume these types directly without transformation.
+**Data Source:** All mission and badge data is retrieved from the Smartico API backend. The .NET 9 backend acts as a BFF (Backend for Frontend), wrapping Smartico API calls and exposing REST + SignalR endpoints to the React frontend.
+
+## API Endpoints (.NET 9 Backend)
+
+The .NET 9 backend exposes the following REST API endpoints and SignalR hubs for the React frontend:
+
+### REST API Endpoints
+
+**Base URL:** `/api` (e.g., `https://your-domain.com/api`)
+
+#### Missions
+
+| Method | Endpoint | Description | Auth Required | Request Body | Response |
+|--------|----------|-------------|---------------|--------------|----------|
+| GET | `/api/missions` | List all missions for authenticated user | ✅ JWT | - | `Mission[]` (200 OK) |
+| GET | `/api/missions/{id}` | Get single mission by ID | ✅ JWT | - | `Mission` (200 OK) or 404 |
+| POST | `/api/missions/{id}/opt-in` | Opt into a mission | ✅ JWT | - | `OptInResult` (200 OK) or 400/404 |
+| POST | `/api/missions/{id}/claim` | Claim mission reward | ✅ JWT | - | `ClaimResult` (200 OK) or 400/404 |
+
+#### Badges
+
+| Method | Endpoint | Description | Auth Required | Request Body | Response |
+|--------|----------|-------------|---------------|--------------|----------|
+| GET | `/api/badges` | List all badges for authenticated user | ✅ JWT | - | `Badge[]` (200 OK) |
+| GET | `/api/badges/{id}` | Get single badge by ID | ✅ JWT | - | `Badge` (200 OK) or 404 |
+
+#### Categories
+
+| Method | Endpoint | Description | Auth Required | Request Body | Response |
+|--------|----------|-------------|---------------|--------------|----------|
+| GET | `/api/categories` | List all mission/badge categories | ✅ JWT | - | `Category[]` (200 OK) |
+
+#### Health & Diagnostics
+
+| Method | Endpoint | Description | Auth Required | Response |
+|--------|----------|-------------|---------------|----------|
+| GET | `/health` | Health check | ❌ No | `{ "status": "healthy", "timestamp": "..." }` |
+| GET | `/health/ready` | Readiness probe (Kubernetes) | ❌ No | 200 OK or 503 Service Unavailable |
+| GET | `/health/live` | Liveness probe (Kubernetes) | ❌ No | 200 OK or 503 Service Unavailable |
+
+### SignalR Real-Time Hub
+
+**Hub URL:** `/hubs/progress`
+
+**Connection:** Requires JWT token in query string (`?access_token=...`) or Authorization header
+
+#### Server → Client Events
+
+| Event Name | Payload | Description |
+|------------|---------|-------------|
+| `MissionProgressUpdated` | `{ missionId: number, progress: number, tasks: Task[] }` | Mission progress changed |
+| `MissionCompleted` | `{ missionId: number, reward: Reward }` | Mission completed |
+| `BadgeEarned` | `{ badgeId: number, badge: Badge }` | New badge earned |
+
+#### Client → Server Methods
+
+| Method Name | Parameters | Description |
+|-------------|------------|-------------|
+| `SubscribeToMissions` | `missionIds: number[]` | Subscribe to progress updates for specific missions |
+| `UnsubscribeFromMissions` | `missionIds: number[]` | Unsubscribe from mission updates |
+
+### Authentication
+
+All API endpoints (except `/health*`) require JWT Bearer token authentication:
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+**JWT Claims Required:**
+- `sub` or `nameid`: User ID
+- `email`: User email (optional)
+- `exp`: Token expiration
+
+**Token Validation:**
+- Issuer: Configured in `appsettings.json` (`Jwt:Issuer`)
+- Audience: Configured in `appsettings.json` (`Jwt:Audience`)
+- Signing Key: Configured via environment variable or Azure Key Vault
+
+### Error Responses
+
+All error responses follow a consistent format:
+
+```json
+{
+  "error": {
+    "code": "MISSION_NOT_FOUND",
+    "message": "Mission with ID 123 not found",
+    "timestamp": "2024-11-04T10:30:00Z",
+    "traceId": "00-abc123-def456-00"
+  }
+}
+```
+
+**Common Error Codes:**
+- `UNAUTHORIZED` (401): Invalid or missing JWT token
+- `FORBIDDEN` (403): User does not have permission
+- `NOT_FOUND` (404): Resource not found
+- `VALIDATION_ERROR` (400): Invalid request data
+- `MISSION_NOT_AVAILABLE` (400): Mission cannot be opted into (locked, expired, etc.)
+- `REWARD_ALREADY_CLAIMED` (400): Reward has already been claimed
+- `INTERNAL_SERVER_ERROR` (500): Unexpected server error
+
+### Rate Limiting
+
+API endpoints are rate-limited per user:
+
+- **Default Limit:** 100 requests per minute per user
+- **Burst Limit:** 20 requests per second
+- **Headers:**
+  - `X-RateLimit-Limit`: Maximum requests allowed
+  - `X-RateLimit-Remaining`: Remaining requests
+  - `X-RateLimit-Reset`: Unix timestamp when limit resets
+
+**Rate Limit Exceeded Response (429):**
+```json
+{
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Too many requests. Please try again later.",
+    "retryAfter": 60
+  }
+}
+```
 
 ## Open Questions
 
@@ -527,6 +657,7 @@ The Missions & Badges feature implements a comprehensive gamification system tha
 |---------|------------|-------------------|----------------------------|
 | 1.0.0   | 2024-10-29 | System Architect  | Initial specification      |
 | 1.1.0   | 2024-10-29 | System Architect  | Backend migration: Node.js → .NET 9; Added clarifications for .NET stack (framework, architecture, persistence, SignalR, Docker) |
+| 1.2.0   | 2024-11-04 | System Architect  | Specification refinements based on analysis: Added explicit API endpoints section (.NET 9 REST + SignalR), clarified performance targets with network conditions (4G, mid-tier device), standardized polling interval (15s), added explicit browser support matrix (Chrome 110+, Firefox 115+, Safari 16+), specified search debounce delay (300ms), expanded frontend stack details |
 
 ## Approval
 
