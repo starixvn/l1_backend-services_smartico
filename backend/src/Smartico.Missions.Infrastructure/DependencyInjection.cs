@@ -64,6 +64,9 @@ public static class DependencyInjection
         // Register Smartico Mini Game API Client (demo implementation, no HTTP needed)
         services.AddSingleton<ISmarticoMiniGameApiClient, SmarticoMiniGameApiClient>();
 
+        // Register Smartico Tournament API Client (demo implementation, no HTTP needed)
+        services.AddSingleton<ISmarticoTournamentApiClient, SmarticoTournamentApiClient>();
+
         return services;
     }
 }

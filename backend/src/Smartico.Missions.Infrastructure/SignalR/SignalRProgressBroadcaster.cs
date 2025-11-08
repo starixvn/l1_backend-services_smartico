@@ -250,5 +250,96 @@ public class SignalRProgressBroadcaster : IProgressBroadcaster
             _logger.LogError(ex, "Error broadcasting mini game available to user {UserId}", userId);
         }
     }
+
+    // ========== TOURNAMENT EVENTS ==========
+
+    public async Task BroadcastTournamentRegisteredAsync(string userId, Tournament tournament, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting tournament registered to user {UserId} for tournament {TournamentId}",
+                userId, tournament.InstanceId);
+
+            await _hubContext.Clients
+                .Group($"user:{userId}")
+                .SendAsync("TournamentRegistered", tournament, cancellationToken);
+
+            _logger.LogDebug("Tournament registered broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting tournament registered to user {UserId}, tournament {TournamentId}",
+                userId, tournament.InstanceId);
+        }
+    }
+
+    public async Task BroadcastTournamentLeaderboardUpdatedAsync(int tournamentInstanceId, List<TournamentParticipant> participants, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting tournament leaderboard updated to ALL USERS - Tournament: {TournamentId}, Participants: {Count}",
+                tournamentInstanceId, participants.Count);
+
+            // Broadcast to ALL connected clients viewing this tournament
+            await _hubContext.Clients.All
+                .SendAsync("TournamentLeaderboardUpdated", new
+                {
+                    TournamentInstanceId = tournamentInstanceId,
+                    Participants = participants
+                }, cancellationToken);
+
+            _logger.LogDebug("Tournament leaderboard updated broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting tournament leaderboard updated for tournament {TournamentId}",
+                tournamentInstanceId);
+        }
+    }
+
+    public async Task BroadcastTournamentStatusChangedAsync(Tournament tournament, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting tournament status changed to ALL USERS - Tournament: {TournamentId}, Status: {Status}",
+                tournament.InstanceId, tournament.Status);
+
+            // Broadcast to ALL connected clients
+            await _hubContext.Clients.All
+                .SendAsync("TournamentStatusChanged", tournament, cancellationToken);
+
+            _logger.LogDebug("Tournament status changed broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting tournament status changed for tournament {TournamentId}",
+                tournament.InstanceId);
+        }
+    }
+
+    public async Task BroadcastTournamentPrizeWonAsync(string userId, Tournament tournament, TournamentPrize prize, int finalPosition, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting tournament prize won to user {UserId} - Tournament: {TournamentId}, Prize: {PrizeName}, Position: {Position}",
+                userId, tournament.InstanceId, prize.Name, finalPosition);
+
+            await _hubContext.Clients
+                .Group($"user:{userId}")
+                .SendAsync("TournamentPrizeWon", new
+                {
+                    Tournament = tournament,
+                    Prize = prize,
+                    FinalPosition = finalPosition
+                }, cancellationToken);
+
+            _logger.LogDebug("Tournament prize won broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting tournament prize won to user {UserId}, tournament {TournamentId}",
+                userId, tournament.InstanceId);
+        }
+    }
 }
 

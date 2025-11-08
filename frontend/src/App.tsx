@@ -4,12 +4,13 @@ import { signalRService } from './services/signalr';
 import { MissionList } from './components/MissionList';
 import { BonusList } from './components/BonusList';
 import { MiniGameList } from './components/MiniGameList';
+import { TournamentList } from './components/TournamentList';
 import type { Mission } from './types';
 
 // Hardcoded user ID for MVP testing
 const TEST_USER_ID = 'test-user-123';
 
-type ActiveTab = 'missions' | 'bonuses' | 'minigames';
+type ActiveTab = 'missions' | 'bonuses' | 'minigames' | 'tournaments';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('missions');
@@ -206,6 +207,16 @@ function App() {
             >
               🎮 Mini Games
             </button>
+            <button
+              onClick={() => setActiveTab('tournaments')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                activeTab === 'tournaments'
+                  ? 'border-orange-600 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🏆 Tournaments
+            </button>
           </nav>
         </div>
 
@@ -278,6 +289,10 @@ function App() {
 
         {activeTab === 'minigames' && (
           <MiniGameList userId={TEST_USER_ID} />
+        )}
+
+        {activeTab === 'tournaments' && (
+          <TournamentList userId={TEST_USER_ID} />
         )}
       </main>
 

@@ -125,5 +125,48 @@ public interface IProgressBroadcaster
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Completion task</returns>
     Task BroadcastMiniGameAvailableAsync(string userId, MiniGame game, CancellationToken cancellationToken = default);
+
+    // ========== TOURNAMENT EVENTS ==========
+
+    /// <summary>
+    /// Broadcasts that a user registered for a tournament.
+    /// Frontend event: "TournamentRegistered"
+    /// </summary>
+    /// <param name="userId">Unique identifier of the user</param>
+    /// <param name="tournament">The tournament that was registered for</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastTournamentRegisteredAsync(string userId, Tournament tournament, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a tournament leaderboard was updated.
+    /// Frontend event: "TournamentLeaderboardUpdated"
+    /// </summary>
+    /// <param name="tournamentInstanceId">Tournament instance identifier</param>
+    /// <param name="participants">Updated leaderboard participants</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastTournamentLeaderboardUpdatedAsync(int tournamentInstanceId, List<TournamentParticipant> participants, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a tournament status changed.
+    /// Frontend event: "TournamentStatusChanged"
+    /// </summary>
+    /// <param name="tournament">The tournament with updated status</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastTournamentStatusChangedAsync(Tournament tournament, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a tournament finished and prizes were awarded.
+    /// Frontend event: "TournamentPrizeWon"
+    /// </summary>
+    /// <param name="userId">Unique identifier of the user who won</param>
+    /// <param name="tournament">The tournament that finished</param>
+    /// <param name="prize">The prize that was won</param>
+    /// <param name="finalPosition">User's final position in tournament</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastTournamentPrizeWonAsync(string userId, Tournament tournament, TournamentPrize prize, int finalPosition, CancellationToken cancellationToken = default);
 }
 
