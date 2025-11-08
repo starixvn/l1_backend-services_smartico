@@ -9,26 +9,26 @@
 ### High-Level Overview
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                    PRESENTATION LAYER                     │
-│                  (React 19 + TypeScript)                 │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────── ┐│
-│  │  Missions  │ │  Bonuses   │ │ Mini Games │ │Tournaments││
-│  │    Tab     │ │    Tab     │ │    Tab     │ │  Tab      ││
-│  └────────────┘ └────────────┘ └────────────┘ └───────────┘│
-└────────────┬──────────────────────┬────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                    PRESENTATION LAYER                             │
+│                  (React 19 + TypeScript)                         │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐│
+│  │ Missions │ │ Bonuses  │ │MiniGames │ │Tournament│ │ Levels ││
+│  │   Tab    │ │   Tab    │ │   Tab    │ │   Tab    │ │  Tab   ││
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └────────┘│
+└────────────┬──────────────────────┬──────────────────────────────┘
              │                      │
              │ HTTP REST API        │ WebSocket (SignalR)
              │ (JSON)               │ (Real-time Events)
              │                      │
-┌────────────▼──────────────────────▼────────────────────────┐
-│                      API LAYER                             │
-│              (.NET 9 / ASP.NET Core 9)                    │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │         RESTful Controllers + SignalR Hub           │  │
-│  │  [Missions] [Bonuses] [MiniGames] [Tournaments]    │  │
-│  │              [ProgressHub - SignalR]                │  │
-│  └──────────────┬──────────────────────────────────────┘  │
+┌────────────▼──────────────────────▼──────────────────────────────┐
+│                      API LAYER                                   │
+│              (.NET 9 / ASP.NET Core 9)                          │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │         RESTful Controllers + SignalR Hub               │    │
+│  │  [Missions] [Bonuses] [MiniGames] [Tournaments] [Levels]│    │
+│  │              [ProgressHub - SignalR]                    │    │
+│  └──────────────┬──────────────────────────────────────────┘    │
 │                 │                                          │
 │                 │ MediatR (CQRS)                          │
 │                 │                                          │
@@ -47,7 +47,7 @@
 │  ┌──────────────▼──────────────────────────────────────┐  │
 │  │              DOMAIN LAYER                           │  │
 │  │         (Entities, Enums, Interfaces)              │  │
-│  │  - Mission, Bonus, MiniGame, Tournament            │  │
+│  │  - Mission, Bonus, MiniGame, Tournament, Level     │  │
 │  │  - IProgressBroadcaster (Unified Interface)        │  │
 │  │  - ISmartico*ApiClient (Repository Pattern)        │  │
 │  └──────────────┬──────────────────────────────────────┘  │
@@ -78,11 +78,12 @@
 - Bonus, ClaimBonusResult
 - MiniGame, MiniGamePrize, PlayMiniGameResult
 - Tournament, TournamentPrize, TournamentParticipant, RegisterTournamentResult
+- Level, UserLevelProgress
 
 **Enums**: 15+ enums for status, types, and classifications
 
 **Interfaces**:
-- `IProgressBroadcaster` - Unified SignalR event broadcaster (12 events)
+- `IProgressBroadcaster` - Unified SignalR event broadcaster (14 events)
 - `ISmartico*ApiClient` - Repository abstractions for each feature
 
 **Principles**:
@@ -101,6 +102,7 @@
 - `GetMiniGamesQuery` → Handler (30s cache) → Response
 - `GetTournamentsQuery` → Handler (30s cache) → Response
 - `GetLeaderboardQuery` → Handler (30s cache) → Response
+- `GetUserLevelProgressQuery` → Handler (30s cache) → Response
 
 **Commands** (Write Operations):
 - `OptInMissionCommand` → Validator → Handler → Response
@@ -135,6 +137,7 @@
 - `SmarticoBonusApiClient` - Demo: 5 bonuses
 - `SmarticoMiniGameApiClient` - Demo: 5 games with prize distribution
 - `SmarticoTournamentApiClient` - Demo: 3 tournaments with leaderboards
+- `SmarticoLevelApiClient` - Demo: 7 levels (Bronze → Mythic), 4 users
 
 **Dependency Injection**:
 - `DependencyInjection.cs` - Service registration
@@ -149,11 +152,12 @@
 - `BonusesController` - CQRS via MediatR
 - `MiniGamesController` - CQRS via MediatR
 - `TournamentsController` - CQRS via MediatR
+- `LevelsController` - CQRS via MediatR
 
 **SignalR Hub**:
 - `ProgressHub` at `/hubs/progress`
 - Connection with `?userId={userId}`
-- 12 client event methods
+- 14 client event methods (ready for future level-up broadcasts)
 
 **Features**:
 - OpenAPI/Swagger documentation
@@ -254,6 +258,8 @@ Event subscriptions registered:
     - onTournamentRegistered (future)
     - onLeaderboardUpdated (future)
     - onTournamentStatusChanged (future)
+    - onLevelProgressUpdated (ready)
+    - onLevelUpAchieved (ready)
 ```
 
 ### Broadcasting Pattern
@@ -322,13 +328,16 @@ App.tsx (Root)
 │   ├── Missions Tab
 │   ├── Bonuses Tab
 │   ├── Mini Games Tab
-│   └── Tournaments Tab
+│   ├── Tournaments Tab
+│   └── Levels Tab
 └── Tab Content
     ├── MissionList → MissionCard[]
     ├── BonusList → BonusCard[]
     ├── MiniGameList → MiniGameCard[]
-    └── TournamentList → TournamentCard[]
-                      └── TournamentLeaderboard (Modal)
+    ├── TournamentList → TournamentCard[]
+    │                 └── TournamentLeaderboard (Modal)
+    └── LevelCard → LevelProgressBar
+                 └── User Switcher Dropdown (Demo)
 ```
 
 ### State Management
@@ -358,6 +367,7 @@ useEffect(() => {
 - `bonusService.ts` - Fetch API
 - `miniGameService.ts` - Fetch API
 - `tournamentService.ts` - Fetch API
+- `levelService.ts` - Fetch API
 
 **SignalR Service** (Singleton):
 - `signalr.ts` - Connection management + event subscriptions
@@ -542,4 +552,4 @@ Load Balancer (Azure/AWS)
 *For implementation details and code examples, see [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)*
 
 *Last Updated: November 8, 2025*
-*Version: 1.0*
+*Version: 2.0 - Player Levels Feature Added*
