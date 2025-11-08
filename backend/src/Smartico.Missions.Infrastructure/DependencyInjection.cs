@@ -25,6 +25,10 @@ public static class DependencyInjection
         services.Configure<SmarticoApiOptions>(
             configuration.GetSection("Smartico"));
 
+        // Configure Smartico Bonus API Options
+        services.Configure<SmarticoBonusApiOptions>(
+            configuration.GetSection("SmarticoBonusApi"));
+
         // Configure Cache Options
         services.Configure<CacheOptions>(
             configuration.GetSection("Cache"));
@@ -33,11 +37,22 @@ public static class DependencyInjection
         services.AddSingleton<ICacheService, MemoryCacheService>();
 
         // Register Progress Broadcaster (SignalR)
+        // Handles all real-time events: Mission progress, Badge earned, Bonus issued/claimed/expired
         // Note: Requires SignalR to be configured in API layer
         services.AddSingleton<IProgressBroadcaster, SignalRProgressBroadcaster>();
 
         // Register Smartico API Client with Polly resilience
         services.AddHttpClient<ISmarticoApiClient, SmarticoApiClient>()
+            .AddPolicyHandler(HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .WaitAndRetryAsync(
+                    retryCount: 3,
+                    sleepDurationProvider: retryAttempt =>
+                        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+            .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30)));
+
+        // Register Smartico Bonus API Client with Polly resilience
+        services.AddHttpClient<ISmarticoBonusApiClient, SmarticoBonusApiClient>()
             .AddPolicyHandler(HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(

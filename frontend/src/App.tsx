@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { api } from './services/api';
 import { signalRService } from './services/signalr';
 import { MissionList } from './components/MissionList';
+import { BonusList } from './components/BonusList';
 import type { Mission } from './types';
 
 // Hardcoded user ID for MVP testing
 const TEST_USER_ID = 'test-user-123';
 
+type ActiveTab = 'missions' | 'bonuses';
+
 function App() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('missions');
   const [missions, setMissions] = useState<Mission[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMissionId, setLoadingMissionId] = useState<number | undefined>();
@@ -135,9 +139,9 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">🎯 Missions & Badges</h1>
+              <h1 className="text-3xl font-bold text-gray-900">🎯 Smartico Gamification</h1>
               <p className="text-sm text-gray-600 mt-1">
-                MVP Frontend Demo - User ID: <code className="bg-gray-100 px-2 py-1 rounded">{TEST_USER_ID}</code>
+                Missions, Badges & Bonuses - User ID: <code className="bg-gray-100 px-2 py-1 rounded">{TEST_USER_ID}</code>
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -168,6 +172,32 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Tabs */}
+        <div className="mb-8 border-b border-gray-200">
+          <nav className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('missions')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                activeTab === 'missions'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🎯 Missions
+            </button>
+            <button
+              onClick={() => setActiveTab('bonuses')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                activeTab === 'bonuses'
+                  ? 'border-green-600 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🎁 Bonuses
+            </button>
+          </nav>
+        </div>
+
         {/* Error Banner */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
@@ -184,8 +214,11 @@ function App() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Content based on active tab */}
+        {activeTab === 'missions' && (
+          <>
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-2xl font-bold text-gray-900">{missions.length}</div>
             <div className="text-sm text-gray-600">Total Missions</div>
@@ -210,20 +243,26 @@ function App() {
           </div>
         </div>
 
-        {/* Mission List */}
-        {isLoading && missions.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading missions...</p>
-          </div>
-        ) : (
-          <MissionList
-            missions={missions}
-            onOptIn={handleOptIn}
-            onClaim={handleClaim}
-            isLoading={!!loadingMissionId}
-            loadingMissionId={loadingMissionId}
-          />
+            {/* Mission List */}
+            {isLoading && missions.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="text-gray-600 mt-4">Loading missions...</p>
+              </div>
+            ) : (
+              <MissionList
+                missions={missions}
+                onOptIn={handleOptIn}
+                onClaim={handleClaim}
+                isLoading={!!loadingMissionId}
+                loadingMissionId={loadingMissionId}
+              />
+            )}
+          </>
+        )}
+
+        {activeTab === 'bonuses' && (
+          <BonusList userId={TEST_USER_ID} />
         )}
       </main>
 

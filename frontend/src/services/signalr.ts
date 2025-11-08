@@ -1,11 +1,15 @@
 import * as signalR from '@microsoft/signalr';
 import type { Mission, Badge } from '../types';
+import type { Bonus } from '../types/bonus';
 
 const HUB_URL = 'http://localhost:5227/hubs/progress';
 
 export type ProgressUpdateHandler = (mission: Mission) => void;
 export type MissionCompletedHandler = (mission: Mission) => void;
 export type BadgeEarnedHandler = (badge: Badge) => void;
+export type BonusIssuedHandler = (bonus: Bonus) => void;
+export type BonusClaimedHandler = (bonus: Bonus) => void;
+export type BonusExpiredHandler = (data: { bonusId: string }) => void;
 
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
@@ -94,6 +98,42 @@ class SignalRService {
     this.connection.on('BadgeEarned', (badge: Badge) => {
       console.log('🏆 Badge earned:', badge);
       handler(badge);
+    });
+  }
+
+  onBonusIssued(handler: BonusIssuedHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('BonusIssued', (bonus: Bonus) => {
+      console.log('🎁 Bonus issued:', bonus);
+      handler(bonus);
+    });
+  }
+
+  onBonusClaimed(handler: BonusClaimedHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('BonusClaimed', (bonus: Bonus) => {
+      console.log('✅ Bonus claimed:', bonus);
+      handler(bonus);
+    });
+  }
+
+  onBonusExpired(handler: BonusExpiredHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('BonusExpired', (data: { bonusId: string }) => {
+      console.log('⏰ Bonus expired:', data);
+      handler(data);
     });
   }
 

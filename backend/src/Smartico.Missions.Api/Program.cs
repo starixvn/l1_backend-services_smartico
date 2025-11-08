@@ -4,7 +4,10 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Smartico.Missions.Api.Filters;
 using Smartico.Missions.Api.Middleware;
+using Smartico.Missions.Application;
+using Smartico.Missions.Domain.Interfaces;
 using Smartico.Missions.Infrastructure;
+using Smartico.Missions.Infrastructure.SignalR;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -144,6 +147,9 @@ try
 
     // Memory Cache
     builder.Services.AddMemoryCache();
+
+    // Application services (MediatR, CQRS handlers)
+    builder.Services.AddApplication();
 
     // Infrastructure services (Smartico API Client, etc.)
     builder.Services.AddInfrastructure(builder.Configuration);
