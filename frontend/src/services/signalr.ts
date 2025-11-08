@@ -1,6 +1,7 @@
 import * as signalR from '@microsoft/signalr';
 import type { Mission, Badge } from '../types';
 import type { Bonus } from '../types/bonus';
+import type { MiniGame, MiniGamePrize } from '../types/minigame';
 
 const HUB_URL = 'http://localhost:5227/hubs/progress';
 
@@ -10,6 +11,9 @@ export type BadgeEarnedHandler = (badge: Badge) => void;
 export type BonusIssuedHandler = (bonus: Bonus) => void;
 export type BonusClaimedHandler = (bonus: Bonus) => void;
 export type BonusExpiredHandler = (data: { bonusId: string }) => void;
+export type MiniGamePlayedHandler = (game: MiniGame) => void;
+export type MiniGamePrizeWonHandler = (data: { game: MiniGame; prize: MiniGamePrize }) => void;
+export type MiniGameJackpotWonHandler = (data: { userId: string; game: MiniGame; jackpotAmount: number }) => void;
 
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
@@ -133,6 +137,42 @@ class SignalRService {
 
     this.connection.on('BonusExpired', (data: { bonusId: string }) => {
       console.log('⏰ Bonus expired:', data);
+      handler(data);
+    });
+  }
+
+  onMiniGamePlayed(handler: MiniGamePlayedHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('MiniGamePlayed', (game: MiniGame) => {
+      console.log('🎮 Mini game played:', game);
+      handler(game);
+    });
+  }
+
+  onMiniGamePrizeWon(handler: MiniGamePrizeWonHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('MiniGamePrizeWon', (data: { game: MiniGame; prize: MiniGamePrize }) => {
+      console.log('🏆 Mini game prize won:', data);
+      handler(data);
+    });
+  }
+
+  onMiniGameJackpotWon(handler: MiniGameJackpotWonHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('MiniGameJackpotWon', (data: { userId: string; game: MiniGame; jackpotAmount: number }) => {
+      console.log('💰 JACKPOT WON!', data);
       handler(data);
     });
   }

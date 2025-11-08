@@ -70,5 +70,60 @@ public interface IProgressBroadcaster
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Completion task</returns>
     Task BroadcastBonusExpiredAsync(string userId, string bonusId, CancellationToken cancellationToken = default);
+
+    // ========== MINI GAME EVENTS ==========
+
+    /// <summary>
+    /// Broadcasts that a user played a mini game.
+    /// Frontend event: "MiniGamePlayed"
+    /// </summary>
+    /// <param name="userId">Unique identifier of the user</param>
+    /// <param name="game">The mini game that was played</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastMiniGamePlayedAsync(string userId, MiniGame game, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a user won a prize in a mini game.
+    /// Frontend event: "MiniGamePrizeWon"
+    /// </summary>
+    /// <param name="userId">Unique identifier of the user</param>
+    /// <param name="game">The mini game where prize was won</param>
+    /// <param name="prize">The prize that was won</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastMiniGamePrizeWonAsync(string userId, MiniGame game, MiniGamePrize prize, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a user won the jackpot (sent to all connected clients).
+    /// Frontend event: "MiniGameJackpotWon"
+    /// </summary>
+    /// <param name="userId">Unique identifier of the user who won</param>
+    /// <param name="game">The mini game where jackpot was won</param>
+    /// <param name="jackpotAmount">The jackpot amount won</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastMiniGameJackpotWonAsync(string userId, MiniGame game, decimal jackpotAmount, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a prize pool has been updated (sent to all connected clients).
+    /// Frontend event: "MiniGamePoolUpdated"
+    /// </summary>
+    /// <param name="gameId">ID of the mini game</param>
+    /// <param name="prizeId">ID of the prize</param>
+    /// <param name="remainingPool">Remaining items in pool</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastMiniGamePoolUpdatedAsync(int gameId, int prizeId, int remainingPool, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a new mini game became available to the user.
+    /// Frontend event: "MiniGameAvailable"
+    /// </summary>
+    /// <param name="userId">Unique identifier of the user</param>
+    /// <param name="game">The mini game that became available</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastMiniGameAvailableAsync(string userId, MiniGame game, CancellationToken cancellationToken = default);
 }
 

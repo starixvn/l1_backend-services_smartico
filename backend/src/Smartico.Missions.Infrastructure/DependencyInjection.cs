@@ -61,6 +61,9 @@ public static class DependencyInjection
                         TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
             .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30)));
 
+        // Register Smartico Mini Game API Client (demo implementation, no HTTP needed)
+        services.AddSingleton<ISmarticoMiniGameApiClient, SmarticoMiniGameApiClient>();
+
         return services;
     }
 }

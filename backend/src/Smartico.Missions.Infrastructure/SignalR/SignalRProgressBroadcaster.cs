@@ -142,5 +142,113 @@ public class SignalRProgressBroadcaster : IProgressBroadcaster
             _logger.LogError(ex, "Error broadcasting bonus expired to user {UserId}", userId);
         }
     }
+
+    // ========== MINI GAME EVENTS ==========
+
+    public async Task BroadcastMiniGamePlayedAsync(string userId, MiniGame game, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting mini game played to user {UserId} for game {GameId}",
+                userId, game.Id);
+
+            await _hubContext.Clients
+                .Group($"user:{userId}")
+                .SendAsync("MiniGamePlayed", game, cancellationToken);
+
+            _logger.LogDebug("Mini game played broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting mini game played to user {UserId}", userId);
+        }
+    }
+
+    public async Task BroadcastMiniGamePrizeWonAsync(string userId, MiniGame game, MiniGamePrize prize, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting mini game prize won to user {UserId} for game {GameId}, prize {PrizeId}",
+                userId, game.Id, prize.Id);
+
+            await _hubContext.Clients
+                .Group($"user:{userId}")
+                .SendAsync("MiniGamePrizeWon", new { Game = game, Prize = prize }, cancellationToken);
+
+            _logger.LogDebug("Mini game prize won broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting mini game prize won to user {UserId}", userId);
+        }
+    }
+
+    public async Task BroadcastMiniGameJackpotWonAsync(string userId, MiniGame game, decimal jackpotAmount, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting mini game jackpot won to ALL USERS - Winner: {UserId}, Game: {GameId}, Amount: {Amount}",
+                userId, game.Id, jackpotAmount);
+
+            // Broadcast to ALL connected clients (not just user group)
+            await _hubContext.Clients.All
+                .SendAsync("MiniGameJackpotWon", new
+                {
+                    UserId = userId,
+                    Game = game,
+                    JackpotAmount = jackpotAmount
+                }, cancellationToken);
+
+            _logger.LogDebug("Mini game jackpot won broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting mini game jackpot won");
+        }
+    }
+
+    public async Task BroadcastMiniGamePoolUpdatedAsync(int gameId, int prizeId, int remainingPool, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting mini game pool updated to ALL USERS - Game: {GameId}, Prize: {PrizeId}, Remaining: {Remaining}",
+                gameId, prizeId, remainingPool);
+
+            // Broadcast to ALL connected clients (not just user group)
+            await _hubContext.Clients.All
+                .SendAsync("MiniGamePoolUpdated", new
+                {
+                    GameId = gameId,
+                    PrizeId = prizeId,
+                    RemainingPool = remainingPool
+                }, cancellationToken);
+
+            _logger.LogDebug("Mini game pool updated broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting mini game pool updated for game {GameId}, prize {PrizeId}",
+                gameId, prizeId);
+        }
+    }
+
+    public async Task BroadcastMiniGameAvailableAsync(string userId, MiniGame game, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting mini game available to user {UserId} for game {GameId}",
+                userId, game.Id);
+
+            await _hubContext.Clients
+                .Group($"user:{userId}")
+                .SendAsync("MiniGameAvailable", game, cancellationToken);
+
+            _logger.LogDebug("Mini game available broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting mini game available to user {UserId}", userId);
+        }
+    }
 }
 

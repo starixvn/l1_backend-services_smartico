@@ -1,0 +1,613 @@
+openapi: 3.0.3
+info:
+  title: Smartico Mini Games API
+  description: |
+    REST API for Mini Games feature, integrated into Smartico Missions & Badges platform.
+    Enables users to play interactive games and win prizes with real-time updates via SignalR.
+  version: 1.0.0
+  contact:
+    name: Smartico Development Team
+
+servers:
+  - url: http://localhost:5227
+    description: Local development server
+  - url: https://api.smartico.example.com
+    description: Production server
+
+tags:
+  - name: MiniGames
+    description: Mini game operations (browse, play)
+
+paths:
+  /api/mini-games:
+    get:
+      tags:
+        - MiniGames
+      summary: Get available mini games for user
+      description: |
+        Returns list of all mini games available to the specified user, including current state
+        (cooldowns, attempts remaining, jackpot amounts, prize pools).
+
+        **Caching:** Results cached for 30 seconds per user.
+
+        **Performance:** < 200ms (p95) with cache hit < 10ms.
+      operationId: getMiniGames
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: Unique identifier of the user
+          schema:
+            type: string
+            example: "user123"
+      responses:
+        '200':
+          description: Successfully retrieved mini games
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMiniGamesResponse'
+              examples:
+                success:
+                  $ref: '#/components/examples/GetMiniGamesSuccess'
+        '400':
+          description: Invalid request (missing userId)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidUserId:
+                  value:
+                    success: false
+                    error: "User ID is required"
+                    errorCode: "INVALID_USER_ID"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  value:
+                    success: false
+                    error: "Internal server error"
+                    errorCode: "SERVER_ERROR"
+
+  /api/mini-games/{gameId}/play:
+    post:
+      tags:
+        - MiniGames
+      summary: Play a mini game
+      description: |
+        Executes a mini game play for the specified user. Validates buy-in requirements,
+        cooldowns, and attempt limits. Awards prize immediately and broadcasts real-time event via SignalR.
+
+        **Side Effects:**
+        - Deducts buy-in cost from user balance
+        - Updates game cooldown and attempt counters
+        - Increments jackpot (if applicable)
+        - Decrements prize pool (if applicable)
+        - Invalidates mini games cache for user
+        - Broadcasts `MiniGamePlayed`, `MiniGamePrizeWon` (and possibly `MiniGameJackpotWon`) via SignalR
+
+        **Performance:** < 500ms (p95)
+      operationId: playMiniGame
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          description: ID of the mini game template to play
+          schema:
+            type: integer
+            format: int32
+            example: 1
+        - name: userId
+          in: query
+          required: true
+          description: Unique identifier of the user
+          schema:
+            type: string
+            example: "user123"
+      responses:
+        '200':
+          description: Game played successfully (check `success` field for win/loss)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayMiniGameResponse'
+              examples:
+                wonPoints:
+                  $ref: '#/components/examples/PlayWonPoints'
+                wonJackpot:
+                  $ref: '#/components/examples/PlayWonJackpot'
+                wonNoPrize:
+                  $ref: '#/components/examples/PlayWonNoPrize'
+        '400':
+          description: Invalid request or game validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayMiniGameResponse'
+              examples:
+                insufficientBalance:
+                  value:
+                    success: false
+                    errorCode: "INSUFFICIENT_BALANCE"
+                    errorMessage: "You need 50 more points to play this game"
+                cooldownActive:
+                  value:
+                    success: false
+                    errorCode: "COOLDOWN_ACTIVE"
+                    errorMessage: "Next play available in 2 hours 15 minutes"
+                maxAttemptsExceeded:
+                  value:
+                    success: false
+                    errorCode: "MAX_ATTEMPTS_EXCEEDED"
+                    errorMessage: "You've reached the maximum attempts for today"
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayMiniGameResponse'
+              examples:
+                gameNotFound:
+                  value:
+                    success: false
+                    errorCode: "GAME_NOT_FOUND"
+                    errorMessage: "This game is no longer available"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    GetMiniGamesResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          description: Whether the request succeeded
+          example: true
+        data:
+          type: object
+          required:
+            - miniGames
+          properties:
+            miniGames:
+              type: array
+              description: List of available mini games
+              items:
+                $ref: '#/components/schemas/MiniGame'
+        error:
+          type: string
+          description: Error message if request failed
+          nullable: true
+
+    PlayMiniGameResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Whether the play was successful
+          example: true
+        data:
+          type: object
+          nullable: true
+          properties:
+            prizeId:
+              type: integer
+              description: ID of the prize won (null if error or NO_PRIZE)
+              nullable: true
+              example: 101
+            prizeName:
+              type: string
+              description: Name of the prize won
+              nullable: true
+              example: "100 Points"
+            prizeType:
+              type: string
+              description: Type of prize won
+              enum:
+                - NO_PRIZE
+                - POINTS
+                - BONUS
+                - MANUAL
+                - SPIN
+                - JACKPOT
+                - CHANGE_LEVEL
+                - MISSION
+                - RAFFLE_TICKET
+                - GEMS_AND_DIAMONDS
+                - UNKNOWN
+              nullable: true
+              example: "POINTS"
+            prizeValue:
+              type: number
+              format: double
+              description: Numeric value of prize (for POINTS, SPIN, GEMS_AND_DIAMONDS)
+              nullable: true
+              example: 100
+            updatedGame:
+              $ref: '#/components/schemas/MiniGame'
+              description: Updated game state after play (new cooldown, attempts, jackpot)
+            errorCode:
+              type: string
+              description: Error code if play failed
+              nullable: true
+              example: null
+            errorMessage:
+              type: string
+              description: User-friendly error message if play failed
+              nullable: true
+              example: null
+
+    MiniGame:
+      type: object
+      required:
+        - id
+        - name
+        - gameType
+        - buyInType
+        - prizes
+      properties:
+        id:
+          type: integer
+          description: Unique identifier of the mini game template
+          example: 1
+        name:
+          type: string
+          description: Localized name of the mini game
+          example: "Daily Lucky Spin"
+        description:
+          type: string
+          description: Localized description of the mini game
+          nullable: true
+          example: "Spin the wheel once per day for free prizes!"
+        thumbnail:
+          type: string
+          format: uri
+          description: URL to the game's thumbnail image
+          nullable: true
+          example: "https://cdn.smartico.example.com/games/daily-spin.png"
+        gameType:
+          type: string
+          description: Type of game mechanic
+          enum:
+            - SPIN
+            - GIFTBOX
+            - SCRATCH
+            - MATCHX
+          example: "SPIN"
+        buyInType:
+          type: string
+          description: Buy-in requirement type
+          enum:
+            - FREE
+            - POINTS
+            - GEMS
+            - DIAMONDS
+            - SPIN
+          example: "FREE"
+        buyInCostPoints:
+          type: number
+          format: double
+          description: Cost in points (if buyInType is POINTS)
+          nullable: true
+          example: null
+        buyInCostGems:
+          type: number
+          format: double
+          description: Cost in gems (if buyInType is GEMS)
+          nullable: true
+          example: null
+        buyInCostDiamonds:
+          type: number
+          format: double
+          description: Cost in diamonds (if buyInType is DIAMONDS)
+          nullable: true
+          example: null
+        spinCount:
+          type: integer
+          description: Number of spin attempts remaining for user
+          nullable: true
+          example: 1
+        nextAvailableSpinTs:
+          type: integer
+          format: int64
+          description: Unix timestamp (milliseconds) when next play is available
+          nullable: true
+          example: null
+        jackpotCurrent:
+          type: number
+          format: double
+          description: Current jackpot amount
+          nullable: true
+          example: 105.00
+        jackpotAddOnAttempt:
+          type: number
+          format: double
+          description: Amount added to jackpot per play
+          nullable: true
+          example: 5.00
+        maxNumberOfAttempts:
+          type: integer
+          description: Maximum plays allowed per period
+          nullable: true
+          example: 1
+        maxSpinsPeriodMs:
+          type: integer
+          format: int64
+          description: Period duration in milliseconds
+          nullable: true
+          example: 86400000
+        activeFromDate:
+          type: integer
+          format: int64
+          description: Unix timestamp when game becomes available
+          nullable: true
+          example: null
+        activeTillDate:
+          type: integer
+          format: int64
+          description: Unix timestamp when game becomes unavailable
+          nullable: true
+          example: null
+        prizes:
+          type: array
+          description: List of prizes in this game
+          items:
+            $ref: '#/components/schemas/MiniGamePrize'
+
+    MiniGamePrize:
+      type: object
+      required:
+        - id
+        - name
+        - prizeType
+        - isSurcharge
+        - hidePrizeFromHistory
+      properties:
+        id:
+          type: integer
+          description: Unique identifier of the prize
+          example: 101
+        name:
+          type: string
+          description: Display name of the prize
+          example: "100 Points"
+        prizeType:
+          type: string
+          description: Type of prize
+          enum:
+            - NO_PRIZE
+            - POINTS
+            - BONUS
+            - MANUAL
+            - SPIN
+            - JACKPOT
+            - CHANGE_LEVEL
+            - MISSION
+            - RAFFLE_TICKET
+            - GEMS_AND_DIAMONDS
+            - UNKNOWN
+          example: "POINTS"
+        prizeValue:
+          type: number
+          format: double
+          description: Numeric value (for POINTS, SPIN, GEMS_AND_DIAMONDS)
+          nullable: true
+          example: 100
+        icon:
+          type: string
+          format: uri
+          description: URL to prize icon
+          nullable: true
+          example: "https://cdn.smartico.example.com/icons/points.png"
+        pool:
+          type: integer
+          description: Remaining items in stock
+          nullable: true
+          example: 100
+        poolInitial:
+          type: integer
+          description: Initial stock amount
+          nullable: true
+          example: 1000
+        winsCount:
+          type: integer
+          description: Total wins recorded
+          nullable: true
+          example: 42
+        acknowledgeMessage:
+          type: string
+          description: Message shown when prize won
+          nullable: true
+          example: "Congratulations! You won 100 points!"
+        acknowledgeDp:
+          type: string
+          format: uri
+          description: Deep link for action button
+          nullable: true
+          example: "/points"
+        acknowledgeActionTitle:
+          type: string
+          description: Action button text
+          nullable: true
+          example: "View Points"
+        outOfStockMessage:
+          type: string
+          description: Message when prize depleted
+          nullable: true
+          example: "This prize is currently out of stock"
+        isSurcharge:
+          type: boolean
+          description: Always available regardless of pool
+          example: false
+        hidePrizeFromHistory:
+          type: boolean
+          description: Hide from user's prize history
+          example: false
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          description: Always false for error responses
+          example: false
+        error:
+          type: string
+          description: User-friendly error message
+          example: "Internal server error"
+        errorCode:
+          type: string
+          description: Machine-readable error code
+          example: "SERVER_ERROR"
+
+  examples:
+    GetMiniGamesSuccess:
+      summary: Successful mini games retrieval
+      value:
+        success: true
+        data:
+          miniGames:
+            - id: 1
+              name: "Daily Lucky Spin"
+              description: "Spin the wheel once per day for free prizes!"
+              thumbnail: "https://cdn.smartico.example.com/games/daily-spin.png"
+              gameType: "SPIN"
+              buyInType: "FREE"
+              buyInCostPoints: null
+              buyInCostGems: null
+              buyInCostDiamonds: null
+              spinCount: 1
+              nextAvailableSpinTs: null
+              jackpotCurrent: 105.00
+              jackpotAddOnAttempt: 5.00
+              maxNumberOfAttempts: 1
+              maxSpinsPeriodMs: 86400000
+              activeFromDate: null
+              activeTillDate: null
+              prizes:
+                - id: 101
+                  name: "No Prize"
+                  prizeType: "NO_PRIZE"
+                  prizeValue: null
+                  icon: null
+                  pool: null
+                  poolInitial: null
+                  winsCount: 342
+                  acknowledgeMessage: "Better luck next time!"
+                  acknowledgeDp: null
+                  acknowledgeActionTitle: null
+                  outOfStockMessage: null
+                  isSurcharge: true
+                  hidePrizeFromHistory: false
+                - id: 102
+                  name: "100 Points"
+                  prizeType: "POINTS"
+                  prizeValue: 100
+                  icon: "https://cdn.smartico.example.com/icons/points.png"
+                  pool: 50
+                  poolInitial: 100
+                  winsCount: 50
+                  acknowledgeMessage: "Congratulations! You won 100 points!"
+                  acknowledgeDp: "/points"
+                  acknowledgeActionTitle: "View Points"
+                  outOfStockMessage: "Points prize is currently unavailable"
+                  isSurcharge: false
+                  hidePrizeFromHistory: false
+                - id: 103
+                  name: "Jackpot Prize"
+                  prizeType: "JACKPOT"
+                  prizeValue: null
+                  icon: "https://cdn.smartico.example.com/icons/jackpot.png"
+                  pool: 1
+                  poolInitial: 1
+                  winsCount: 12
+                  acknowledgeMessage: "JACKPOT! You won $105!"
+                  acknowledgeDp: "/jackpot-winners"
+                  acknowledgeActionTitle: "View Winners"
+                  outOfStockMessage: null
+                  isSurcharge: true
+                  hidePrizeFromHistory: false
+
+    PlayWonPoints:
+      summary: Successfully won 100 points
+      value:
+        success: true
+        data:
+          prizeId: 102
+          prizeName: "100 Points"
+          prizeType: "POINTS"
+          prizeValue: 100
+          updatedGame:
+            id: 1
+            name: "Daily Lucky Spin"
+            spinCount: 0
+            nextAvailableSpinTs: 1699574400000
+            jackpotCurrent: 110.00
+            # ... (other fields omitted for brevity)
+          errorCode: null
+          errorMessage: null
+
+    PlayWonJackpot:
+      summary: Successfully won jackpot
+      value:
+        success: true
+        data:
+          prizeId: 103
+          prizeName: "Jackpot Prize"
+          prizeType: "JACKPOT"
+          prizeValue: 105.00
+          updatedGame:
+            id: 1
+            name: "Daily Lucky Spin"
+            spinCount: 0
+            nextAvailableSpinTs: 1699574400000
+            jackpotCurrent: 10.00
+            # (jackpot reset to seed value)
+          errorCode: null
+          errorMessage: null
+
+    PlayWonNoPrize:
+      summary: No prize won
+      value:
+        success: true
+        data:
+          prizeId: 101
+          prizeName: "No Prize"
+          prizeType: "NO_PRIZE"
+          prizeValue: null
+          updatedGame:
+            id: 1
+            name: "Daily Lucky Spin"
+            spinCount: 0
+            nextAvailableSpinTs: 1699574400000
+            jackpotCurrent: 110.00
+          errorCode: null
+          errorMessage: null
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authenticated requests
+
+security:
+  - bearerAuth: []
