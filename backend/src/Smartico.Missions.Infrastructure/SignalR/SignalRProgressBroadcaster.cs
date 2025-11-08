@@ -341,5 +341,51 @@ public class SignalRProgressBroadcaster : IProgressBroadcaster
                 userId, tournament.InstanceId);
         }
     }
+
+    // ========== LEVEL EVENTS ==========
+
+    public async Task BroadcastLevelProgressUpdatedAsync(string userId, UserLevelProgress progress, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting level progress update to user {UserId} - Level: {CurrentLevel}, Progress: {Progress}%",
+                userId, progress.CurrentLevelName, progress.ProgressPercentage?.ToString("F2") ?? "N/A");
+
+            await _hubContext.Clients
+                .Group($"user:{userId}")
+                .SendAsync("LevelProgressUpdated", progress, cancellationToken);
+
+            _logger.LogDebug("Level progress update broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting level progress update to user {UserId}", userId);
+        }
+    }
+
+    public async Task BroadcastLevelUpAchievedAsync(string userId, Level newLevel, Level? previousLevel, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting level-up achievement to user {UserId} - New Level: {NewLevel} (from {PreviousLevel})",
+                userId, newLevel.Name, previousLevel?.Name ?? "Level 0");
+
+            await _hubContext.Clients
+                .Group($"user:{userId}")
+                .SendAsync("LevelUpAchieved", new
+                {
+                    NewLevel = newLevel,
+                    PreviousLevel = previousLevel,
+                    UserId = userId
+                }, cancellationToken);
+
+            _logger.LogDebug("Level-up achievement broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting level-up achievement to user {UserId}, new level {LevelId}",
+                userId, newLevel.Id);
+        }
+    }
 }
 

@@ -15,7 +15,8 @@
       "SlashCommand(/speckit.specify:*)",
       "Bash(powershell.exe -ExecutionPolicy Bypass -File \".specify/powershell/setup-plan.ps1\" -Json)",
       "SlashCommand(/speckit.implement MVP tasks to ensure working demo.)",
-      "SlashCommand(/speckit.implement:*)"
+      "SlashCommand(/speckit.implement:*)",
+      "Bash(dotnet --version:*)"
     ],
     "deny": [],
     "ask": []

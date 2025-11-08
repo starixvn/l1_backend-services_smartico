@@ -168,5 +168,28 @@ public interface IProgressBroadcaster
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Completion task</returns>
     Task BroadcastTournamentPrizeWonAsync(string userId, Tournament tournament, TournamentPrize prize, int finalPosition, CancellationToken cancellationToken = default);
+
+    // ========== LEVEL EVENTS ==========
+
+    /// <summary>
+    /// Broadcasts that a user's level progress was updated (points earned, progress percentage changed).
+    /// Frontend event: "LevelProgressUpdated"
+    /// </summary>
+    /// <param name="userId">Unique identifier of the user</param>
+    /// <param name="progress">Updated level progress data</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastLevelProgressUpdatedAsync(string userId, UserLevelProgress progress, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a user achieved a new level (level-up event).
+    /// Frontend event: "LevelUpAchieved"
+    /// </summary>
+    /// <param name="userId">Unique identifier of the user</param>
+    /// <param name="newLevel">The new level that was reached</param>
+    /// <param name="previousLevel">The previous level (null if leveling up from level 0)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastLevelUpAchievedAsync(string userId, Level newLevel, Level? previousLevel, CancellationToken cancellationToken = default);
 }
 

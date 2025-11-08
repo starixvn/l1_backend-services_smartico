@@ -5,12 +5,13 @@ import { MissionList } from './components/MissionList';
 import { BonusList } from './components/BonusList';
 import { MiniGameList } from './components/MiniGameList';
 import { TournamentList } from './components/TournamentList';
+import { LevelCard } from './components/LevelCard';
 import type { Mission } from './types';
 
 // Hardcoded user ID for MVP testing
 const TEST_USER_ID = 'test-user-123';
 
-type ActiveTab = 'missions' | 'bonuses' | 'minigames' | 'tournaments';
+type ActiveTab = 'missions' | 'bonuses' | 'minigames' | 'tournaments' | 'levels';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('missions');
@@ -20,6 +21,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [signalRConnected, setSignalRConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [selectedLevelUserId, setSelectedLevelUserId] = useState<string>(TEST_USER_ID);
 
   // Load missions on mount
   useEffect(() => {
@@ -217,6 +219,16 @@ function App() {
             >
               🏆 Tournaments
             </button>
+            <button
+              onClick={() => setActiveTab('levels')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                activeTab === 'levels'
+                  ? 'border-yellow-600 text-yellow-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              ⭐ Levels
+            </button>
           </nav>
         </div>
 
@@ -293,6 +305,39 @@ function App() {
 
         {activeTab === 'tournaments' && (
           <TournamentList userId={TEST_USER_ID} />
+        )}
+
+        {activeTab === 'levels' && (
+          <div className="max-w-3xl mx-auto">
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Level Progression</h2>
+                  <p className="text-gray-600">Track your progress and see how far you've come!</p>
+                </div>
+
+                {/* Demo User Switcher */}
+                <div className="relative">
+                  <label htmlFor="user-select" className="block text-xs text-gray-500 mb-1">
+                    Demo User
+                  </label>
+                  <select
+                    id="user-select"
+                    value={selectedLevelUserId}
+                    onChange={(e) => setSelectedLevelUserId(e.target.value)}
+                    className="block w-48 px-4 py-2 pr-8 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <option value="test-user-123">New User (Bronze - 0 pts)</option>
+                    <option value="newbie">Newbie (Bronze - 50 pts)</option>
+                    <option value="user123">User123 (Gold - 1,250 pts)</option>
+                    <option value="demo_user">Demo User (Platinum - 3,500 pts)</option>
+                    <option value="elite">Elite (Diamond - 15,000 pts)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <LevelCard userId={selectedLevelUserId} />
+          </div>
         )}
       </main>
 
