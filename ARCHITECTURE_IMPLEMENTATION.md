@@ -16,6 +16,10 @@
 │  │ Missions │ │ Bonuses  │ │MiniGames │ │Tournament│ │ Levels ││
 │  │   Tab    │ │   Tab    │ │   Tab    │ │   Tab    │ │  Tab   ││
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └────────┘│
+│  ┌──────────────────────────────────────────────────────────────┐│
+│  │                 Jackpots Page (Tabbed)                       ││
+│  │            Active Jackpots | Recent Winners                  ││
+│  └──────────────────────────────────────────────────────────────┘│
 └────────────┬──────────────────────┬──────────────────────────────┘
              │                      │
              │ HTTP REST API        │ WebSocket (SignalR)
@@ -27,7 +31,7 @@
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │         RESTful Controllers + SignalR Hub               │    │
 │  │  [Missions] [Bonuses] [MiniGames] [Tournaments] [Levels]│    │
-│  │              [ProgressHub - SignalR]                    │    │
+│  │              [Jackpots] [ProgressHub - SignalR]         │    │
 │  └──────────────┬──────────────────────────────────────────┘    │
 │                 │                                          │
 │                 │ MediatR (CQRS)                          │
@@ -79,12 +83,13 @@
 - MiniGame, MiniGamePrize, PlayMiniGameResult
 - Tournament, TournamentPrize, TournamentParticipant, RegisterTournamentResult
 - Level, UserLevelProgress
+- Jackpot, JackpotWinner, JackpotPot, JackpotPublicMeta
 
 **Enums**: 15+ enums for status, types, and classifications
 
 **Interfaces**:
-- `IProgressBroadcaster` - Unified SignalR event broadcaster (14 events)
-- `ISmartico*ApiClient` - Repository abstractions for each feature
+- `IProgressBroadcaster` - Unified SignalR event broadcaster (18 events)
+- `ISmartico*ApiClient` - Repository abstractions for each feature (including ISmarticoJackpotApiClient)
 
 **Principles**:
 - No dependencies on external layers
@@ -103,6 +108,8 @@
 - `GetTournamentsQuery` → Handler (30s cache) → Response
 - `GetLeaderboardQuery` → Handler (30s cache) → Response
 - `GetUserLevelProgressQuery` → Handler (30s cache) → Response
+- `GetJackpotsQuery` → Handler (30s cache) → Response
+- `GetJackpotWinnersQuery` → Handler (30s cache) → Response
 
 **Commands** (Write Operations):
 - `OptInMissionCommand` → Validator → Handler → Response
@@ -110,6 +117,8 @@
 - `ClaimBonusCommand` → Validator → Handler (cache invalidation + broadcast) → Response
 - `PlayMiniGameCommand` → Validator → Handler (cache invalidation + broadcast) → Response
 - `RegisterTournamentCommand` → Validator → Handler (cache invalidation) → Response
+- `OptInJackpotCommand` → Validator → Handler (cache invalidation + broadcast) → Response
+- `OptOutJackpotCommand` → Validator → Handler (cache invalidation + broadcast) → Response
 
 **Features**:
 - FluentValidation for all commands
@@ -129,8 +138,9 @@
 
 **SignalR Broadcasting**:
 - `SignalRProgressBroadcaster` implements `IProgressBroadcaster`
-- 12 real-time events across 4 features
+- 18 real-time events across 6 features
 - User-scoped groups: `user:{userId}`
+- Global broadcasts: `Clients.All` (for jackpot pool/temperature updates)
 
 **API Clients** (Demo Implementations):
 - `SmarticoMissionApiClient` - Legacy direct service
@@ -138,6 +148,7 @@
 - `SmarticoMiniGameApiClient` - Demo: 5 games with prize distribution
 - `SmarticoTournamentApiClient` - Demo: 3 tournaments with leaderboards
 - `SmarticoLevelApiClient` - Demo: 7 levels (Bronze → Mythic), 4 users
+- `SmarticoJackpotApiClient` - Demo: 5 jackpots (3 MultiUser, 2 Personal), 11 winners
 
 **Dependency Injection**:
 - `DependencyInjection.cs` - Service registration
@@ -153,11 +164,12 @@
 - `MiniGamesController` - CQRS via MediatR
 - `TournamentsController` - CQRS via MediatR
 - `LevelsController` - CQRS via MediatR
+- `JackpotsController` - CQRS via MediatR
 
 **SignalR Hub**:
 - `ProgressHub` at `/hubs/progress`
 - Connection with `?userId={userId}`
-- 14 client event methods (ready for future level-up broadcasts)
+- 18 client event methods across all gamification features
 
 **Features**:
 - OpenAPI/Swagger documentation
@@ -255,11 +267,16 @@ Event subscriptions registered:
     - onMiniGamePlayed
     - onMiniGamePrizeWon
     - onMiniGameJackpotWon
-    - onTournamentRegistered (future)
-    - onLeaderboardUpdated (future)
-    - onTournamentStatusChanged (future)
-    - onLevelProgressUpdated (ready)
-    - onLevelUpAchieved (ready)
+    - onTournamentRegistered
+    - onTournamentLeaderboardUpdated
+    - onTournamentStatusChanged
+    - onTournamentPrizeWon
+    - onLevelProgressUpdated
+    - onLevelUpAchieved
+    - onJackpotPoolUpdated
+    - onJackpotTemperatureChanged
+    - onJackpotExploded
+    - onJackpotWinnerAnnounced
 ```
 
 ### Broadcasting Pattern
@@ -329,15 +346,19 @@ App.tsx (Root)
 │   ├── Bonuses Tab
 │   ├── Mini Games Tab
 │   ├── Tournaments Tab
-│   └── Levels Tab
+│   ├── Levels Tab
+│   └── Jackpots Tab
 └── Tab Content
     ├── MissionList → MissionCard[]
     ├── BonusList → BonusCard[]
     ├── MiniGameList → MiniGameCard[]
     ├── TournamentList → TournamentCard[]
     │                 └── TournamentLeaderboard (Modal)
-    └── LevelCard → LevelProgressBar
-                 └── User Switcher Dropdown (Demo)
+    ├── LevelCard → LevelProgressBar
+    │             └── User Switcher Dropdown (Demo)
+    └── JackpotsPage (Tabbed)
+        ├── Active Jackpots Tab → JackpotList → JackpotCard[]
+        └── Recent Winners Tab → WinnerList → WinnerCard[]
 ```
 
 ### State Management
@@ -368,6 +389,7 @@ useEffect(() => {
 - `miniGameService.ts` - Fetch API
 - `tournamentService.ts` - Fetch API
 - `levelService.ts` - Fetch API
+- `jackpotService.ts` - Fetch API
 
 **SignalR Service** (Singleton):
 - `signalr.ts` - Connection management + event subscriptions
@@ -551,5 +573,5 @@ Load Balancer (Azure/AWS)
 
 *For implementation details and code examples, see [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)*
 
-*Last Updated: November 8, 2025*
-*Version: 2.0 - Player Levels Feature Added*
+*Last Updated: November 9, 2025*
+*Version: 3.0 - Jackpot System Feature Added*
