@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Smartico.Missions.Application.Features.Levels.Queries.GetUserLevelProgress;
+using Smartico.Missions.Application.Features.Levels.Queries.GetLevels;
 
 namespace Smartico.Missions.Api.Controllers;
 
@@ -60,6 +61,44 @@ public class LevelsController : ControllerBase
 
         _logger.LogInformation("Returning level progress for user {UserId} - Level: {Level}, Progress: {Progress}%",
             userId, response.Progress.CurrentLevelName, response.Progress.ProgressPercentage?.ToString("F2") ?? "Max Level");
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Gets all levels visible to the user, sorted by required points.
+    /// </summary>
+    /// <param name="userId">User identifier (default: user123 for demo)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of all levels with user's current level ID</returns>
+    /// <response code="200">Successfully retrieved levels</response>
+    /// <response code="400">Invalid user ID</response>
+    /// <response code="500">Internal server error</response>
+    [HttpGet]
+    [ProducesResponseType(typeof(GetLevelsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<GetLevelsResponse>> GetLevels(
+        [FromQuery] string userId = "user123",
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            _logger.LogWarning("GetLevels called with empty userId");
+            return BadRequest(new { error = "User ID is required" });
+        }
+
+        _logger.LogInformation("GET /api/levels - User: {UserId}", userId);
+
+        var query = new GetLevelsQuery(userId);
+        var response = await _mediator.Send(query, cancellationToken);
+
+        _logger.LogInformation(
+            "Returning {LevelCount} levels for user {UserId}, current level ID: {CurrentLevelId}",
+            response.Levels.Count,
+            userId,
+            response.UserCurrentLevelId
+        );
 
         return Ok(response);
     }

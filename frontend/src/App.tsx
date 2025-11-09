@@ -6,7 +6,10 @@ import { BonusList } from './components/BonusList';
 import { MiniGameList } from './components/MiniGameList';
 import { TournamentList } from './components/TournamentList';
 import { LevelCard } from './components/LevelCard';
+import { LevelList } from './components/LevelList';
+import { LevelUpNotification } from './components/LevelUpNotification';
 import type { Mission } from './types';
+import type { Level } from './types/level';
 
 // Hardcoded user ID for MVP testing
 const TEST_USER_ID = 'test-user-123';
@@ -22,6 +25,8 @@ function App() {
   const [signalRConnected, setSignalRConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [selectedLevelUserId, setSelectedLevelUserId] = useState<string>(TEST_USER_ID);
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [levelUpData, setLevelUpData] = useState<{ newLevel: Level; previousLevel: Level | null } | null>(null);
 
   // Load missions on mount
   useEffect(() => {
@@ -134,6 +139,36 @@ function App() {
     } finally {
       setLoadingMissionId(undefined);
     }
+  };
+
+  const handleTestLevelUp = () => {
+    // Simulate level-up from Silver to Gold
+    const previousLevel: Level = {
+      id: 2,
+      name: 'Silver',
+      description: "You're gaining momentum! Keep playing to unlock even better rewards.",
+      image: 'https://images.example.com/levels/silver-badge.png',
+      requiredPoints: 500,
+      visibilityPoints: 0,
+      requiredLevelCounter1: null,
+      requiredLevelCounter2: null,
+      customData: '{"color":"#C0C0C0","tier":"intermediate"}',
+    };
+
+    const newLevel: Level = {
+      id: 3,
+      name: 'Gold',
+      description: "Impressive progress! You're now among the top players. Exclusive rewards await.",
+      image: 'https://images.example.com/levels/gold-badge.png',
+      requiredPoints: 1000,
+      visibilityPoints: 500,
+      requiredLevelCounter1: null,
+      requiredLevelCounter2: null,
+      customData: '{"color":"#FFD700","tier":"advanced"}',
+    };
+
+    setLevelUpData({ newLevel, previousLevel });
+    setShowLevelUpModal(true);
   };
 
   return (
@@ -316,8 +351,19 @@ function App() {
                   <p className="text-gray-600">Track your progress and see how far you've come!</p>
                 </div>
 
-                {/* Demo User Switcher */}
-                <div className="relative">
+                {/* Demo Controls */}
+                <div className="flex gap-3">
+                  {/* Test Level Up Button */}
+                  <button
+                    onClick={handleTestLevelUp}
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium px-4 py-2 rounded-lg shadow-md transition-all hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                    title="Test level-up notification"
+                  >
+                    🎉 Test Level Up
+                  </button>
+
+                  {/* Demo User Switcher */}
+                  <div className="relative">
                   <label htmlFor="user-select" className="block text-xs text-gray-500 mb-1">
                     Demo User
                   </label>
@@ -333,10 +379,21 @@ function App() {
                     <option value="demo_user">Demo User (Platinum - 3,500 pts)</option>
                     <option value="elite">Elite (Diamond - 15,000 pts)</option>
                   </select>
+                  </div>
                 </div>
               </div>
             </div>
             <LevelCard userId={selectedLevelUserId} />
+            <LevelList userId={selectedLevelUserId} />
+
+            {/* Level-Up Notification Modal */}
+            {showLevelUpModal && levelUpData && (
+              <LevelUpNotification
+                newLevel={levelUpData.newLevel}
+                previousLevel={levelUpData.previousLevel}
+                onClose={() => setShowLevelUpModal(false)}
+              />
+            )}
           </div>
         )}
       </main>

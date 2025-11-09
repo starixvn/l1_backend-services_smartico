@@ -1,4 +1,4 @@
-import type { UserLevelProgress, GetUserLevelProgressResponse } from '../types/level';
+import type { Level, UserLevelProgress, GetUserLevelProgressResponse } from '../types/level';
 
 const API_BASE_URL = 'http://localhost:5227/api';
 
@@ -40,5 +40,31 @@ export class LevelService {
     }
 
     return data.progress;
+  }
+
+  /**
+   * Fetches all levels visible to the user, sorted by required points.
+   * @param userId - User identifier
+   * @returns Promise resolving to levels list and user's current level ID
+   * @throws Error if API request fails
+   */
+  static async getLevels(userId: string): Promise<{ levels: Level[]; userCurrentLevelId: number }> {
+    console.log(`📊 Fetching levels list for user ${userId}`);
+
+    const response = await fetch(`${API_BASE_URL}/levels?userId=${encodeURIComponent(userId)}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to fetch levels:', errorText);
+      throw new Error(`Failed to fetch levels: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    console.log(
+      `✅ Fetched ${data.levels.length} levels for user ${userId}, current level ID: ${data.userCurrentLevelId}`
+    );
+
+    return data;
   }
 }
