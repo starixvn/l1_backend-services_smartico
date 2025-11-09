@@ -1,3 +1,5 @@
+using Smartico.Missions.Domain.Enums;
+
 namespace Smartico.Missions.Domain.Entities;
 
 /// <summary>
@@ -10,6 +12,11 @@ public record JackpotWinner
     /// Pot instance ID that was drawn.
     /// </summary>
     public required int JpPotId { get; init; }
+
+    /// <summary>
+    /// Type of jackpot (MultiUser or Personal) for filtering purposes.
+    /// </summary>
+    public required JackpotType JackpotType { get; init; }
 
     /// <summary>
     /// Flag indicating if the current logged-in user is this winner.

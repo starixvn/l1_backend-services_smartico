@@ -111,6 +111,8 @@ export interface JackpotDetails {
 export interface JackpotWinner {
   /** Pot instance ID that was drawn */
   jpPotId: number;
+  /** Type of jackpot (MultiUser or Personal) for filtering */
+  jackpotType: JackpotType;
   /** Flag indicating if the current logged-in user is this winner */
   isMe: boolean;
   /** Username of winner (masked for others) */
@@ -155,4 +157,12 @@ export interface OptOutJackpotResponse {
   jackpot: JackpotDetails;
   /** Success message */
   message: string;
+}
+
+/**
+ * API response for GET /api/jackpots/winners
+ */
+export interface GetJackpotWinnersResponse {
+  /** List of jackpot winners (last 30 days) */
+  winners: JackpotWinner[];
 }

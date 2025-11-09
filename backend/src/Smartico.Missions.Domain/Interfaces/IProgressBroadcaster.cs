@@ -1,4 +1,5 @@
 using Smartico.Missions.Domain.Entities;
+using Smartico.Missions.Domain.Enums;
 
 namespace Smartico.Missions.Domain.Interfaces;
 
@@ -191,5 +192,71 @@ public interface IProgressBroadcaster
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Completion task</returns>
     Task BroadcastLevelUpAchievedAsync(string userId, Level newLevel, Level? previousLevel, CancellationToken cancellationToken = default);
+
+    // ========== JACKPOT EVENTS ==========
+
+    /// <summary>
+    /// Broadcasts that a jackpot pool was updated (amount changed, registration count changed).
+    /// Sent to all connected clients. Frontend event: "JackpotPoolUpdated"
+    /// </summary>
+    /// <param name="templateId">Jackpot template ID</param>
+    /// <param name="currentPotJp">Current pot amount in jackpot currency</param>
+    /// <param name="currentPotUser">Current pot amount in user currency</param>
+    /// <param name="registrationCount">Current number of opted-in users</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastJackpotPoolUpdatedAsync(
+        int templateId,
+        decimal currentPotJp,
+        decimal currentPotUser,
+        int registrationCount,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a jackpot temperature changed (COLD/WARM/HOT/BURNING).
+    /// Sent to all connected clients. Frontend event: "JackpotTemperatureChanged"
+    /// </summary>
+    /// <param name="templateId">Jackpot template ID</param>
+    /// <param name="temperature">New temperature state</param>
+    /// <param name="currentPot">Current pot amount</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastJackpotTemperatureChangedAsync(
+        int templateId,
+        JackPotTemperature temperature,
+        decimal currentPot,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a jackpot exploded and winners were drawn.
+    /// Sent to all connected clients. Frontend event: "JackpotExploded"
+    /// </summary>
+    /// <param name="templateId">Jackpot template ID</param>
+    /// <param name="jackpotName">Name of the jackpot</param>
+    /// <param name="finalPot">Final pot amount before explosion</param>
+    /// <param name="winnerCount">Number of winners drawn</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastJackpotExplodedAsync(
+        int templateId,
+        string jackpotName,
+        decimal finalPot,
+        int winnerCount,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcasts that a jackpot winner was announced.
+    /// Sent to all connected clients. Frontend event: "JackpotWinnerAnnounced"
+    /// </summary>
+    /// <param name="templateId">Jackpot template ID</param>
+    /// <param name="jackpotName">Name of the jackpot</param>
+    /// <param name="winner">The jackpot winner details</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Completion task</returns>
+    Task BroadcastJackpotWinnerAnnouncedAsync(
+        int templateId,
+        string jackpotName,
+        JackpotWinner winner,
+        CancellationToken cancellationToken = default);
 }
 

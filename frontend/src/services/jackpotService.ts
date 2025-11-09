@@ -1,6 +1,9 @@
 import type {
   JackpotDetails,
+  JackpotWinner,
+  JackpotType,
   GetJackpotsResponse,
+  GetJackpotWinnersResponse,
   OptInJackpotResponse,
   OptOutJackpotResponse
 } from '../types/jackpot';
@@ -115,5 +118,37 @@ export class JackpotService {
     console.log(`✅ User ${userId} successfully opted out of jackpot ${templateId}`);
 
     return data;
+  }
+
+  /**
+   * Fetches recent jackpot winners with optional type filtering.
+   * @param userId - User identifier
+   * @param filterType - Optional filter by jackpot type (MultiUser/Personal)
+   * @returns Promise resolving to list of winners
+   * @throws Error if API request fails
+   */
+  static async getWinners(userId: string, filterType?: JackpotType): Promise<JackpotWinner[]> {
+    console.log(`🏆 Fetching jackpot winners for user ${userId}, filter: ${filterType ?? 'All'}`);
+
+    let url = `${API_BASE_URL}/jackpots/winners?userId=${encodeURIComponent(userId)}`;
+    if (filterType !== undefined) {
+      url += `&type=${filterType}`;
+    }
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to fetch winners:', errorText);
+      throw new Error(`Failed to fetch winners: ${response.statusText}`);
+    }
+
+    const data: GetJackpotWinnersResponse = await response.json();
+
+    console.log(
+      `✅ Fetched ${data.winners.length} winners for user ${userId} (filter: ${filterType ?? 'All'})`
+    );
+
+    return data.winners;
   }
 }

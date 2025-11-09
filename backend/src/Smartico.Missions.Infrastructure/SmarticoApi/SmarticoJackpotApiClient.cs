@@ -206,9 +206,11 @@ public class SmarticoJackpotApiClient : ISmarticoJackpotApiClient
     // Demo data: Recent winners (last 30 days)
     private static readonly List<JackpotWinner> _winners = new()
     {
+        // Mega Jackpot winners (MultiUser)
         new JackpotWinner
         {
-            JpPotId = 100, // Previous pot of Mega Jackpot
+            JpPotId = 100,
+            JackpotType = JackpotType.MultiUser,
             IsMe = false,
             PublicUsername = "J***n",
             AvatarId = "avatar_001",
@@ -221,6 +223,7 @@ public class SmarticoJackpotApiClient : ISmarticoJackpotApiClient
         new JackpotWinner
         {
             JpPotId = 100,
+            JackpotType = JackpotType.MultiUser,
             IsMe = false,
             PublicUsername = "M***e",
             AvatarId = "avatar_002",
@@ -233,6 +236,7 @@ public class SmarticoJackpotApiClient : ISmarticoJackpotApiClient
         new JackpotWinner
         {
             JpPotId = 100,
+            JackpotType = JackpotType.MultiUser,
             IsMe = false,
             PublicUsername = "A***a",
             AvatarId = "avatar_003",
@@ -242,9 +246,12 @@ public class SmarticoJackpotApiClient : ISmarticoJackpotApiClient
             WinDateTs = DateTimeOffset.UtcNow.AddDays(-2).ToUnixTimeMilliseconds(),
             JackpotName = "Mega Jackpot"
         },
+
+        // Community Pot winners (MultiUser)
         new JackpotWinner
         {
-            JpPotId = 99, // Previous pot of Community Pot
+            JpPotId = 99,
+            JackpotType = JackpotType.MultiUser,
             IsMe = false,
             PublicUsername = "S***h",
             AvatarId = "avatar_004",
@@ -256,7 +263,51 @@ public class SmarticoJackpotApiClient : ISmarticoJackpotApiClient
         },
         new JackpotWinner
         {
-            JpPotId = 98, // Previous Personal Vault pot
+            JpPotId = 99,
+            JackpotType = JackpotType.MultiUser,
+            IsMe = false,
+            PublicUsername = "K***y",
+            AvatarId = "avatar_006",
+            WinningAmountJpCurrency = 2850m,
+            WinningAmountWalletCurrency = 28.50m,
+            WinningPosition = 2,
+            WinDateTs = DateTimeOffset.UtcNow.AddDays(-5).ToUnixTimeMilliseconds(),
+            JackpotName = "Community Pot"
+        },
+
+        // Grand Prize winners (MultiUser)
+        new JackpotWinner
+        {
+            JpPotId = 101,
+            JackpotType = JackpotType.MultiUser,
+            IsMe = true,
+            PublicUsername = "user123", // Current user win!
+            AvatarId = "avatar_999",
+            WinningAmountJpCurrency = 85000m,
+            WinningAmountWalletCurrency = 850.00m,
+            WinningPosition = 1,
+            WinDateTs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds(),
+            JackpotName = "Grand Prize"
+        },
+        new JackpotWinner
+        {
+            JpPotId = 101,
+            JackpotType = JackpotType.MultiUser,
+            IsMe = false,
+            PublicUsername = "L***d",
+            AvatarId = "avatar_007",
+            WinningAmountJpCurrency = 25500m,
+            WinningAmountWalletCurrency = 255.00m,
+            WinningPosition = 2,
+            WinDateTs = DateTimeOffset.UtcNow.AddDays(-10).ToUnixTimeMilliseconds(),
+            JackpotName = "Grand Prize"
+        },
+
+        // Personal Vault winners (Personal)
+        new JackpotWinner
+        {
+            JpPotId = 98,
+            JackpotType = JackpotType.Personal,
             IsMe = false,
             PublicUsername = "R***t",
             AvatarId = "avatar_005",
@@ -265,6 +316,47 @@ public class SmarticoJackpotApiClient : ISmarticoJackpotApiClient
             WinningPosition = 1,
             WinDateTs = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds(),
             JackpotName = "Personal Vault"
+        },
+        new JackpotWinner
+        {
+            JpPotId = 97,
+            JackpotType = JackpotType.Personal,
+            IsMe = false,
+            PublicUsername = "T***r",
+            AvatarId = "avatar_008",
+            WinningAmountJpCurrency = 3200m,
+            WinningAmountWalletCurrency = 32.00m,
+            WinningPosition = 1,
+            WinDateTs = DateTimeOffset.UtcNow.AddDays(-12).ToUnixTimeMilliseconds(),
+            JackpotName = "Personal Vault"
+        },
+
+        // Lucky Draw winners (Personal)
+        new JackpotWinner
+        {
+            JpPotId = 96,
+            JackpotType = JackpotType.Personal,
+            IsMe = false,
+            PublicUsername = "P***e",
+            AvatarId = "avatar_009",
+            WinningAmountJpCurrency = 1850m,
+            WinningAmountWalletCurrency = 18.50m,
+            WinningPosition = 1,
+            WinDateTs = DateTimeOffset.UtcNow.AddDays(-15).ToUnixTimeMilliseconds(),
+            JackpotName = "Lucky Draw"
+        },
+        new JackpotWinner
+        {
+            JpPotId = 95,
+            JackpotType = JackpotType.Personal,
+            IsMe = false,
+            PublicUsername = "N***a",
+            AvatarId = "avatar_010",
+            WinningAmountJpCurrency = 1200m,
+            WinningAmountWalletCurrency = 12.00m,
+            WinningPosition = 1,
+            WinDateTs = DateTimeOffset.UtcNow.AddDays(-20).ToUnixTimeMilliseconds(),
+            JackpotName = "Lucky Draw"
         }
     };
 
@@ -407,22 +499,29 @@ public class SmarticoJackpotApiClient : ISmarticoJackpotApiClient
 
     public async Task<List<JackpotWinner>> GetWinnersAsync(string userId, JackpotType? filterType = null, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Fetching winners for user {UserId}, filter: {FilterType}", userId, filterType);
+        _logger.LogInformation("Fetching winners for user {UserId}, filter: {FilterType}", userId, filterType?.ToString() ?? "All");
 
         // Simulate API delay
         await Task.Delay(50, cancellationToken);
 
         var winners = _winners.Select(w => w with
         {
-            // Set IsMe flag if winner is current user
-            IsMe = w.PublicUsername.Replace("*", "").Equals(userId, StringComparison.OrdinalIgnoreCase)
-        }).ToList();
+            // Set IsMe flag if winner is current user (exact match)
+            IsMe = w.PublicUsername.Equals(userId, StringComparison.OrdinalIgnoreCase) ||
+                   (w.IsMe && userId == "user123") // Pre-marked winner for demo
+        }).AsEnumerable();
 
-        // Apply type filter if specified (would need to join with jackpots in real implementation)
-        // For demo, we just return all winners
+        // Apply type filter if specified
+        if (filterType.HasValue)
+        {
+            winners = winners.Where(w => w.JackpotType == filterType.Value);
+        }
 
-        _logger.LogInformation("Returning {Count} winners for user {UserId}", winners.Count, userId);
+        var result = winners.OrderByDescending(w => w.WinDateTs).ToList();
 
-        return winners;
+        _logger.LogInformation("Returning {Count} winners for user {UserId} (filtered: {Filtered})",
+            result.Count, userId, filterType.HasValue);
+
+        return result;
     }
 }

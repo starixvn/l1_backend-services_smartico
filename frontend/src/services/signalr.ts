@@ -2,6 +2,7 @@ import * as signalR from '@microsoft/signalr';
 import type { Mission, Badge } from '../types';
 import type { Bonus } from '../types/bonus';
 import type { MiniGame, MiniGamePrize } from '../types/minigame';
+import type { JackpotWinner, JackPotTemperature } from '../types/jackpot';
 
 const HUB_URL = 'http://localhost:5227/hubs/progress';
 
@@ -14,6 +15,37 @@ export type BonusExpiredHandler = (data: { bonusId: string }) => void;
 export type MiniGamePlayedHandler = (game: MiniGame) => void;
 export type MiniGamePrizeWonHandler = (data: { game: MiniGame; prize: MiniGamePrize }) => void;
 export type MiniGameJackpotWonHandler = (data: { userId: string; game: MiniGame; jackpotAmount: number }) => void;
+
+// Jackpot event handlers
+export type JackpotPoolUpdatedHandler = (data: {
+  templateId: number;
+  currentPotJp: number;
+  currentPotUser: number;
+  registrationCount: number;
+  timestamp: number;
+}) => void;
+
+export type JackpotTemperatureChangedHandler = (data: {
+  templateId: number;
+  temperature: JackPotTemperature;
+  currentPot: number;
+  timestamp: number;
+}) => void;
+
+export type JackpotExplodedHandler = (data: {
+  templateId: number;
+  jackpotName: string;
+  finalPot: number;
+  winnerCount: number;
+  timestamp: number;
+}) => void;
+
+export type JackpotWinnerAnnouncedHandler = (data: {
+  templateId: number;
+  jackpotName: string;
+  winner: JackpotWinner;
+  timestamp: number;
+}) => void;
 
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
@@ -173,6 +205,78 @@ class SignalRService {
 
     this.connection.on('MiniGameJackpotWon', (data: { userId: string; game: MiniGame; jackpotAmount: number }) => {
       console.log('💰 JACKPOT WON!', data);
+      handler(data);
+    });
+  }
+
+  // ========== JACKPOT EVENTS ==========
+
+  onJackpotPoolUpdated(handler: JackpotPoolUpdatedHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('JackpotPoolUpdated', (data: {
+      templateId: number;
+      currentPotJp: number;
+      currentPotUser: number;
+      registrationCount: number;
+      timestamp: number;
+    }) => {
+      console.log('🎰 Jackpot pool updated:', data);
+      handler(data);
+    });
+  }
+
+  onJackpotTemperatureChanged(handler: JackpotTemperatureChangedHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('JackpotTemperatureChanged', (data: {
+      templateId: number;
+      temperature: JackPotTemperature;
+      currentPot: number;
+      timestamp: number;
+    }) => {
+      console.log('🌡️ Jackpot temperature changed:', data);
+      handler(data);
+    });
+  }
+
+  onJackpotExploded(handler: JackpotExplodedHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('JackpotExploded', (data: {
+      templateId: number;
+      jackpotName: string;
+      finalPot: number;
+      winnerCount: number;
+      timestamp: number;
+    }) => {
+      console.log('💥 JACKPOT EXPLODED!', data);
+      handler(data);
+    });
+  }
+
+  onJackpotWinnerAnnounced(handler: JackpotWinnerAnnouncedHandler): void {
+    if (!this.connection) {
+      console.error('SignalR not connected');
+      return;
+    }
+
+    this.connection.on('JackpotWinnerAnnounced', (data: {
+      templateId: number;
+      jackpotName: string;
+      winner: JackpotWinner;
+      timestamp: number;
+    }) => {
+      console.log('🏆 Jackpot winner announced:', data);
       handler(data);
     });
   }

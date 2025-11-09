@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Smartico.Missions.Domain.Entities;
+using Smartico.Missions.Domain.Enums;
 using Smartico.Missions.Domain.Interfaces;
 
 namespace Smartico.Missions.Infrastructure.SignalR;
@@ -385,6 +386,128 @@ public class SignalRProgressBroadcaster : IProgressBroadcaster
         {
             _logger.LogError(ex, "Error broadcasting level-up achievement to user {UserId}, new level {LevelId}",
                 userId, newLevel.Id);
+        }
+    }
+
+    // ========== JACKPOT EVENTS ==========
+
+    public async Task BroadcastJackpotPoolUpdatedAsync(
+        int templateId,
+        decimal currentPotJp,
+        decimal currentPotUser,
+        int registrationCount,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting jackpot pool update to ALL USERS - Template: {TemplateId}, Pot: {PotJp}, Registrations: {Count}",
+                templateId, currentPotJp, registrationCount);
+
+            // Broadcast to ALL connected clients (jackpots are public information)
+            await _hubContext.Clients.All
+                .SendAsync("JackpotPoolUpdated", new
+                {
+                    TemplateId = templateId,
+                    CurrentPotJp = currentPotJp,
+                    CurrentPotUser = currentPotUser,
+                    RegistrationCount = registrationCount,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                }, cancellationToken);
+
+            _logger.LogDebug("Jackpot pool update broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting jackpot pool update for template {TemplateId}", templateId);
+        }
+    }
+
+    public async Task BroadcastJackpotTemperatureChangedAsync(
+        int templateId,
+        JackPotTemperature temperature,
+        decimal currentPot,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting jackpot temperature change to ALL USERS - Template: {TemplateId}, Temperature: {Temperature}, Pot: {Pot}",
+                templateId, temperature, currentPot);
+
+            // Broadcast to ALL connected clients
+            await _hubContext.Clients.All
+                .SendAsync("JackpotTemperatureChanged", new
+                {
+                    TemplateId = templateId,
+                    Temperature = temperature,
+                    CurrentPot = currentPot,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                }, cancellationToken);
+
+            _logger.LogDebug("Jackpot temperature change broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting jackpot temperature change for template {TemplateId}", templateId);
+        }
+    }
+
+    public async Task BroadcastJackpotExplodedAsync(
+        int templateId,
+        string jackpotName,
+        decimal finalPot,
+        int winnerCount,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting jackpot explosion to ALL USERS - {JackpotName} (Template: {TemplateId}), Final Pot: {FinalPot}, Winners: {WinnerCount}",
+                jackpotName, templateId, finalPot, winnerCount);
+
+            // Broadcast to ALL connected clients (major event!)
+            await _hubContext.Clients.All
+                .SendAsync("JackpotExploded", new
+                {
+                    TemplateId = templateId,
+                    JackpotName = jackpotName,
+                    FinalPot = finalPot,
+                    WinnerCount = winnerCount,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                }, cancellationToken);
+
+            _logger.LogDebug("Jackpot explosion broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting jackpot explosion for template {TemplateId}", templateId);
+        }
+    }
+
+    public async Task BroadcastJackpotWinnerAnnouncedAsync(
+        int templateId,
+        string jackpotName,
+        JackpotWinner winner,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Broadcasting jackpot winner announcement to ALL USERS - {JackpotName}, Winner: {Username}, Position: {Position}",
+                jackpotName, winner.PublicUsername, winner.WinningPosition);
+
+            // Broadcast to ALL connected clients
+            await _hubContext.Clients.All
+                .SendAsync("JackpotWinnerAnnounced", new
+                {
+                    TemplateId = templateId,
+                    JackpotName = jackpotName,
+                    Winner = winner,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                }, cancellationToken);
+
+            _logger.LogDebug("Jackpot winner announcement broadcasted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting jackpot winner announcement for template {TemplateId}", templateId);
         }
     }
 }

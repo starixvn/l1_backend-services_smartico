@@ -1,8 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Smartico.Missions.Application.Features.Jackpots.Queries.GetJackpots;
+using Smartico.Missions.Application.Features.Jackpots.Queries.GetWinners;
 using Smartico.Missions.Application.Features.Jackpots.Commands.OptIn;
 using Smartico.Missions.Application.Features.Jackpots.Commands.OptOut;
+using Smartico.Missions.Domain.Enums;
 
 namespace Smartico.Missions.Api.Controllers;
 
@@ -54,6 +56,50 @@ public class JackpotsController : ControllerBase
         _logger.LogInformation(
             "Returning {JackpotCount} jackpots for user {UserId}",
             response.Jackpots.Count,
+            userId
+        );
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Gets recent jackpot winners with optional type filtering.
+    /// Returns winners from the last 30 days.
+    /// </summary>
+    /// <param name="userId">User identifier (default: user123 for demo)</param>
+    /// <param name="type">Optional filter by jackpot type (1=MultiUser, 2=Personal)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of jackpot winners with positions, prizes, and masked usernames</returns>
+    /// <response code="200">Successfully retrieved winners</response>
+    /// <response code="400">Invalid parameters</response>
+    /// <response code="500">Internal server error</response>
+    [HttpGet("winners")]
+    [ProducesResponseType(typeof(GetJackpotWinnersResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<GetJackpotWinnersResponse>> GetWinners(
+        [FromQuery] string userId = "user123",
+        [FromQuery] JackpotType? type = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            _logger.LogWarning("GetWinners called with empty userId");
+            return BadRequest(new { error = "User ID is required" });
+        }
+
+        _logger.LogInformation(
+            "GET /api/jackpots/winners - User: {UserId}, Type: {FilterType}",
+            userId,
+            type?.ToString() ?? "All"
+        );
+
+        var query = new GetJackpotWinnersQuery(userId, type);
+        var response = await _mediator.Send(query, cancellationToken);
+
+        _logger.LogInformation(
+            "Returning {WinnerCount} jackpot winners for user {UserId}",
+            response.Winners.Count,
             userId
         );
 

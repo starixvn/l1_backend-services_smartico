@@ -12,15 +12,18 @@ public class OptInJackpotCommandHandler : IRequestHandler<OptInJackpotCommand, O
 {
     private readonly ISmarticoJackpotApiClient _jackpotApiClient;
     private readonly ICacheService _cacheService;
+    private readonly IProgressBroadcaster _progressBroadcaster;
     private readonly ILogger<OptInJackpotCommandHandler> _logger;
 
     public OptInJackpotCommandHandler(
         ISmarticoJackpotApiClient jackpotApiClient,
         ICacheService cacheService,
+        IProgressBroadcaster progressBroadcaster,
         ILogger<OptInJackpotCommandHandler> logger)
     {
         _jackpotApiClient = jackpotApiClient;
         _cacheService = cacheService;
+        _progressBroadcaster = progressBroadcaster;
         _logger = logger;
     }
 
@@ -45,8 +48,17 @@ public class OptInJackpotCommandHandler : IRequestHandler<OptInJackpotCommand, O
         var cacheKey = $"jackpots:{request.UserId}";
         await _cacheService.RemoveAsync(cacheKey);
 
+        // Broadcast pool update to all connected clients
+        await _progressBroadcaster.BroadcastJackpotPoolUpdatedAsync(
+            jackpot.JpTemplateId,
+            jackpot.Pot.CurrentPotAmount,
+            jackpot.Pot.CurrentPotAmountUserCurrency,
+            jackpot.RegistrationCount,
+            cancellationToken
+        );
+
         _logger.LogInformation(
-            "User {UserId} successfully opted in to jackpot {TemplateId}. Cache invalidated.",
+            "User {UserId} successfully opted in to jackpot {TemplateId}. Cache invalidated. Pool update broadcasted.",
             request.UserId,
             request.JackpotTemplateId
         );
