@@ -1,6 +1,6 @@
 # Feature Specification: Jackpot System
 
-**Version**: 1.0
+**Version**: 1.2
 **Status**: Draft
 **Created**: 2025-11-09
 **Last Updated**: 2025-11-09
@@ -13,17 +13,18 @@
 Jackpot System
 
 ### Brief Description
-A progressive jackpot system that allows users to enter jackpot draws using various currencies (points, gems, diamonds) and compete for growing prize pools. The system supports multiple jackpot types (progressive, fixed, daily, weekly, monthly) with real-time updates on pool amounts, participant counts, and winner announcements.
+A jackpot system that allows users to opt-in to jackpot draws and compete for growing prize pools. The system supports two jackpot types: **MultiUser** (shared pool among all users) and **Personal** (individual pool per user). Users opt-in for free, then contributions are automatically deducted during gameplay based on the jackpot's contribution type (Fixed amount or Percentage of bet). Features include real-time pool updates, temperature indicators (COLD/WARM/HOT/BURNING), and winner announcements.
 
 ### Problem Statement
 Users need an engaging, high-reward gamification mechanic that creates excitement through the possibility of winning significant prizes. Traditional progression systems (levels, missions) provide incremental rewards, but lack the thrill of potentially winning a large jackpot. This feature adds a lottery-style mechanic that increases user engagement and provides aspirational goals.
 
 ### Goals & Objectives
 - Increase user engagement through high-value prize opportunities
-- Provide multiple jackpot entry options to accommodate different user spending patterns
-- Create anticipation and excitement through visible pool growth and countdown timers
-- Encourage repeat visits through daily/weekly jackpot schedules
-- Maintain transparency by displaying recent winners and prize amounts
+- Provide free opt-in mechanics with automatic contribution during gameplay
+- Create anticipation and excitement through visible pool growth, temperature indicators, and explosion countdowns
+- Support both community-based (MultiUser) and individual (Personal) jackpot experiences
+- Offer flexible contribution models (Fixed amount or Percentage-based)
+- Maintain transparency by displaying recent winners, contribution rates, and pool temperatures
 
 ---
 
@@ -31,34 +32,41 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
 
 ### Primary User Scenarios
 
-#### Scenario 1: Discovering and Entering a Progressive Jackpot
+#### Scenario 1: Opting Into a MultiUser Jackpot
 **Actor**: Sarah, an active player with 5,000 points
 
 **Preconditions**:
 - Sarah has earned 5,000 points through gameplay
-- A progressive "Mega Jackpot" is active with current pool at 50,000 points
-- Entry cost is 100 points per entry
-- Max 10 entries per user
+- A MultiUser "Mega Jackpot" is active with current pool at 50,000 points (shared among all users)
+- Jackpot has Percentage contribution: 5% of each bet
+- Temperature: HOT (pool exceeds minimum threshold)
+- Sarah is not yet opted in
 
 **Steps**:
 1. Sarah navigates to the Jackpots section
 2. She sees the Mega Jackpot card displaying:
-   - Current pool: 50,000 points
-   - Entry cost: 100 points
-   - Participants: 312 users
-   - Draw date: "In 2 days, 5 hours"
-3. Sarah clicks "Enter Jackpot"
-4. System prompts: "How many entries? (1-10)"
-5. Sarah selects 5 entries (500 points total)
-6. System shows confirmation: "5 entries purchased. Your total entries: 5/10"
-7. Her points balance decreases from 5,000 to 4,500
-8. Jackpot pool increases to 50,500 points
-9. Participant count updates to 313
+   - Current pool: 50,000 points (growing)
+   - Temperature: 🔥 HOT
+   - Contribution rate: "5% of each bet"
+   - Registration count: 312 users
+   - Explosion estimate: "In 2 days, 5 hours"
+   - "Opt In" button (enabled)
+3. Sarah clicks "Opt In"
+4. System shows confirmation: "You're in! Your bets will now contribute to the Mega Jackpot pool."
+5. Registration count updates to 313
+6. Sarah's opt-in status changes to "Opted In"
+7. During subsequent gameplay:
+   - Sarah places a 100-point bet → 5 points contribute to jackpot pool (5%)
+   - Sarah places a 200-point bet → 10 points contribute to jackpot pool (5%)
+8. Pool grows to 50,015 points in real-time
+9. Temperature indicator may shift to BURNING as pool approaches max threshold
 
 **Expected Outcome**:
-- Sarah's entries are recorded
-- Pool amount increases immediately
-- Sarah can view her entry count on the jackpot card
+- Sarah is registered for the jackpot (free opt-in)
+- Her opt-in status is visible on the jackpot card
+- Automatic contributions happen during gameplay
+- Pool updates reflect her contributions in real-time
+- She can view temperature changes as pool grows
 
 #### Scenario 2: Viewing Recent Winners
 **Actor**: Mike, a new player
@@ -76,10 +84,10 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
    - Prize amount
    - Win date
 4. Mike sees entries like:
-   - "J***n won Daily Jackpot: 10,000 points (Nov 8)"
+   - "J***n won Community Jackpot: 10,000 points (Nov 8)"
    - "S***h won Mega Jackpot: 50,000 points (Nov 5)"
-5. Mike filters by "Daily" jackpots
-6. List updates to show only daily jackpot winners
+5. Mike filters by "MultiUser" jackpots
+6. List updates to show only MultiUser jackpot winners
 
 **Expected Outcome**:
 - Mike understands the potential prizes
@@ -88,43 +96,59 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
 
 ### Edge Cases & Error Scenarios
 
-#### Edge Case 1: Insufficient Balance
-**Scenario**: User attempts to enter jackpot without sufficient currency
+#### Edge Case 1: Opting Out After Registration
+**Scenario**: User wants to stop participating in a jackpot
 
 **Steps**:
-1. User has 50 points
-2. Jackpot entry costs 100 points
-3. User clicks "Enter Jackpot"
+1. User is currently opted in to "Mega Jackpot"
+2. User clicks "Opt Out" button
+3. System prompts confirmation: "Are you sure? You'll stop contributing to this jackpot."
+4. User confirms
 
 **Expected Behavior**:
-- System displays error: "Insufficient balance. You need 100 points but have 50 points."
-- No entry is processed
-- User balance remains unchanged
+- User's opt-in status changes to "Not Opted In"
+- Registration count decreases by 1
+- Future gameplay no longer contributes to this jackpot
+- Button changes from "Opt Out" to "Opt In"
 
-#### Edge Case 2: Maximum Entries Reached
-**Scenario**: User has already reached the maximum entry limit
-
-**Steps**:
-1. User has 10/10 entries in a jackpot
-2. User attempts to purchase more entries
-
-**Expected Behavior**:
-- "Enter Jackpot" button is disabled
-- Message displays: "Maximum entries reached (10/10)"
-- Option to view existing entries is available
-
-#### Edge Case 3: Jackpot Draw in Progress
-**Scenario**: User attempts to enter while draw is being processed
+#### Edge Case 2: Jackpot Explosion (Draw) in Progress
+**Scenario**: User attempts to opt-in while jackpot is exploding/drawing winner
 
 **Steps**:
-1. Draw time arrives
+1. Pool reaches explosion threshold (max amount exceeded)
 2. System begins processing winner selection
-3. User attempts to enter
+3. User attempts to opt in
 
 **Expected Behavior**:
-- Entry button is disabled
-- Message displays: "Draw in progress. New entries will be available for the next jackpot."
+- "Opt In" button is disabled
+- Message displays: "Jackpot draw in progress. New pot will be available soon."
 - User can view results once draw completes
+
+#### Edge Case 3: Already Opted In
+**Scenario**: User attempts to opt-in to a jackpot they're already registered for
+
+**Steps**:
+1. User is already opted in to "Community Jackpot"
+2. User views jackpot card
+
+**Expected Behavior**:
+- "Opt In" button is replaced with "Opt Out" button
+- Status badge shows: "✓ You're In"
+- Contribution rate is highlighted (e.g., "You contribute 5% per bet")
+
+#### Edge Case 4: Insufficient Balance for Contribution
+**Scenario**: User places bet but has insufficient balance after contribution deduction
+
+**Steps**:
+1. User is opted in to jackpot with Fixed contribution of 50 points
+2. User attempts to place 100-point bet
+3. User only has 120 points (not enough for 100 bet + 50 contribution)
+
+**Expected Behavior**:
+- System displays error: "Insufficient balance. Bet requires 150 points (100 bet + 50 jackpot contribution)."
+- Bet is not placed
+- No contribution is made
+- User balance remains unchanged
 
 ---
 
@@ -137,27 +161,48 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
 - Each jackpot shall show:
   - Name and description
   - Thumbnail image
-  - Current pool amount
-  - Entry cost and currency type
-  - Participant count
-  - Draw date/time with countdown timer
-  - Jackpot type badge (Progressive, Fixed, Daily, etc.)
-  - User's current entry count (if applicable)
-- Users shall be able to filter jackpots by type
+  - Current pool amount (in both jackpot currency and user wallet currency)
+  - Contribution type and value (e.g., "Fixed: 10 points per bet" or "Percentage: 5% of each bet")
+  - Registration count (number of opted-in users) for MultiUser jackpots
+  - Pool temperature indicator (COLD/WARM/HOT/BURNING) with visual styling
+  - Explosion estimate (time until pool is likely to explode/draw)
+  - Jackpot type badge (MultiUser or Personal)
+  - User's opt-in status ("Opted In" badge if registered)
+  - Opt In/Opt Out button based on current status
+- Users shall be able to filter jackpots by type (MultiUser/Personal)
+- Pool amounts shall display in real-time as other users contribute
 
-#### F2: Jackpot Entry
-- Users shall be able to enter jackpots using points, gems, or diamonds
+#### F2: Jackpot Opt-In/Opt-Out
+- Users shall be able to opt-in to jackpots (free registration, no upfront cost)
+- Users shall be able to opt-out at any time
 - System shall validate:
-  - Sufficient currency balance
-  - Entry limit not exceeded
-  - Jackpot is accepting entries (not drawn/closed)
-- Entry shall:
-  - Deduct currency immediately
-  - Record entry count for user
-  - Increase pool for progressive jackpots
-  - Update participant count
-  - Show confirmation with updated entry count
-- Users shall be able to enter multiple times (up to maximum limit)
+  - User is not already opted in (for opt-in requests)
+  - User is currently opted in (for opt-out requests)
+  - Jackpot is not in explosion/draw state
+- Opt-in shall:
+  - Register user for the jackpot
+  - Update registration count for MultiUser jackpots
+  - Enable automatic contributions during gameplay
+  - Show confirmation message with contribution details
+  - Change button from "Opt In" to "Opt Out"
+- Opt-out shall:
+  - Deregister user from the jackpot
+  - Update registration count for MultiUser jackpots
+  - Stop automatic contributions
+  - Show confirmation message
+  - Change button from "Opt Out" to "Opt In"
+
+#### F2.1: Automatic Contribution During Gameplay
+- When user is opted in and places a bet/wager:
+  - System shall calculate contribution based on contribution type:
+    - **Fixed**: Deduct fixed contribution amount (e.g., 10 points per bet)
+    - **Percentage**: Deduct percentage of bet amount (e.g., 5% of 100-point bet = 5 points)
+  - System shall validate user has sufficient balance for bet + contribution
+  - Contribution shall be added to appropriate pool:
+    - **MultiUser**: Add to shared pool visible to all users
+    - **Personal**: Add to user's individual pool
+  - Pool amount shall update in real-time for all viewing users
+  - Temperature may update if pool crosses thresholds
 
 #### F3: Winner Display
 - System shall display recent winners (last 30 days)
@@ -177,20 +222,28 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
 
 ### Data & Validation
 
-#### Entry Limits
-- Each jackpot defines maximum entries per user
-- System enforces limits before accepting payment
-- Users can view their current entry count vs maximum
+#### Contribution Validation
+- System validates sufficient balance before allowing bet when user is opted in
+- Contribution calculation is accurate based on type:
+  - Fixed: Exact amount per bet (e.g., 10 points)
+  - Percentage: Calculated from bet amount (e.g., 5% of 100 = 5 points)
+- Transaction is atomic (deduct bet + contribution together)
 
-#### Currency Validation
-- Entry cost can be in points, gems, diamonds, or free
-- System checks user's balance before entry
-- Transaction is atomic (deduct currency + record entry)
+#### Pool Temperature Calculation
+- Temperature thresholds are defined per jackpot:
+  - **COLD** (0): current_pot < (min_amount - seed_amount) / 2
+  - **WARM** (1): (min_amount - seed_amount) / 2 ≤ current_pot < min_amount
+  - **HOT** (2): min_amount ≤ current_pot < min_amount + 0.5 * (max_amount - min_amount)
+  - **BURNING** (3): current_pot ≥ min_amount + 0.5 * (max_amount - min_amount)
+- Temperature updates in real-time as pool grows
+- Visual indicators change based on temperature (colors, animations)
 
-#### Draw Scheduling
-- Each jackpot has a defined draw date/time
-- System prevents entries after draw begins
-- Countdown timer shows time remaining
+#### Explosion (Draw) Triggering
+- Each jackpot has explosion thresholds (min_amount, max_amount)
+- Explosion can occur when pool ≥ min_amount
+- Explosion is guaranteed when pool ≥ max_amount
+- System prevents opt-in/opt-out during explosion processing
+- Explosion timestamp is recorded for historical data
 
 ---
 
@@ -199,68 +252,92 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
 ### Measurable Outcomes
 
 #### User Engagement
-- 40% of active users enter at least one jackpot within first week
-- Average user enters jackpots 3+ times per week
-- Daily active users increase by 15% on jackpot draw days
+- 40% of active users opt-in to at least one jackpot within first week
+- Average user remains opted-in to 2+ jackpots simultaneously
+- Daily active users increase by 15% on jackpot explosion days
 
 #### Performance
 - Jackpot list loads in under 2 seconds
-- Entry transactions complete in under 1 second
-- Real-time pool updates appear within 2 seconds of entry
-- System supports 1,000 concurrent entries during peak times
+- Opt-in/opt-out transactions complete in under 500ms
+- Real-time pool updates appear within 2 seconds of contribution
+- System supports 1,000 concurrent users viewing jackpots during peak times
 
 #### User Satisfaction
-- Users can complete jackpot entry in under 30 seconds
-- 90% of users successfully enter jackpots on first attempt
-- Winner announcement reaches users within 5 seconds of draw completion
+- Users can complete jackpot opt-in in under 10 seconds
+- 95% of users successfully opt-in on first attempt
+- Winner announcement reaches users within 5 seconds of explosion completion
+- Temperature indicators update smoothly as pools grow
 
 #### System Reliability
-- Entry transactions have 99.9% success rate
-- Zero duplicate entries for same user/jackpot combination
+- Opt-in/opt-out transactions have 99.9% success rate
+- Zero duplicate opt-in records for same user/jackpot combination
 - Pool calculations are 100% accurate
+- Contribution deductions are atomic with bet transactions
+- Temperature calculations are deterministic and consistent
 
 ---
 
 ## Key Entities
 
-### Jackpot
-**Purpose**: Represents a jackpot draw opportunity
+### Jackpot (JackpotDetails)
+**Purpose**: Represents a jackpot template with current pot information
 
 **Attributes**:
-- Unique identifier
+- Template ID (unique identifier for jackpot configuration)
+- Jackpot type (MultiUser = 1, Personal = 2)
 - Name
 - Description
 - Thumbnail image URL
-- Jackpot type (Progressive, Fixed, Daily, Weekly, Monthly)
-- Entry cost amount
-- Entry cost currency (Points, Gems, Diamonds, Free)
-- Current pool amount
-- Maximum entries per user
-- Draw date/time
-- Status (Active, Drawing, Completed)
-- Participant count
+- Base currency (e.g., "USD", "Points")
+- User wallet currency (for display conversion)
+- **Contribution type** (Fixed = 1, Percentage = 2)
+- **Contribution value** (fixed amount or percentage, e.g., 10 or 5.0)
+- Current pot amount (in base currency)
+- Current pot amount (in user currency)
+- **Pool temperature** (COLD = 0, WARM = 1, HOT = 2, BURNING = 3)
+- Minimum pool amount (explosion threshold start)
+- Maximum pool amount (guaranteed explosion threshold)
+- Seed amount (initial pool value)
+- **Explosion date timestamp** (when pot exploded/will explode)
+- **Registration count** (number of opted-in users)
+- **User opt-in status** (boolean: is current user opted in)
+- Allow all games (boolean: jackpot applies to all games vs specific games)
+- Expose winners publicly (boolean: show winners in UI/API)
 
-### Jackpot Entry
-**Purpose**: Records user's participation in a jackpot
+### Jackpot Opt-In Record
+**Purpose**: Records user's registration for a jackpot
 
 **Attributes**:
-- Unique identifier
 - User identifier
-- Jackpot identifier
-- Entry count (number of entries purchased)
-- Total cost paid
-- Entry timestamp
+- Jackpot template ID
+- Opt-in timestamp
+- Opt-in status (Active, Opted Out)
+
+### Jackpot Pot
+**Purpose**: Represents a specific pot instance (for explosion tracking)
+
+**Attributes**:
+- Pot ID (unique identifier for this pot instance)
+- Template ID (parent jackpot template)
+- Current pot amount (base currency)
+- Current pot amount (user currency)
+- Temperature (COLD/WARM/HOT/BURNING)
+- Explosion date timestamp (when this pot exploded)
+- Status (Active, Exploding, Exploded)
 
 ### Jackpot Winner
-**Purpose**: Records jackpot draw winners
+**Purpose**: Records jackpot explosion winners
 
 **Attributes**:
-- Unique identifier
+- Pot ID (which pot instance)
 - User identifier
-- Jackpot identifier
-- Prize amount
-- Prize currency
-- Win date/time
+- Public username (masked for privacy, except for current user)
+- Avatar ID
+- Winning amount (in jackpot currency)
+- Winning amount (in user wallet currency)
+- **Winning position** (1st, 2nd, 3rd for multi-winner jackpots)
+- Win date timestamp
+- Is current user (boolean flag)
 
 ---
 
@@ -301,32 +378,38 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
 - Maximum 100 active jackpots at any time
 
 ### Data Assumptions
-- Demo data will simulate 5 jackpots with varying types
-- Demo users will have pre-configured entries
+- Demo data will simulate jackpots of both types (MultiUser and Personal)
+- Demo data will include both contribution types (Fixed and Percentage)
+- Demo jackpots will have various temperatures (COLD, WARM, HOT, BURNING)
+- Demo users will have pre-configured opt-in statuses
 - Winner history will include mock data for demonstration
-- Draw dates will be realistic (next few days/weeks)
+- Explosion timestamps will be realistic (next few hours/days)
 
 ---
 
 ## Scope
 
 ### In Scope
-- Display active jackpots with all required information
-- Entry process with validation and payment
-- Real-time pool/participant updates via SignalR
-- Winner history display with filtering
-- Demo data for MVP testing
+- Display active jackpots with all required information (pool, temperature, contribution rate, opt-in status)
+- Opt-in/opt-out process with validation
+- Real-time pool/temperature/registration count updates via SignalR
+- Temperature indicator visualization (COLD/WARM/HOT/BURNING)
+- Multi-currency support (base currency + user wallet currency conversion)
+- Winner history display with filtering and position display
+- Demo data for MVP testing (both jackpot types, both contribution types, all temperatures)
 - Integration with existing infrastructure
 
 ### Out of Scope
-- Winner selection algorithm (external system)
-- Draw processing mechanism (external system)
+- Actual gameplay/betting mechanics (existing feature - we only handle contribution deduction)
+- Winner selection algorithm (external system - Smartico API handles explosion and winner drawing)
+- Explosion trigger processing (external system)
+- Contribution transaction processing during bets (handled by existing bet system)
 - Currency earning mechanisms (existing feature)
 - User balance management (existing feature)
-- Payment gateway integration (handled by existing system)
 - Email/push notifications for winners
-- Jackpot creation/management UI (admin feature)
+- Jackpot creation/management UI (admin feature - BackOffice)
 - Historical analytics and reporting
+- Game eligibility configuration (simplified to "all games" for MVP)
 
 ---
 
@@ -335,21 +418,26 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
 ### Performance
 - API responses complete in under 500ms (p95)
 - Real-time updates delivered within 2 seconds
-- Support 1,000 concurrent users entering jackpots
+- Support 1,000 concurrent users viewing jackpots
 - Caching reduces database queries by 80%
 
 ### Scalability
 - System handles 100 active jackpots simultaneously
-- Entry system processes 100 transactions per second
+- Opt-in/opt-out system processes 100 transactions per second
 - Winner list supports 10,000+ historical entries
+- Temperature calculations scale with pool updates
 
 ### Reliability
-- Zero data loss during entry transactions
-- Idempotent entry operations (no duplicate entries)
+- Zero data loss during opt-in/opt-out transactions
+- Idempotent opt-in operations (no duplicate registrations)
 - Graceful degradation if real-time updates unavailable
+- Temperature calculations remain consistent across sessions
 
 ### Security
-- Entry transactions are atomic and validated
+- Opt-in/opt-out transactions are validated server-side
+- User can only manage their own opt-in status
+- Pool amounts cannot be manipulated by client
+- Contribution rates are server-enforced during bets
 - User balances are verified before deduction
 - Entry limits are enforced server-side
 - No price manipulation on client-side
@@ -358,69 +446,181 @@ Users need an engaging, high-reward gamification mechanic that creates excitemen
 
 ## Acceptance Criteria
 
-### AC1: View Available Jackpots
+### AC1: View Available Jackpots with All Details
 **Given** I am a logged-in user
 **When** I navigate to the Jackpots section
-**Then** I see all active jackpots with name, pool amount, entry cost, participant count, and countdown timer
-**And** I can filter by jackpot type
+**Then** I see all active jackpots with name, pool amount (both currencies), contribution rate, temperature, registration count, and explosion estimate
+**And** I can filter by jackpot type (MultiUser/Personal)
+**And** Temperature indicators are visually distinct (COLD=blue, WARM=yellow, HOT=orange, BURNING=red)
+**And** My opt-in status is visible for each jackpot
 **And** Page loads in under 2 seconds
 
-### AC2: Enter Jackpot with Sufficient Balance
-**Given** I have 1,000 points
-**And** A jackpot costs 100 points per entry
-**And** I have 0/10 entries
-**When** I purchase 5 entries
-**Then** 500 points are deducted from my balance
-**And** My entry count shows 5/10
-**And** Jackpot pool increases by 500 points (for progressive)
-**And** Participant count increases
-**And** Transaction completes in under 1 second
+### AC2: Opt-In to MultiUser Jackpot
+**Given** I am a logged-in user
+**And** A MultiUser jackpot exists with Percentage contribution at 5%
+**And** I am not currently opted in
+**And** Jackpot is not in explosion state
+**When** I click "Opt In"
+**Then** My opt-in status changes to "Opted In"
+**And** Registration count increases by 1
+**And** Button changes from "Opt In" to "Opt Out"
+**And** Confirmation message displays: "You're in! Your bets will now contribute 5% to this jackpot."
+**And** Transaction completes in under 500ms
 
-### AC3: Prevent Entry with Insufficient Balance
-**Given** I have 50 points
-**And** A jackpot costs 100 points per entry
-**When** I attempt to enter
-**Then** System displays "Insufficient balance" error
-**And** No currency is deducted
-**And** No entry is recorded
+### AC3: Automatic Contribution During Gameplay (Percentage)
+**Given** I am opted in to a jackpot with Percentage contribution at 5%
+**And** I have 1,000 points balance
+**When** I place a 100-point bet during gameplay
+**Then** 5 points are deducted for jackpot contribution (5% of 100)
+**And** 100 points are deducted for the bet
+**And** My balance decreases to 895 points (1,000 - 100 - 5)
+**And** Jackpot pool increases by 5 points (for MultiUser) or my personal pool increases by 5 (for Personal)
+**And** Pool updates in real-time within 2 seconds
 
-### AC4: Enforce Maximum Entry Limit
-**Given** I have 10/10 entries in a jackpot
-**When** I view the jackpot
-**Then** Entry button is disabled
-**And** Message displays "Maximum entries reached (10/10)"
+### AC4: Automatic Contribution During Gameplay (Fixed)
+**Given** I am opted in to a jackpot with Fixed contribution at 10 points per bet
+**And** I have 500 points balance
+**When** I place a 50-point bet during gameplay
+**Then** 10 points are deducted for jackpot contribution (fixed amount)
+**And** 50 points are deducted for the bet
+**And** My balance decreases to 440 points (500 - 50 - 10)
+**And** Jackpot pool increases by 10 points
+**And** Pool updates in real-time within 2 seconds
 
-### AC5: Real-time Pool Updates
-**Given** I am viewing a jackpot
-**When** Another user enters the jackpot
-**Then** Pool amount updates within 2 seconds
-**And** Participant count increases within 2 seconds
+### AC5: Opt-Out from Jackpot
+**Given** I am currently opted in to a jackpot
+**When** I click "Opt Out"
+**And** Confirm the opt-out action
+**Then** My opt-in status changes to "Not Opted In"
+**And** Registration count decreases by 1 (for MultiUser)
+**And** Button changes from "Opt Out" to "Opt In"
+**And** Future bets no longer contribute to this jackpot
+**And** Confirmation message displays: "You've opted out. Your bets will no longer contribute to this jackpot."
 
-### AC6: View Recent Winners
-**Given** Jackpots have been drawn in the past 30 days
+### AC6: Real-time Pool and Temperature Updates
+**Given** I am viewing a MultiUser jackpot with current pool at 4,950 points
+**And** Temperature is WARM (pool is approaching min_amount of 5,000)
+**When** Another user's contribution adds 100 points to the pool
+**Then** Pool amount updates to 5,050 points within 2 seconds
+**And** Temperature changes from WARM to HOT (pool exceeded min_amount)
+**And** Temperature indicator color changes from yellow to orange
+**And** Explosion estimate may update based on pool growth rate
+
+### AC7: View Recent Winners with Positions
+**Given** Jackpots have exploded in the past 30 days
+**And** Some jackpots had multiple winners (1st, 2nd, 3rd place)
 **When** I view the Winners section
 **Then** I see a list of recent winners
-**And** Each entry shows partially anonymized username, jackpot name, prize amount, and win date
-**And** I can filter by jackpot type
-**And** My wins (if any) are highlighted
+**And** Each entry shows partially anonymized username, jackpot name, prize amount (both currencies), winning position, and win date
+**And** My username is NOT masked if I'm the winner (shows "is_me" indicator)
+**And** I can filter by jackpot type (MultiUser/Personal)
+**And** My wins are highlighted with special styling
+**And** Winner avatars are displayed
 
-### AC7: Countdown Timer Accuracy
-**Given** A jackpot draw is in 2 days, 5 hours
+### AC8: Explosion Estimate Display
+**Given** A jackpot has HOT temperature with pool at 5,500 points
+**And** Min amount is 5,000 points, max amount is 10,000 points
+**And** Average contribution rate is 500 points per hour
 **When** I view the jackpot
-**Then** Countdown displays "2d 5h" or similar format
-**And** Timer updates every minute
-**And** When draw time arrives, entry button is disabled
+**Then** Explosion estimate displays approximate time (e.g., "In 9 hours" based on growth to max_amount)
+**And** Estimate updates as contribution rate changes
+**And** When explosion is imminent (pool near max), estimate shows "Exploding soon!"
+
+### AC9: Prevent Opt-In During Explosion
+**Given** A jackpot is currently in explosion/draw state
+**When** I view the jackpot
+**Then** "Opt In" button is disabled
+**And** Status message displays: "Jackpot draw in progress. New pot will be available soon."
+**And** I can view explosion results once processing completes
 
 ---
 
 ## Open Questions
 
-_None - All requirements have been specified with reasonable industry-standard defaults._
+_None - All requirements have been specified based on Smartico API constraints._
+
+---
+
+## Specification Clarifications
+
+### JackpotType Alignment (2025-11-09)
+
+**Original Assumption**: The initial draft incorrectly specified 5 jackpot types (Progressive, Fixed, Daily, Weekly, Monthly) based on common industry patterns for jackpot systems.
+
+**Correction**: After review of the Smartico API documentation ([smartico-api/docs/enums/JackpotType.md](../../smartico-api/docs/enums/JackpotType.md)), the specification has been corrected to align with the actual API enum:
+
+```csharp
+public enum JackpotType
+{
+    MultiUser = 1,  // Shared jackpot pool among all users
+    Personal = 2    // Individual jackpot pool per user
+}
+```
+
+**Impact**: The following sections were updated to reflect the correct 2-type system:
+- Brief Description: Updated to describe MultiUser (shared pool) and Personal (individual pool) types
+- Goals & Objectives: Removed mention of daily/weekly schedules
+- User Scenarios: Changed "Progressive Jackpot" to "MultiUser Jackpot"
+- Functional Requirements: Updated filter options to MultiUser/Personal
+- Key Entities: Updated Jackpot type attribute to use correct enum values
+- Acceptance Criteria: Updated test scenarios to reference MultiUser type
+- Data Assumptions: Updated to reflect both jackpot types in demo data
+
+**Behavioral Differences**:
+- **MultiUser**: Pool grows with each user's entry, shared among all participants, higher potential prizes
+- **Personal**: Isolated pool per user, individual prize calculation, personalized experience
+
+---
+
+### Opt-In Model vs Entry Model (2025-11-09 - v1.2)
+
+**Original Assumption (v1.0-1.1)**: The specification incorrectly described jackpots as using a direct "entry purchase" model where users pay points upfront to buy entries (similar to buying lottery tickets).
+
+**Example from v1.1**:
+> "Sarah selects 5 entries (500 points total)"
+> "500 points are deducted from my balance"
+> "Jackpot pool increases by 500 points"
+
+**Correction (v1.2)**: After deep review of the Smartico API source code ([smartico-api/src/Jackpots](../../smartico-api/src/Jackpots/)), the specification has been completely rewritten to reflect the actual **opt-in + automatic contribution** model:
+
+**How It Actually Works**:
+1. **Free Opt-In**: Users register for jackpots at no cost (`JackpotsOptinRequest` / `JackpotsOptoutRequest`)
+2. **Automatic Contributions**: During gameplay, when users place bets, a portion is automatically deducted and added to the jackpot pool
+3. **Contribution Types**:
+   - **Fixed** (`JackpotContributionType.Fixed = 1`): Fixed amount per bet (e.g., 10 points per bet)
+   - **Percentage** (`JackpotContributionType.Percentage = 2`): Percentage of bet (e.g., 5% of each bet)
+
+**Major Additions in v1.2**:
+
+1. **JackpotContributionType** (Fixed/Percentage) - Previously missing entirely
+2. **Pool Temperature** (`JackPotTemparature`: COLD/WARM/HOT/BURNING) - Visual indicator of pool status
+3. **Explosion Model**: Jackpots "explode" (draw winners) when pool reaches thresholds (min_amount to max_amount range)
+4. **Multi-Currency**: Base currency + user wallet currency conversion (`jp_currency` vs `user_currency`)
+5. **Registration Count**: Opt-in users count (not "participant count" which was ambiguous)
+6. **Explosion Timestamp**: When pot will/did explode (`explode_date_ts`)
+7. **Winning Position**: Multi-winner support (1st, 2nd, 3rd place)
+8. **Is Me Flag**: Current user's wins are not masked (`is_me` boolean)
+
+**Sections Completely Rewritten**:
+- **Brief Description**: Changed from "enter jackpot draws using currencies" to "opt-in and contribute during gameplay"
+- **Goals & Objectives**: Added contribution models, temperature indicators, removed "entry options"
+- **User Scenario 1**: Completely rewritten from "purchasing entries" to "opting in and betting"
+- **Edge Cases**: Replaced "Insufficient Balance for Entry" / "Maximum Entries" with "Opting Out" / "Already Opted In" / "Insufficient Balance for Contribution"
+- **Functional Requirement F2**: Completely replaced "Jackpot Entry" with "Jackpot Opt-In/Opt-Out" + "Automatic Contribution During Gameplay"
+- **Data & Validation**: Replaced "Entry Limits" / "Currency Validation" with "Contribution Validation" / "Pool Temperature Calculation" / "Explosion Triggering"
+- **Success Criteria**: Changed from "enter jackpots" to "opt-in to jackpots", updated metrics
+- **Key Entities**: Completely rewritten with all API fields (contribution_type, temperature, registration_count, etc.)
+- **Acceptance Criteria**: All 9 criteria rewritten for opt-in model (AC2-AC9 are entirely new)
+- **Scope**: Clarified that actual betting mechanics and contribution processing are out of scope (existing features)
+
+**Impact**: This is a **fundamental architectural change** to the feature. The implementation will follow the Smartico API's actual opt-in pattern, not the fictional entry-purchase pattern from v1.0-1.1.
 
 ---
 
 ## Change Log
 
-| Version | Date       | Author  | Changes            |
-|---------|------------|---------|-------------------|
-| 1.0     | 2025-11-09 | Claude  | Initial draft     |
+| Version | Date       | Author  | Changes                                                                 |
+|---------|------------|---------|-------------------------------------------------------------------------|
+| 1.0     | 2025-11-09 | Claude  | Initial draft                                                           |
+| 1.1     | 2025-11-09 | Claude  | Corrected JackpotType from 5 types to 2 types (MultiUser, Personal)   |
+| 1.2     | 2025-11-09 | Claude  | **Major revision**: Rewritten to align with Smartico API opt-in model. Added JackpotContributionType, pool temperature, explosion model, multi-currency, and all missing API fields. Replaced entry-purchase model with opt-in + automatic contribution model. Completely rewrote user scenarios, functional requirements, entities, and acceptance criteria. |

@@ -8,13 +8,15 @@ import { TournamentList } from './components/TournamentList';
 import { LevelCard } from './components/LevelCard';
 import { LevelList } from './components/LevelList';
 import { LevelUpNotification } from './components/LevelUpNotification';
+import { JackpotList } from './components/JackpotList';
+import { useJackpots } from './hooks/useJackpots';
 import type { Mission } from './types';
 import type { Level } from './types/level';
 
 // Hardcoded user ID for MVP testing
 const TEST_USER_ID = 'test-user-123';
 
-type ActiveTab = 'missions' | 'bonuses' | 'minigames' | 'tournaments' | 'levels';
+type ActiveTab = 'missions' | 'bonuses' | 'minigames' | 'tournaments' | 'levels' | 'jackpots';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('missions');
@@ -27,6 +29,9 @@ function App() {
   const [selectedLevelUserId, setSelectedLevelUserId] = useState<string>(TEST_USER_ID);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [levelUpData, setLevelUpData] = useState<{ newLevel: Level; previousLevel: Level | null } | null>(null);
+
+  // Load jackpots
+  const { jackpots, loading: jackpotsLoading, error: jackpotsError, refetch: refetchJackpots } = useJackpots(TEST_USER_ID);
 
   // Load missions on mount
   useEffect(() => {
@@ -264,6 +269,16 @@ function App() {
             >
               ⭐ Levels
             </button>
+            <button
+              onClick={() => setActiveTab('jackpots')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                activeTab === 'jackpots'
+                  ? 'border-pink-600 text-pink-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🎰 Jackpots
+            </button>
           </nav>
         </div>
 
@@ -394,6 +409,22 @@ function App() {
                 onClose={() => setShowLevelUpModal(false)}
               />
             )}
+          </div>
+        )}
+
+        {activeTab === 'jackpots' && (
+          <div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Active Jackpots</h2>
+              <p className="text-gray-600">Opt-in to jackpots to automatically contribute and win prizes!</p>
+            </div>
+            <JackpotList
+              jackpots={jackpots}
+              loading={jackpotsLoading}
+              error={jackpotsError}
+              userId={TEST_USER_ID}
+              onRefresh={refetchJackpots}
+            />
           </div>
         )}
       </main>

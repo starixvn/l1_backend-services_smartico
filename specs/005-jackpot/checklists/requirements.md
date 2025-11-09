@@ -38,12 +38,14 @@ All quality criteria have been met. The specification is complete and ready for 
 
 ### Key Strengths
 
-1. **Clear User Scenarios**: Two detailed primary scenarios with preconditions, steps, and expected outcomes
-2. **Comprehensive Edge Cases**: Three edge cases covering common failure scenarios (insufficient balance, max entries, draw in progress)
-3. **Measurable Success Criteria**: All criteria include specific metrics (percentages, time limits, success rates)
-4. **Technology-Agnostic**: Success criteria focus on user outcomes, not implementation details
-5. **Well-Defined Scope**: Clear boundaries between in-scope and out-of-scope items
-6. **Complete Acceptance Criteria**: Seven acceptance criteria covering all functional requirements with Given/When/Then format
+1. **API-Aligned Model**: Specification fully aligns with actual Smartico API opt-in + contribution model
+2. **Clear User Scenarios**: Two detailed primary scenarios covering opt-in flow and winner viewing
+3. **Comprehensive Edge Cases**: Four edge cases covering opt-out, explosion, already-opted-in, and contribution balance
+4. **Complete Entity Model**: All API fields documented (JackpotDetails, JackpotPot, JackpotWinner with 20+ attributes)
+5. **Measurable Success Criteria**: All criteria include specific metrics with updated opt-in terminology
+6. **Technology-Agnostic**: Success criteria focus on user outcomes, not implementation details
+7. **Well-Defined Scope**: Clear boundaries between in-scope (UI, opt-in) and out-of-scope (bet processing, explosion algorithm)
+8. **Complete Acceptance Criteria**: Nine acceptance criteria covering all functional requirements with Given/When/Then format
 
 ### Issues Found
 
@@ -52,6 +54,8 @@ None
 ## Notes
 
 - Specification is ready for `/speckit.plan` to generate implementation tasks
-- Demo data assumptions are documented for MVP testing
+- Demo data assumptions are documented for MVP testing (both jackpot types, both contribution types, all temperatures)
 - Integration constraints clearly specify reuse of existing infrastructure
-- No clarifications needed - all requirements use industry-standard defaults
+- **Updated 2025-11-09 (v1.1)**: Corrected JackpotType from 5 fictional types to 2 actual API types (MultiUser, Personal)
+- **Updated 2025-11-09 (v1.2)**: **Major revision** - Completely rewritten to align with Smartico API opt-in model. Added JackpotContributionType (Fixed/Percentage), pool temperature (COLD/WARM/HOT/BURNING), explosion model, multi-currency support, and all missing API fields
+- Specification now fully aligns with Smartico API source code constraints
