@@ -64,6 +64,17 @@ export function useTheme() {
   }, []);
 
   /**
+   * Preset color mappings.
+   */
+  const PRESET_COLORS: Record<string, { primary: string; accent: string }> = {
+    'royal-purple': { primary: '#9333ea', accent: '#ec4899' },
+    'ocean-blue': { primary: '#0ea5e9', accent: '#06b6d4' },
+    'neon-cyber': { primary: '#10b981', accent: '#8b5cf6' },
+    'nature-zen': { primary: '#22c55e', accent: '#84cc16' },
+    'sunset-orange': { primary: '#f97316', accent: '#ef4444' },
+  };
+
+  /**
    * Apply theme to document root (CSS variables).
    */
   useEffect(() => {
@@ -75,7 +86,7 @@ export function useTheme() {
     // Apply font size
     root.style.setProperty('--base-font-size', `${theme.fontSize}px`);
 
-    // Apply custom colors (if custom preset)
+    // Apply colors based on preset or custom
     if (theme.preset === 'custom') {
       if (theme.primaryColor) {
         root.style.setProperty('--color-primary', theme.primaryColor);
@@ -84,9 +95,12 @@ export function useTheme() {
         root.style.setProperty('--color-accent', theme.accentColor);
       }
     } else {
-      // Remove custom colors if switching to preset
-      root.style.removeProperty('--color-primary');
-      root.style.removeProperty('--color-accent');
+      // Apply preset colors
+      const presetColors = PRESET_COLORS[theme.preset];
+      if (presetColors) {
+        root.style.setProperty('--color-primary', presetColors.primary);
+        root.style.setProperty('--color-accent', presetColors.accent);
+      }
     }
 
     // Apply animation intensity as CSS variable
