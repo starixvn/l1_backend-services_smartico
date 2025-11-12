@@ -52,13 +52,15 @@ export function DashboardApp() {
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
                 onClick={() => setIsThemeCustomizerOpen(true)}
                 className="
-                  px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600
-                  hover:from-pink-700 hover:to-purple-700
-                  text-white text-sm font-medium rounded-lg
-                  transition-all shadow-lg shadow-pink-500/30
-                  focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-slate-900
+                  px-4 py-2 text-white text-sm font-medium rounded-lg
+                  transition-all shadow-lg
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900
                   flex items-center gap-2
                 "
+                style={{
+                  background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%)',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+                }}
                 title="Customize Theme"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -73,13 +75,15 @@ export function DashboardApp() {
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
                 onClick={() => setIsLayoutCustomizerOpen(true)}
                 className="
-                  px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600
-                  hover:from-purple-700 hover:to-pink-700
-                  text-white text-sm font-medium rounded-lg
-                  transition-all shadow-lg shadow-purple-500/30
-                  focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900
+                  px-4 py-2 text-white text-sm font-medium rounded-lg
+                  transition-all shadow-lg
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900
                   flex items-center gap-2
                 "
+                style={{
+                  background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+                }}
                 title="Customize Layout"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
