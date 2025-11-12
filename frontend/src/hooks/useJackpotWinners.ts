@@ -31,7 +31,7 @@ export function useJackpotWinners(
     try {
       setLoading(true);
       setError(null);
-      const data = await JackpotService.getWinners(userId, filterType);
+      const data = await JackpotService.getWinners(filterType, userId);
       setWinners(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch winners';

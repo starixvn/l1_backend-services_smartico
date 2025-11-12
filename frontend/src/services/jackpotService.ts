@@ -1,3 +1,9 @@
+/**
+ * Jackpot Service
+ * Service for jackpot API operations using the centralized API client.
+ */
+
+import { apiClient } from './apiClient';
 import type {
   JackpotDetails,
   JackpotWinner,
@@ -8,146 +14,90 @@ import type {
   OptOutJackpotResponse
 } from '../types/jackpot';
 
-const API_BASE_URL = 'http://localhost:5227/api';
-
 /**
  * Service for jackpot API operations.
+ * Now uses centralized apiClient with retry logic and error handling.
  */
 export class JackpotService {
   /**
    * Fetches all active jackpots with user opt-in status.
-   * @param userId - User identifier
+   * @param userId - User identifier (optional, uses environment userId if not provided)
    * @returns Promise resolving to list of jackpots
-   * @throws Error if API request fails
+   * @throws ApiError if API request fails
    */
-  static async getJackpots(userId: string): Promise<JackpotDetails[]> {
-    console.log(`🎰 Fetching jackpots for user ${userId}`);
+  static async getJackpots(userId?: string): Promise<JackpotDetails[]> {
+    console.log(`🎰 Fetching jackpots${userId ? ` for user ${userId}` : ''}`);
 
-    const response = await fetch(`${API_BASE_URL}/jackpots?userId=${encodeURIComponent(userId)}`);
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.get<GetJackpotsResponse>('/jackpots', params);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to fetch jackpots:', errorText);
-      throw new Error(`Failed to fetch jackpots: ${response.statusText}`);
-    }
-
-    const data: GetJackpotsResponse = await response.json();
-
-    console.log(
-      `✅ Fetched ${data.jackpots.length} jackpots for user ${userId}`
-    );
+    console.log(`✅ Fetched ${data.jackpots.length} jackpots`);
 
     return data.jackpots;
   }
 
   /**
    * Opts a user into a jackpot.
-   * @param userId - User identifier
    * @param templateId - Jackpot template ID
+   * @param userId - User identifier (optional, uses environment userId if not provided)
    * @returns Promise resolving to updated jackpot details and message
-   * @throws Error if API request fails
+   * @throws ApiError if API request fails (409 if already opted in, 404 if not found)
    */
-  static async optIn(userId: string, templateId: number): Promise<OptInJackpotResponse> {
-    console.log(`🎰 User ${userId} opting in to jackpot ${templateId}`);
+  static async optIn(templateId: number, userId?: string): Promise<OptInJackpotResponse> {
+    console.log(`🎰 Opting in to jackpot ${templateId}`);
 
-    const response = await fetch(`${API_BASE_URL}/jackpots/${templateId}/opt-in`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ userId })
-    });
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.post<OptInJackpotResponse>(
+      `/jackpots/${templateId}/opt-in`,
+      undefined,
+      params
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to opt-in to jackpot:', errorText);
-
-      // Handle specific error codes
-      if (response.status === 409) {
-        throw new Error('You are already opted in to this jackpot');
-      }
-      if (response.status === 404) {
-        throw new Error('Jackpot not found');
-      }
-
-      throw new Error(`Failed to opt-in: ${response.statusText}`);
-    }
-
-    const data: OptInJackpotResponse = await response.json();
-
-    console.log(`✅ User ${userId} successfully opted in to jackpot ${templateId}`);
+    console.log(`✅ Successfully opted in to jackpot ${templateId}`);
 
     return data;
   }
 
   /**
    * Opts a user out of a jackpot.
-   * @param userId - User identifier
    * @param templateId - Jackpot template ID
+   * @param userId - User identifier (optional, uses environment userId if not provided)
    * @returns Promise resolving to updated jackpot details and message
-   * @throws Error if API request fails
+   * @throws ApiError if API request fails (409 if not opted in, 404 if not found)
    */
-  static async optOut(userId: string, templateId: number): Promise<OptOutJackpotResponse> {
-    console.log(`🎰 User ${userId} opting out of jackpot ${templateId}`);
+  static async optOut(templateId: number, userId?: string): Promise<OptOutJackpotResponse> {
+    console.log(`🎰 Opting out of jackpot ${templateId}`);
 
-    const response = await fetch(`${API_BASE_URL}/jackpots/${templateId}/opt-out`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ userId })
-    });
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.post<OptOutJackpotResponse>(
+      `/jackpots/${templateId}/opt-out`,
+      undefined,
+      params
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to opt-out of jackpot:', errorText);
-
-      // Handle specific error codes
-      if (response.status === 409) {
-        throw new Error('You are not opted in to this jackpot');
-      }
-      if (response.status === 404) {
-        throw new Error('Jackpot not found');
-      }
-
-      throw new Error(`Failed to opt-out: ${response.statusText}`);
-    }
-
-    const data: OptOutJackpotResponse = await response.json();
-
-    console.log(`✅ User ${userId} successfully opted out of jackpot ${templateId}`);
+    console.log(`✅ Successfully opted out of jackpot ${templateId}`);
 
     return data;
   }
 
   /**
    * Fetches recent jackpot winners with optional type filtering.
-   * @param userId - User identifier
    * @param filterType - Optional filter by jackpot type (MultiUser/Personal)
+   * @param userId - User identifier (optional, uses environment userId if not provided)
    * @returns Promise resolving to list of winners
-   * @throws Error if API request fails
+   * @throws ApiError if API request fails
    */
-  static async getWinners(userId: string, filterType?: JackpotType): Promise<JackpotWinner[]> {
-    console.log(`🏆 Fetching jackpot winners for user ${userId}, filter: ${filterType ?? 'All'}`);
+  static async getWinners(filterType?: JackpotType, userId?: string): Promise<JackpotWinner[]> {
+    console.log(`🏆 Fetching jackpot winners, filter: ${filterType ?? 'All'}`);
 
-    let url = `${API_BASE_URL}/jackpots/winners?userId=${encodeURIComponent(userId)}`;
+    const params: Record<string, string> = userId ? { userId } : {};
     if (filterType !== undefined) {
-      url += `&type=${filterType}`;
+      params.type = String(filterType);
     }
 
-    const response = await fetch(url);
+    const data = await apiClient.get<GetJackpotWinnersResponse>('/jackpots/winners', params);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to fetch winners:', errorText);
-      throw new Error(`Failed to fetch winners: ${response.statusText}`);
-    }
-
-    const data: GetJackpotWinnersResponse = await response.json();
-
-    console.log(
-      `✅ Fetched ${data.winners.length} winners for user ${userId} (filter: ${filterType ?? 'All'})`
-    );
+    console.log(`✅ Fetched ${data.winners.length} winners (filter: ${filterType ?? 'All'})`);
 
     return data.winners;
   }

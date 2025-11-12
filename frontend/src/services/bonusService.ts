@@ -1,59 +1,63 @@
+/**
+ * Bonus Service
+ * Service for bonus API operations using the centralized API client.
+ */
+
+import { apiClient } from './apiClient';
 import { Bonus, ClaimResult } from '../types/bonus';
 
-const API_BASE_URL = 'http://localhost:5227';
+interface GetBonusesResponse {
+  bonuses: Bonus[];
+}
 
+interface ClaimBonusResponse {
+  success: boolean;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+/**
+ * Service for bonus API operations.
+ * Now uses centralized apiClient with retry logic and error handling.
+ */
 export class BonusService {
-  private static async fetchWithAuth(url: string, options: RequestInit = {}) {
-    // TODO: Add JWT token from auth context
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers,
+  /**
+   * Fetches all bonuses for a user.
+   * @param userId - User identifier (optional, uses environment userId if not provided)
+   * @returns Promise resolving to list of bonuses
+   * @throws ApiError if API request fails
+   */
+  static async getBonuses(userId?: string): Promise<Bonus[]> {
+    console.log(`🎁 Fetching bonuses${userId ? ` for user ${userId}` : ''}`);
+
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.get<GetBonusesResponse>('/bonuses', params);
+
+    console.log(`✅ Fetched ${data.bonuses.length} bonuses`);
+
+    return data.bonuses;
+  }
+
+  /**
+   * Claims a bonus for a user.
+   * @param bonusId - Bonus identifier
+   * @param userId - User identifier (optional, uses environment userId if not provided)
+   * @returns Promise resolving to claim result
+   * @throws ApiError if API request fails
+   */
+  static async claimBonus(bonusId: string, userId?: string): Promise<ClaimResult> {
+    console.log(`🎁 Claiming bonus ${bonusId}`);
+
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.post<ClaimBonusResponse>(`/bonuses/${bonusId}/claim`, undefined, params);
+
+    console.log(`✅ Claimed bonus ${bonusId}, success: ${data.success}`);
+
+    return {
+      success: data.success,
+      errorCode: data.errorCode,
+      errorMessage: data.errorMessage,
+      bonusId,
     };
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-
-    return response.json();
-  }
-
-  static async getBonuses(userId: string): Promise<Bonus[]> {
-    const response = await this.fetchWithAuth(
-      `${API_BASE_URL}/api/bonuses?userId=${userId}`
-    );
-
-    // API returns { success, data, error }
-    if (response.success && response.data && response.data.bonuses) {
-      return response.data.bonuses;
-    }
-
-    throw new Error(response.error || 'Failed to fetch bonuses');
-  }
-
-  static async claimBonus(userId: string, bonusId: string): Promise<ClaimResult> {
-    const response = await this.fetchWithAuth(
-      `${API_BASE_URL}/api/bonuses/${bonusId}/claim?userId=${userId}`,
-      {
-        method: 'POST',
-      }
-    );
-
-    // API returns { success, data, error }
-    if (response.success && response.data) {
-      return {
-        success: response.data.success,
-        errorCode: response.data.errorCode,
-        errorMessage: response.data.errorMessage,
-        bonusId,
-      };
-    }
-
-    throw new Error(response.error || 'Failed to claim bonus');
   }
 }

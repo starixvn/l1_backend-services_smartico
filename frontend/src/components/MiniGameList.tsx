@@ -62,7 +62,7 @@ export function MiniGameList({ userId }: MiniGameListProps) {
   const handlePlay = async (gameId: number) => {
     try {
       setPlayingGameId(gameId);
-      const result = await MiniGameService.playMiniGame(userId, gameId);
+      const result = await MiniGameService.playMiniGame(gameId, userId);
 
       if (result.success) {
         // Update the game with new state

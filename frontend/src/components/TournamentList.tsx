@@ -37,7 +37,7 @@ export function TournamentList({ userId }: TournamentListProps) {
   const handleRegister = async (tournamentId: number) => {
     try {
       setRegisteringId(tournamentId);
-      const result = await TournamentService.registerTournament(userId, tournamentId);
+      const result = await TournamentService.registerTournament(tournamentId, userId);
 
       if (result.success && result.updatedTournament) {
         // Update tournament in state

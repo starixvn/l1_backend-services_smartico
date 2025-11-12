@@ -25,7 +25,7 @@ export function JackpotList({ jackpots, loading, error, userId, onRefresh }: Jac
 
   const handleOptIn = async (templateId: number) => {
     try {
-      const response = await JackpotService.optIn(userId, templateId);
+      const response = await JackpotService.optIn(templateId, userId);
 
       // Update local state optimistically
       setLocalJackpots(prevJackpots =>
@@ -55,7 +55,7 @@ export function JackpotList({ jackpots, loading, error, userId, onRefresh }: Jac
 
   const handleOptOut = async (templateId: number) => {
     try {
-      const response = await JackpotService.optOut(userId, templateId);
+      const response = await JackpotService.optOut(templateId, userId);
 
       // Update local state optimistically
       setLocalJackpots(prevJackpots =>

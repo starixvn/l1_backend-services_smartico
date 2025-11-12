@@ -27,7 +27,7 @@ export function TournamentLeaderboard({
     try {
       setLoading(true);
       setError(null);
-      const data = await TournamentService.getLeaderboard(userId, tournamentInstanceId);
+      const data = await TournamentService.getLeaderboard(tournamentInstanceId, userId);
       setParticipants(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load leaderboard');

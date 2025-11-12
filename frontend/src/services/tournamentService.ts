@@ -1,3 +1,9 @@
+/**
+ * Tournament Service
+ * Service for tournament API operations using the centralized API client.
+ */
+
+import { apiClient } from './apiClient';
 import type {
   Tournament,
   GetTournamentsResponse,
@@ -6,29 +12,23 @@ import type {
   TournamentParticipant,
 } from '../types/tournament';
 
-const API_BASE_URL = 'http://localhost:5227/api';
-
 /**
  * Service for tournament API operations.
+ * Now uses centralized apiClient with retry logic and error handling.
  */
 export class TournamentService {
   /**
    * Fetches all tournaments for a specific user.
-   * @param userId - User identifier
+   * @param userId - User identifier (optional, uses environment userId if not provided)
    * @returns Promise resolving to list of tournaments
+   * @throws ApiError if API request fails
    */
-  static async getTournaments(userId: string): Promise<Tournament[]> {
-    console.log(`📊 Fetching tournaments for user ${userId}`);
+  static async getTournaments(userId?: string): Promise<Tournament[]> {
+    console.log(`📊 Fetching tournaments${userId ? ` for user ${userId}` : ''}`);
 
-    const response = await fetch(`${API_BASE_URL}/tournaments?userId=${encodeURIComponent(userId)}`);
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.get<GetTournamentsResponse>('/tournaments', params);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to fetch tournaments:', errorText);
-      throw new Error(`Failed to fetch tournaments: ${response.statusText}`);
-    }
-
-    const data: GetTournamentsResponse = await response.json();
     console.log(`✅ Fetched ${data.tournaments.length} tournaments`);
 
     return data.tournaments;
@@ -36,23 +36,20 @@ export class TournamentService {
 
   /**
    * Registers a user for a tournament.
-   * @param userId - User identifier
    * @param tournamentInstanceId - Tournament instance ID
+   * @param userId - User identifier (optional, uses environment userId if not provided)
    * @returns Promise resolving to registration result
+   * @throws ApiError if API request fails
    */
-  static async registerTournament(userId: string, tournamentInstanceId: number): Promise<RegisterTournamentResponse> {
-    console.log(`📝 Registering user ${userId} for tournament ${tournamentInstanceId}`);
+  static async registerTournament(tournamentInstanceId: number, userId?: string): Promise<RegisterTournamentResponse> {
+    console.log(`📝 Registering for tournament ${tournamentInstanceId}`);
 
-    const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentInstanceId}/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userId }),
-    });
-
-    // Parse JSON response (works for both success and error responses)
-    const data: RegisterTournamentResponse = await response.json();
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.post<RegisterTournamentResponse>(
+      `/tournaments/${tournamentInstanceId}/register`,
+      undefined,
+      params
+    );
 
     if (data.success) {
       console.log(`✅ Successfully registered for tournament ${tournamentInstanceId}`);
@@ -65,24 +62,20 @@ export class TournamentService {
 
   /**
    * Fetches the leaderboard for a specific tournament.
-   * @param userId - User identifier
    * @param tournamentInstanceId - Tournament instance ID
+   * @param userId - User identifier (optional, uses environment userId if not provided)
    * @returns Promise resolving to list of participants
+   * @throws ApiError if API request fails
    */
-  static async getLeaderboard(userId: string, tournamentInstanceId: number): Promise<TournamentParticipant[]> {
-    console.log(`📊 Fetching leaderboard for tournament ${tournamentInstanceId}, user ${userId}`);
+  static async getLeaderboard(tournamentInstanceId: number, userId?: string): Promise<TournamentParticipant[]> {
+    console.log(`📊 Fetching leaderboard for tournament ${tournamentInstanceId}`);
 
-    const response = await fetch(
-      `${API_BASE_URL}/tournaments/${tournamentInstanceId}/leaderboard?userId=${encodeURIComponent(userId)}`
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.get<GetLeaderboardResponse>(
+      `/tournaments/${tournamentInstanceId}/leaderboard`,
+      params
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to fetch leaderboard:', errorText);
-      throw new Error(`Failed to fetch leaderboard: ${response.statusText}`);
-    }
-
-    const data: GetLeaderboardResponse = await response.json();
     console.log(`✅ Fetched leaderboard with ${data.participants.length} participants`);
 
     return data.participants;

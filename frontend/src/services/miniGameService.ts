@@ -1,63 +1,75 @@
-import { MiniGame, PlayResult } from '../types/minigame';
+/**
+ * Mini Game Service
+ * Service for mini game API operations using the centralized API client.
+ */
 
-const API_BASE_URL = 'http://localhost:5227';
+import { apiClient } from './apiClient';
+import { MiniGame, PlayResult, MiniGamePrizeType } from '../types/minigame';
 
+interface GetMiniGamesResponse {
+  miniGames: MiniGame[];
+}
+
+interface PlayMiniGameResponse {
+  success: boolean;
+  prizeId: number;
+  prizeName: string;
+  prizeType: string;
+  prizeValue: number;
+  updatedGame: MiniGame;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+/**
+ * Service for mini game API operations.
+ * Now uses centralized apiClient with retry logic and error handling.
+ */
 export class MiniGameService {
-  private static async fetchWithAuth(url: string, options: RequestInit = {}) {
-    // TODO: Add JWT token from auth context
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers,
+  /**
+   * Fetches all available mini games for a user.
+   * @param userId - User identifier (optional, uses environment userId if not provided)
+   * @returns Promise resolving to list of mini games
+   * @throws ApiError if API request fails
+   */
+  static async getMiniGames(userId?: string): Promise<MiniGame[]> {
+    console.log(`🎮 Fetching mini games${userId ? ` for user ${userId}` : ''}`);
+
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.get<GetMiniGamesResponse>('/minigames', params);
+
+    console.log(`✅ Fetched ${data.miniGames.length} mini games`);
+
+    return data.miniGames;
+  }
+
+  /**
+   * Plays a mini game and returns the result.
+   * @param gameId - Mini game ID
+   * @param userId - User identifier (optional, uses environment userId if not provided)
+   * @returns Promise resolving to play result with prize details
+   * @throws ApiError if API request fails
+   */
+  static async playMiniGame(gameId: number, userId?: string): Promise<PlayResult> {
+    console.log(`🎮 Playing mini game ${gameId}`);
+
+    const params = userId ? { userId } : undefined;
+    const data = await apiClient.post<PlayMiniGameResponse>(`/minigames/${gameId}/play`, undefined, params);
+
+    console.log(`✅ Played mini game ${gameId}, success: ${data.success}`);
+
+    // Convert prizeType string to enum
+    const prizeTypeEnum = data.prizeType ? (MiniGamePrizeType[data.prizeType as keyof typeof MiniGamePrizeType] ?? null) : null;
+
+    return {
+      success: data.success,
+      prizeId: data.prizeId,
+      prizeName: data.prizeName,
+      prizeType: prizeTypeEnum,
+      prizeValue: data.prizeValue,
+      updatedGame: data.updatedGame,
+      errorCode: data.errorCode,
+      errorMessage: data.errorMessage,
     };
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || `HTTP ${response.status}`);
-    }
-
-    return response.json();
-  }
-
-  static async getMiniGames(userId: string): Promise<MiniGame[]> {
-    const response = await this.fetchWithAuth(
-      `${API_BASE_URL}/api/mini-games?userId=${userId}`
-    );
-
-    // API returns { success, data, error }
-    if (response.success && response.data && response.data.miniGames) {
-      return response.data.miniGames;
-    }
-
-    throw new Error(response.error || 'Failed to fetch mini games');
-  }
-
-  static async playMiniGame(userId: string, gameId: number): Promise<PlayResult> {
-    const response = await this.fetchWithAuth(
-      `${API_BASE_URL}/api/mini-games/${gameId}/play?userId=${userId}`,
-      {
-        method: 'POST',
-      }
-    );
-
-    // API returns { success, data, error }
-    if (response.success && response.data) {
-      return {
-        success: response.data.success,
-        prizeId: response.data.prizeId,
-        prizeName: response.data.prizeName,
-        prizeType: response.data.prizeType,
-        prizeValue: response.data.prizeValue,
-        updatedGame: response.data.updatedGame,
-        errorCode: response.data.errorCode,
-        errorMessage: response.data.errorMessage,
-      };
-    }
-
-    throw new Error(response.error || 'Failed to play mini game');
   }
 }
