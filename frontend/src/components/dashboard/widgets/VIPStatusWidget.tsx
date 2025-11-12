@@ -14,11 +14,21 @@ import type { VIPStatus } from '../../../types/dashboard/data';
  */
 const VIP_TIERS: Record<
   VIPStatus['tier'],
-  { color: string; gradient: string; emoji: string; label: string; maxPoints: number }
+  {
+    color: string;
+    gradient: string;
+    gradientStart: string;
+    gradientEnd: string;
+    emoji: string;
+    label: string;
+    maxPoints: number
+  }
 > = {
   bronze: {
     color: 'text-orange-700',
     gradient: 'from-orange-700 to-orange-900',
+    gradientStart: '#c2410c',
+    gradientEnd: '#7c2d12',
     emoji: '🥉',
     label: 'Bronze',
     maxPoints: 1000,
@@ -26,6 +36,8 @@ const VIP_TIERS: Record<
   silver: {
     color: 'text-gray-400',
     gradient: 'from-gray-400 to-gray-600',
+    gradientStart: '#9ca3af',
+    gradientEnd: '#4b5563',
     emoji: '🥈',
     label: 'Silver',
     maxPoints: 5000,
@@ -33,6 +45,8 @@ const VIP_TIERS: Record<
   gold: {
     color: 'text-yellow-400',
     gradient: 'from-yellow-400 to-yellow-600',
+    gradientStart: '#facc15',
+    gradientEnd: '#ca8a04',
     emoji: '🥇',
     label: 'Gold',
     maxPoints: 15000,
@@ -40,6 +54,8 @@ const VIP_TIERS: Record<
   platinum: {
     color: 'text-cyan-400',
     gradient: 'from-cyan-400 to-blue-500',
+    gradientStart: '#22d3ee',
+    gradientEnd: '#3b82f6',
     emoji: '💎',
     label: 'Platinum',
     maxPoints: 50000,
@@ -47,6 +63,8 @@ const VIP_TIERS: Record<
   diamond: {
     color: 'text-purple-400',
     gradient: 'from-purple-400 to-pink-500',
+    gradientStart: '#c084fc',
+    gradientEnd: '#ec4899',
     emoji: '👑',
     label: 'Diamond',
     maxPoints: Infinity,
@@ -150,8 +168,8 @@ export function VIPStatusWidget() {
                 <svg width="0" height="0">
                   <defs>
                     <linearGradient id="vip-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor={currentTier.gradient.split(' ')[0].replace('from-', '#')} />
-                      <stop offset="100%" stopColor={currentTier.gradient.split(' ')[2].replace('to-', '#')} />
+                      <stop offset="0%" stopColor={currentTier.gradientStart} />
+                      <stop offset="100%" stopColor={currentTier.gradientEnd} />
                     </linearGradient>
                   </defs>
                 </svg>
