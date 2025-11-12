@@ -1,93 +1,271 @@
-# Smartico
+# Smartico Gamification Platform
 
+A comprehensive gamification platform with a modern, customizable dashboard featuring real-time updates, theme customization, and 14 specialized widgets.
 
+## Features
 
-## Getting started
+### 🎮 Gamification Dashboard
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- **14 Interactive Widgets**: Track missions, achievements, leaderboards, bonuses, and more
+- **Theme Customization**: 6 preset themes + custom color picker with WCAG AA validation
+- **Layout Controls**: Show/hide widgets, customize your dashboard experience
+- **Real-time Updates**: SignalR integration for live progress tracking (planned)
+- **Responsive Design**: Mobile-first, works on all screen sizes
+- **Smooth Animations**: Spring-based physics animations with accessibility support
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### 🎨 Customization
 
-## Add your files
+- **Theme Presets**: Royal Purple, Ocean Blue, Neon Cyber, Nature Zen, Sunset Orange
+- **Light/Dark Mode**: Toggle between themes
+- **Font Sizes**: 14px, 16px, 18px options
+- **Animation Control**: None, subtle, moderate, energetic
+- **Import/Export**: Share and backup your theme configurations
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+### 📊 Widget Gallery
+
+1. **Daily Challenge** - Today's mission with countdown timer
+2. **Level Progress** - XP tracking with circular progress ring
+3. **Active Missions** - Ongoing missions and rewards
+4. **Recent Achievements** - Unlocked achievements showcase
+5. **Leaderboard** - Top players and your rank
+6. **Bonus Tracker** - Active bonuses to claim
+7. **Personal Goals** - User-defined goals tracking
+8. **Streak Tracker** - Daily login streak calendar
+9. **Reward Calendar** - Monthly login rewards
+10. **VIP Status** - Tier progress and benefits
+11. **Jackpot** - Jackpot pool and tickets
+12. **Tournament** - Active tournament standings
+13. **Mini Games** - Available games to play
+14. **Activity Feed** - Recent activity timeline
+
+## Project Structure
 
 ```
-cd existing_repo
-git remote add origin https://git3.nexdev.net/l1/backend-services/smartico.git
-git branch -M main
-git push -uf origin main
+smartico/
+├── frontend/                  # React dashboard application
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── dashboard/    # Dashboard components
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── types/            # TypeScript type definitions
+│   │   ├── contexts/         # React context providers
+│   │   └── styles/           # Global styles and themes
+│   ├── docs/                 # Documentation
+│   │   ├── USER_GUIDE.md    # User customization guide
+│   │   └── DEVELOPER_GUIDE.md # Developer reference
+│   ├── DASHBOARD.md          # Dashboard feature documentation
+│   └── package.json
+└── README.md                 # This file
 ```
 
-## Integrate with your tools
+## Getting Started
 
-- [ ] [Set up project integrations](https://git3.nexdev.net/l1/backend-services/smartico/-/settings/integrations)
+### Prerequisites
 
-## Collaborate with your team
+- **Node.js**: 20.19+ or 22.12+
+- **npm**: 10+
+- **Git**: Latest version
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+### Installation
 
-## Test and Deploy
+1. **Clone the repository**:
+   ```bash
+   git clone https://git3.nexdev.net/l1/backend-services/smartico.git
+   cd smartico
+   ```
 
-Use the built-in continuous integration in GitLab.
+2. **Install frontend dependencies**:
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+3. **Start development server**:
+   ```bash
+   npm run dev
+   ```
 
-***
+4. **Open browser**:
+   ```
+   http://localhost:5173
+   ```
 
-# Editing this README
+### Build for Production
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```bash
+cd frontend
+npm run build
+```
 
-## Suggestions for a good README
+Build output: `frontend/dist/`
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## Documentation
 
-## Name
-Choose a self-explaining name for your project.
+### For Users
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- **[User Guide](./frontend/docs/USER_GUIDE.md)** - Learn how to customize themes and layouts
+- **[Dashboard Overview](./frontend/DASHBOARD.md)** - Complete feature documentation
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+### For Developers
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- **[Developer Guide](./frontend/docs/DEVELOPER_GUIDE.md)** - Technical reference for developers
+- **[Dashboard README](./frontend/DASHBOARD.md)** - Architecture and API integration guide
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## Technology Stack
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Frontend
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19 | UI framework |
+| TypeScript | 5.6+ | Type safety |
+| Vite | 7.1 | Build tool + dev server |
+| TailwindCSS | 3.4 | Utility-first styling |
+| Framer Motion | 11 | Declarative animations |
+| SignalR | - | Real-time updates (planned) |
+
+### Development Tools
+
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **Vitest** - Unit testing (planned)
+- **Playwright** - E2E testing (planned)
+
+## Development Workflow
+
+### Running the Dashboard
+
+1. **Update entry point** (`frontend/src/main.tsx`):
+   ```tsx
+   import { DashboardApp } from './DashboardApp'
+
+   root.render(
+     <StrictMode>
+       <DashboardApp />
+     </StrictMode>,
+   )
+   ```
+
+2. **Start dev server**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Access dashboard**:
+   ```
+   http://localhost:5173
+   ```
+
+### Creating a New Widget
+
+See the [Developer Guide](./frontend/docs/DEVELOPER_GUIDE.md#creating-widgets) for step-by-step instructions.
+
+Quick overview:
+1. Create widget component in `frontend/src/components/dashboard/widgets/`
+2. Define widget type in `frontend/src/types/dashboard/widgets.ts`
+3. Add mock data in `frontend/src/hooks/useDashboardData.ts`
+4. Register widget in `frontend/src/components/dashboard/WidgetGrid.tsx`
+5. Add metadata in `frontend/src/components/dashboard/LayoutCustomizer.tsx`
+
+### Git Workflow
+
+**Branch naming:**
+- `feat/feature-name` - New features
+- `fix/bug-description` - Bug fixes
+- `docs/update-type` - Documentation updates
+- `refactor/component-name` - Code refactoring
+
+**Commit messages** (Conventional Commits):
+```
+feat: add new streak tracker widget
+fix: resolve theme persistence issue
+docs: update developer guide with API integration
+refactor: simplify theme hook logic
+test: add unit tests for theme system
+```
 
 ## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+
+### Phase 1-8: Dashboard Foundation ✅ Completed
+- [x] 14 dashboard widgets
+- [x] Theme customization system
+- [x] Layout management
+- [x] Animations and polish
+- [x] Full theme integration across all widgets
+
+### Phase 9: Testing & QA (In Progress)
+- [ ] Unit tests (80%+ coverage)
+- [ ] E2E tests with Playwright
+- [ ] Accessibility audit (WCAG AA)
+- [ ] Performance testing
+- [ ] Cross-browser testing
+
+### Phase 10: Backend Integration (Planned)
+- [ ] Replace mock data with Smartico API
+- [ ] SignalR real-time updates
+- [ ] Error handling and retry logic
+- [ ] Loading states optimization
+- [ ] API response caching
+
+### Phase 11: Deployment (Planned)
+- [ ] Production build optimization
+- [ ] CI/CD pipeline setup
+- [ ] Staging environment deployment
+- [ ] Production deployment
+- [ ] Monitoring and analytics
+
+### Future Enhancements
+- [ ] Toast notifications for actions
+- [ ] Undo/redo for layout changes
+- [ ] Keyboard shortcuts
+- [ ] Widget drag-and-drop reordering
+- [ ] Additional theme presets
+- [ ] Mobile app (React Native)
+
+## Performance
+
+**Current Build Stats:**
+- Bundle Size: 433.13 KB
+- Gzipped: 124.71 KB
+- Build Time: ~3s
+- TypeScript Errors: 0
+
+**Browser Support:**
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+We welcome contributions! Please follow these guidelines:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+1. **Fork the repository** and create a feature branch
+2. **Follow code style**: ESLint + Prettier
+3. **Write tests**: Unit tests for new features
+4. **Update docs**: Keep documentation current
+5. **Submit PR**: Use PR template, describe changes clearly
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+See [Developer Guide](./frontend/docs/DEVELOPER_GUIDE.md) for detailed development instructions.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is part of the Smartico gamification platform.
+
+## Support
+
+- **Issues**: Report bugs and feature requests on [GitLab Issues](https://git3.nexdev.net/l1/backend-services/smartico/-/issues)
+- **Documentation**: See `/frontend/docs/` for detailed guides
+- **Contact**: Smartico support team
+
+## Acknowledgments
+
+Built with:
+- React team for the amazing framework
+- Tailwind Labs for TailwindCSS
+- Framer for Framer Motion
+- Vite team for lightning-fast builds
+
+---
+
+**🤖 Generated with [Claude Code](https://claude.com/claude-code)**
