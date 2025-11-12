@@ -14,52 +14,32 @@
 
 import { DashboardLayout } from './components/dashboard/layout';
 import { DashboardProvider } from './contexts';
+import {
+  DailyChallengeWidget,
+  LevelProgressWidget,
+  ActiveMissionsWidget,
+  RecentAchievementsWidget,
+  LeaderboardWidget,
+} from './components/dashboard/widgets';
 
 export function DashboardApp() {
   return (
     <DashboardProvider>
       <DashboardLayout pageTitle="Dashboard">
-        {/* Placeholder content - widgets will be added in Phase 4 & 5 */}
-        <div className="space-y-8">
-          {/* Welcome Banner */}
-          <div className="glass-dark-strong p-8 rounded-xl border border-purple-500/50 bg-gradient-to-br from-purple-900/30 to-pink-900/30">
-            <h2 className="text-3xl font-bold text-white mb-3">
-              Welcome to Your Dashboard! 🎮
-            </h2>
-            <p className="text-gray-300 text-lg">
-              Track your progress, complete missions, and earn rewards!
-            </p>
+        <div className="space-y-6">
+          {/* Top Row: Daily Challenge + Level Progress */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <DailyChallengeWidget />
+            <LevelProgressWidget />
           </div>
 
-          {/* Widget Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Placeholder Widget Cards */}
-            {[
-              { title: '🎯 Daily Challenge', desc: 'Complete today\'s challenges', color: 'purple' },
-              { title: '⭐ Level Progress', desc: 'Track your level advancement', color: 'blue' },
-              { title: '📋 Active Missions', desc: 'View your current missions', color: 'green' },
-              { title: '🏆 Recent Achievements', desc: 'See your latest wins', color: 'yellow' },
-              { title: '📊 Leaderboard', desc: 'Compare with other players', color: 'red' },
-              { title: '🎁 Bonus Tracker', desc: 'Available bonuses & rewards', color: 'pink' },
-              { title: '🎮 Mini Games', desc: 'Play games to win prizes', color: 'indigo' },
-              { title: '🎰 Jackpot', desc: 'Current jackpot pool', color: 'orange' },
-              { title: '📅 Reward Calendar', desc: 'Daily login rewards', color: 'teal' },
-            ].map((widget, index) => (
-              <div
-                key={index}
-                className="glass-dark p-6 rounded-xl border border-purple-500/30 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 cursor-pointer group"
-              >
-                <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-purple-300 transition-colors">
-                  {widget.title}
-                </h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  {widget.desc}
-                </p>
-                <div className="h-32 bg-slate-700/30 rounded-lg flex items-center justify-center border border-slate-600/30">
-                  <span className="text-gray-500 text-sm">Coming in Phase 4 & 5</span>
-                </div>
-              </div>
-            ))}
+          {/* Middle Row: Active Missions (full width) */}
+          <ActiveMissionsWidget />
+
+          {/* Bottom Row: Achievements + Leaderboard */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RecentAchievementsWidget />
+            <LeaderboardWidget />
           </div>
 
           {/* Implementation Status */}
