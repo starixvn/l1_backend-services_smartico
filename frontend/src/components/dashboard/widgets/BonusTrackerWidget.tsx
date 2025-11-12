@@ -132,13 +132,17 @@ function BonusCard({ bonus, onClaim }: { bonus: Bonus; onClaim: (id: number) => 
                 whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
                 onClick={() => onClaim(bonus.id)}
-                className="
-                  px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600
-                  hover:from-purple-700 hover:to-pink-700
-                  text-white text-sm font-medium rounded-lg
-                  transition-all shadow-lg shadow-purple-500/30
-                  focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900
-                "
+                className="px-4 py-1.5 text-white text-sm font-medium rounded-lg transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900"
+                style={{
+                  background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = 'brightness(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = 'brightness(1)';
+                }}
               >
                 Claim
               </motion.button>

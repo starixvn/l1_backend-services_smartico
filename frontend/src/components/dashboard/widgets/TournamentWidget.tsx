@@ -207,7 +207,10 @@ export function TournamentWidget() {
               initial={{ width: 0 }}
               animate={{ width: `${rankProgress}%` }}
               transition={{ duration: 1, type: 'spring', stiffness: 50, damping: 15 }}
-              className="h-full bg-gradient-to-r from-yellow-600 to-orange-600 relative"
+              className="h-full relative"
+              style={{
+                background: 'linear-gradient(to right, #d97706, #ea580c)',
+              }}
             >
               {/* Shine effect */}
               {!prefersReducedMotion && (
@@ -221,13 +224,17 @@ export function TournamentWidget() {
         <motion.button
           whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
           whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-          className="
-            w-full py-2.5 bg-gradient-to-r from-yellow-600 to-orange-600
-            hover:from-yellow-700 hover:to-orange-700
-            text-white font-medium rounded-lg
-            transition-all shadow-lg shadow-yellow-500/30
-            focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-slate-900
-          "
+          className="w-full py-2.5 text-white font-medium rounded-lg transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900"
+          style={{
+            background: 'linear-gradient(to right, #d97706, #ea580c)',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.filter = 'brightness(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.filter = 'brightness(1)';
+          }}
         >
           View Leaderboard →
         </motion.button>

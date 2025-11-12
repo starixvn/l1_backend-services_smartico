@@ -77,14 +77,12 @@ function PersonalGoalCard({ goal, delay = 0 }: { goal: PersonalGoal; delay?: num
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(goal.progress, 100)}%` }}
             transition={{ duration: 1, type: 'spring', stiffness: 50, damping: 15 }}
-            className={`
-              h-full relative
-              ${
-                isCompleted
-                  ? 'bg-gradient-to-r from-green-600 to-emerald-600'
-                  : 'bg-gradient-to-r from-purple-600 to-pink-600'
-              }
-            `}
+            className="h-full relative"
+            style={{
+              background: isCompleted
+                ? 'linear-gradient(to right, #10b981, #059669)'
+                : 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+            }}
           >
             {/* Shine effect */}
             {!prefersReducedMotion && !isCompleted && (

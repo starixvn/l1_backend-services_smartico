@@ -107,16 +107,31 @@ function MiniGameCard({ game, onPlay }: { game: MiniGame; onPlay: (id: number) =
             whileTap={prefersReducedMotion || !isAvailable ? undefined : { scale: 0.95 }}
             onClick={() => onPlay(game.id)}
             disabled={!isAvailable}
-            className={`
-              px-4 py-1.5 rounded-lg text-sm font-medium
-              transition-all shadow-lg
-              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900
-              ${
-                isAvailable
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-purple-500/30 focus:ring-purple-500'
-                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              }
-            `}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+              isAvailable ? 'text-white' : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+            }`}
+            style={
+              isAvailable
+                ? {
+                    background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+                    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+                  }
+                : undefined
+            }
+            onMouseEnter={
+              isAvailable
+                ? (e) => {
+                    e.currentTarget.style.filter = 'brightness(1.1)';
+                  }
+                : undefined
+            }
+            onMouseLeave={
+              isAvailable
+                ? (e) => {
+                    e.currentTarget.style.filter = 'brightness(1)';
+                  }
+                : undefined
+            }
           >
             {isAvailable ? 'Play' : 'Locked'}
           </motion.button>

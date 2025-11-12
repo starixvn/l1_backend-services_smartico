@@ -135,8 +135,11 @@ export function LevelProgressWidget() {
         <div className="mt-4">
           <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full transition-all duration-500"
-              style={{ width: `${level.xpProgress}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${level.xpProgress}%`,
+                background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+              }}
             />
           </div>
         </div>
@@ -167,8 +170,12 @@ export function LevelProgressWidget() {
                 duration: 0.6,
                 repeat: 3,
               }}
-              className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-600"
-              style={{ textShadow: '0 0 20px rgba(251, 191, 36, 0.5)' }}
+              className="text-6xl font-bold text-transparent bg-clip-text"
+              style={{
+                backgroundImage: 'linear-gradient(to right, var(--color-accent), var(--color-primary))',
+                WebkitBackgroundClip: 'text',
+                textShadow: '0 0 20px rgba(251, 191, 36, 0.5)',
+              }}
             >
               LEVEL UP!
             </motion.div>

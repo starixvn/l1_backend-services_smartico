@@ -101,12 +101,13 @@ export function ActiveMissionsWidget() {
                 </div>
                 <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      mission.isCompleted
-                        ? 'bg-gradient-to-r from-green-600 to-emerald-600'
-                        : 'bg-gradient-to-r from-purple-600 to-pink-600'
-                    }`}
-                    style={{ width: `${mission.progress}%` }}
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${mission.progress}%`,
+                      background: mission.isCompleted
+                        ? 'linear-gradient(to right, #10b981, #059669)'
+                        : 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+                    }}
                   >
                     {/* Shine effect */}
                     {!mission.isCompleted && (

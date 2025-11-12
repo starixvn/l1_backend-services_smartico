@@ -112,8 +112,11 @@ export function DailyChallengeWidget() {
         </div>
         <div className="h-3 bg-slate-700/50 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full transition-all duration-500 ease-out relative"
-            style={{ width: `${challenge.progress}%` }}
+            className="h-full rounded-full transition-all duration-500 ease-out relative"
+            style={{
+              width: `${challenge.progress}%`,
+              background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+            }}
           >
             {/* Shine effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
@@ -134,7 +137,19 @@ export function DailyChallengeWidget() {
           <span className="text-green-400 font-medium">Completed!</span>
         </div>
       ) : (
-        <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-lg transition-all shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900">
+        <button
+          className="w-full py-3 text-white font-medium rounded-lg transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900"
+          style={{
+            background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.filter = 'brightness(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.filter = 'brightness(1)';
+          }}
+        >
           Continue Challenge
         </button>
       )}

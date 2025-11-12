@@ -105,11 +105,18 @@ export function LeaderboardWidget() {
 
                 {/* Avatar */}
                 <div className="flex-shrink-0">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                    isCurrentUser
-                      ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white'
-                      : 'bg-slate-700 text-gray-300'
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                      isCurrentUser ? 'text-white' : 'bg-slate-700 text-gray-300'
+                    }`}
+                    style={
+                      isCurrentUser
+                        ? {
+                            background: 'linear-gradient(to bottom right, var(--color-primary), var(--color-accent))',
+                          }
+                        : undefined
+                    }
+                  >
                     {entry.username.charAt(0).toUpperCase()}
                   </div>
                 </div>

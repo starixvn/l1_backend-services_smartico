@@ -206,13 +206,17 @@ export function JackpotWidget() {
             <motion.button
               whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-              className="
-                px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600
-                hover:from-yellow-700 hover:to-orange-700
-                text-white text-sm font-medium rounded-lg
-                transition-all shadow-lg shadow-yellow-500/30
-                focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-slate-900
-              "
+              className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900"
+              style={{
+                background: 'linear-gradient(to right, #d97706, #ea580c)',
+                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.filter = 'brightness(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.filter = 'brightness(1)';
+              }}
             >
               Buy Tickets
             </motion.button>
@@ -236,7 +240,12 @@ export function JackpotWidget() {
                     className="glass-dark-subtle rounded-lg p-3 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                        style={{
+                          background: 'linear-gradient(to bottom right, #eab308, #f97316)',
+                        }}
+                      >
                         {winner.username.charAt(0).toUpperCase()}
                       </div>
                       <span className="text-sm text-gray-300">{winner.username}</span>
