@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Tiers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>::-webkit-scrollbar { display: none;}
+    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); } 50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.8); } }
+    @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+    @keyframes crown-bounce { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-5px) rotate(5deg); } }
+    @keyframes tier-glow { 0%, 100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); } 50% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.6); } }
+    .float-animation { animation: float 3s ease-in-out infinite; }
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    .shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); background-size: 1000px 100%; animation: shimmer 2s infinite; }
+    .crown-bounce { animation: crown-bounce 2s ease-in-out infinite; }
+    .tier-glow { animation: tier-glow 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 font-sans">
+
+<div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-slate-800/50 backdrop-blur-lg border-r border-purple-500/30 z-50">
+    <div class="p-6">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <i class="fas fa-bolt text-white text-xl"></i>
+            </div>
+            <span class="text-2xl font-bold text-white">EngageMax</span>
+        </div>
+        
+        <nav class="space-y-2">
+            <a href="#dashboard" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-home w-5"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#progress" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-chart-line w-5"></i>
+                <span>Progress</span>
+            </a>
+            <a href="#rewards" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-gift w-5"></i>
+                <span>Rewards</span>
+            </a>
+            <a href="#vip-tiers" class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium">
+                <i class="fas fa-crown w-5"></i>
+                <span>VIP Tiers</span>
+            </a>
+            <a href="#daily-login" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-calendar-check w-5"></i>
+                <span>Daily Login</span>
+            </a>
+            <a href="#referrals" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-users w-5"></i>
+                <span>Referrals</span>
+            </a>
+            <a href="#activity-feed" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-stream w-5"></i>
+                <span>Activity Feed</span>
+            </a>
+            <a href="#settings" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-cog w-5"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+</div>
+
+<div id="main-content" class="ml-64">
+    <header id="header" class="bg-slate-800/30 backdrop-blur-lg border-b border-purple-500/30 sticky top-0 z-40">
+        <div class="px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <h1 class="text-2xl font-bold text-white">VIP Tiers</h1>
+                <div class="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full text-white text-sm font-semibold">Level 42</div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3 bg-slate-700/50 rounded-lg px-4 py-2">
+                    <i class="fas fa-coins text-amber-400"></i>
+                    <span class="text-white font-bold" id="coin-counter">15,847</span>
+                </div>
+                <div class="flex items-center gap-3 bg-slate-700/50 rounded-lg px-4 py-2">
+                    <i class="fas fa-gem text-cyan-400"></i>
+                    <span class="text-white font-bold">342</span>
+                </div>
+                <button class="relative">
+                    <i class="fas fa-bell text-slate-300 text-xl"></i>
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
+                </button>
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" class="w-10 h-10 rounded-full border-2 border-purple-500" alt="User Avatar">
+            </div>
+        </div>
+    </header>
+
+    <main class="p-8">
+        <div id="current-tier-hero" class="mb-8">
+            <div class="bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 rounded-2xl p-8 relative overflow-hidden tier-glow">
+                <div class="absolute inset-0 opacity-20">
+                    <div class="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+                    <div class="absolute bottom-10 right-10 w-40 h-40 bg-white rounded-full blur-3xl"></div>
+                </div>
+                <div class="relative z-10 flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center crown-bounce">
+                                <i class="fas fa-crown text-white text-3xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-3xl font-bold text-white">VIP Gold</h2>
+                                <p class="text-amber-100">Your Current Tier - Level 3</p>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-amber-100 mb-2">
+                                <span>Progress to Platinum</span>
+                                <span class="font-bold">4,200 / 10,000 Points</span>
+                            </div>
+                            <div class="w-80 h-3 bg-white/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-white rounded-full" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        <p class="text-amber-100">5,800 more points to unlock Platinum benefits!</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-6xl font-bold text-white mb-2">+20%</div>
+                        <div class="text-amber-100 text-lg">Bonus Rewards</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tier-comparison" class="mb-8">
+            <h3 class="text-2xl font-bold text-white mb-6">Compare All VIP Tiers</h3>
+            <div class="grid grid-cols-5 gap-6">
+                <div id="bronze-tier" class="bg-slate-800/50 backdrop-blur-lg border border-orange-600/50 rounded-xl p-6 hover:border-orange-500 transition-all">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-medal text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-2">Bronze</h4>
+                        <p class="text-slate-400 text-sm mb-2">Tier 1</p>
+                        <p class="text-orange-400 font-bold">0 - 1,000 Points</p>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span>Basic Rewards</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span>Standard Support</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-500 text-sm">
+                            <i class="fas fa-times-circle text-slate-600"></i>
+                            <span>Bonus Multiplier</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 bg-slate-700 text-slate-400 rounded-lg font-semibold">Current Level</button>
+                </div>
+
+                <div id="silver-tier" class="bg-slate-800/50 backdrop-blur-lg border border-slate-400/50 rounded-xl p-6 hover:border-slate-300 transition-all">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-award text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-2">Silver</h4>
+                        <p class="text-slate-400 text-sm mb-2">Tier 2</p>
+                        <p class="text-slate-300 font-bold">1,001 - 5,000 Points</p>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span>+10% Bonus Rewards</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span>Monthly Bonus</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span>Priority Queue</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-500 transition-all">Achieved</button>
+                </div>
+
+                <div id="gold-tier" class="bg-slate-800/50 backdrop-blur-lg border-2 border-amber-500 rounded-xl p-6 relative overflow-hidden">
+                    <div class="absolute top-3 right-3 px-2 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">CURRENT</div>
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4 crown-bounce">
+                            <i class="fas fa-crown text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-2">Gold</h4>
+                        <p class="text-slate-400 text-sm mb-2">Tier 3</p>
+                        <p class="text-amber-400 font-bold">5,001 - 10,000 Points</p>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span>+20% Bonus Rewards</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span>Exclusive Tournaments</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span>Priority Support</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs text-amber-400 mb-1">
+                            <span>Progress</span>
+                            <span>4,200 / 10,000</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" style="width: 42%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="platinum-tier" class="bg-slate-800/50 backdrop-blur-lg border border-slate-300/50 rounded-xl p-6 hover:border-slate-200 transition-all">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-slate-300 to-slate-400 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-gem text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-2">Platinum</h4>
+                        <p class="text-slate-400 text-sm mb-2">Tier 4</p>
+                        <p class="text-slate-200 font-bold">10,001 - 25,000 Points</p>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-star text-cyan-400"></i>
+                            <span>+30% Bonus Rewards</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-star text-cyan-400"></i>
+                            <span>VIP-Only Events</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-star text-cyan-400"></i>
+                            <span>Personal Manager</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 bg-gradient-to-r from-slate-400 to-slate-500 text-white rounded-lg font-semibold hover:from-slate-300 hover:to-slate-400 transition-all">5,800 Points to Go</button>
+                </div>
+
+                <div id="diamond-tier" class="bg-slate-800/50 backdrop-blur-lg border border-cyan-400/50 rounded-xl p-6 hover:border-cyan-300 transition-all">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4 float-animation">
+                            <i class="fas fa-crown text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-2">Diamond</h4>
+                        <p class="text-slate-400 text-sm mb-2">Tier 5</p>
+                        <p class="text-cyan-400 font-bold">25,000+ Points</p>
+                    </div>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-crown text-amber-400"></i>
+                            <span>+50% Bonus Rewards</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-crown text-amber-400"></i>
+                            <span>Exclusive Access</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-300 text-sm">
+                            <i class="fas fa-crown text-amber-400"></i>
+                            <span>Ultimate Status</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg font-semibold hover:from-cyan-400 hover:to-blue-500 transition-all">Ultimate Goal</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="benefits-upgrade-section" class="grid grid-cols-2 gap-6 mb-8">
+            <div id="current-benefits" class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <i class="fas fa-star text-amber-400"></i>
+                    Your Current Benefits
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-4 p-4 bg-slate-700/50 rounded-lg">
+                        <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-percentage text-white"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-semibold">20% Bonus Rewards</h4>
+                            <p class="text-slate-400 text-sm">Earn 20% more coins and XP on all activities</p>
+                            <div class="text-green-400 text-sm mt-1">+3,169 bonus coins earned this month</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-4 bg-slate-700/50 rounded-lg">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-trophy text-white"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-semibold">Exclusive Tournaments</h4>
+                            <p class="text-slate-400 text-sm">Access to VIP-only tournaments with bigger prizes</p>
+                            <div class="text-purple-400 text-sm mt-1">3 tournaments available this week</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-4 bg-slate-700/50 rounded-lg">
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-headset text-white"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-semibold">Priority Support</h4>
+                            <p class="text-slate-400 text-sm">Fast-track customer support with dedicated agents</p>
+                            <div class="text-green-400 text-sm mt-1">Average response time: 2 minutes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="upgrade-next-tier" class="bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-300/50 rounded-xl p-6">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <i class="fas fa-arrow-up text-slate-300"></i>
+                    Upgrade to Platinum
+                </h3>
+                <div class="mb-6">
+                    <div class="text-center mb-4">
+                        <div class="w-20 h-20 bg-gradient-to-br from-slate-300 to-slate-400 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-gem text-white text-3xl"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-white">5,800</div>
+                        <div class="text-slate-400">Points needed</div>
+                    </div>
+                    <div class="w-full h-3 bg-slate-700 rounded-full overflow-hidden mb-2">
+                        <div class="h-full bg-gradient-to-r from-slate-300 to-slate-400 rounded-full" style="width: 42%"></div>
+                    </div>
+                    <div class="text-center text-slate-400 text-sm">42% complete</div>
+                </div>
+                
+                <div class="space-y-3 mb-6">
+                    <h4 class="text-white font-semibold">New Benefits You'll Unlock:</h4>
+                    <div class="flex items-center gap-3 text-slate-300 text-sm">
+                        <i class="fas fa-plus-circle text-green-400"></i>
+                        <span>+30% Bonus Rewards (upgrade from 20%)</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-slate-300 text-sm">
+                        <i class="fas fa-plus-circle text-green-400"></i>
+                        <span>VIP-Only Events & Competitions</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-slate-300 text-sm">
+                        <i class="fas fa-plus-circle text-green-400"></i>
+                        <span>Personal Account Manager</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-slate-300 text-sm">
+                        <i class="fas fa-plus-circle text-green-400"></i>
+                        <span>Monthly Platinum Gift Box</span>
+                    </div>
+                </div>
+
+                <button class="w-full py-3 bg-gradient-to-r from-slate-400 to-slate-500 text-white font-bold rounded-lg hover:from-slate-300 hover:to-slate-400 transition-all">
+                    View Upgrade Strategies
+                </button>
+            </div>
+        </div>
+
+        <div id="tier-statistics" class="grid grid-cols-3 gap-6">
+            <div id="monthly-progress" class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4">Monthly Progress</h3>
+                <div class="text-center mb-4">
+                    <div class="text-4xl font-bold text-white mb-2">+1,247</div>
+                    <div class="text-slate-400 text-sm">Points earned this month</div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-400">Daily Average</span>
+                        <span class="text-white font-semibold">41 points</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-400">Best Day</span>
+                        <span class="text-green-400 font-semibold">127 points</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-400">Streak</span>
+                        <span class="text-amber-400 font-semibold">24 days</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tier-rewards" class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4">Tier Rewards Earned</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-coins text-amber-400"></i>
+                            <span class="text-white">Bonus Coins</span>
+                        </div>
+                        <span class="text-amber-400 font-bold">+3,169</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-gem text-cyan-400"></i>
+                            <span class="text-white">Bonus Gems</span>
+                        </div>
+                        <span class="text-cyan-400 font-bold">+84</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-gift text-purple-400"></i>
+                            <span class="text-white">Special Rewards</span>
+                        </div>
+                        <span class="text-purple-400 font-bold">12</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="next-milestone" class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4">Next Milestone</h3>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-slate-300 to-slate-400 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-gift text-white text-2xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-white mb-2">7,500 Points</div>
+                    <div class="text-slate-400 text-sm mb-3">Platinum Milestone Reward</div>
+                    <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden mb-2">
+                        <div class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style="width: 56%"></div>
+                    </div>
+                    <div class="text-slate-400 text-xs">3,300 points remaining</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer id="footer" class="mt-16 bg-slate-800/30 backdrop-blur-lg border-t border-purple-500/30 py-6">
+        <div class="px-8">
+            <div class="flex items-center justify-between text-slate-400 text-sm">
+                <div>© 2024 EngageMax. All rights reserved.</div>
+                <div class="flex items-center gap-6">
+                    <a href="#privacy" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="#terms" class="hover:text-white transition-colors">Terms of Service</a>
+                    <a href="#help" class="hover:text-white transition-colors">Help Center</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+</body>
+</html>

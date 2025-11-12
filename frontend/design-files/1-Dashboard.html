@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>::-webkit-scrollbar { display: none;}
+    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); } 50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.8); } }
+    @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+    @keyframes countUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes particle { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-100px) scale(0); opacity: 0; } }
+    .float-animation { animation: float 3s ease-in-out infinite; }
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    .shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); background-size: 1000px 100%; animation: shimmer 2s infinite; }
+    .particle { animation: particle 2s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 font-sans">
+
+<div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-slate-800/50 backdrop-blur-lg border-r border-purple-500/30 z-50">
+    <div class="p-6">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <i class="fas fa-bolt text-white text-xl"></i>
+            </div>
+            <span class="text-2xl font-bold text-white">EngageMax</span>
+        </div>
+        
+        <nav class="space-y-2">
+            <a href="#dashboard" class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium">
+                <i class="fas fa-home w-5"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#progress" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-chart-line w-5"></i>
+                <span>Progress</span>
+            </a>
+            <a href="#rewards" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-gift w-5"></i>
+                <span>Rewards</span>
+            </a>
+            <a href="#vip-tiers" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-crown w-5"></i>
+                <span>VIP Tiers</span>
+            </a>
+            <a href="#daily-login" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-calendar-check w-5"></i>
+                <span>Daily Login</span>
+            </a>
+            <a href="#referrals" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-users w-5"></i>
+                <span>Referrals</span>
+            </a>
+            <a href="#activity-feed" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-stream w-5"></i>
+                <span>Activity Feed</span>
+            </a>
+            <a href="#settings" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700/50 rounded-lg transition-all">
+                <i class="fas fa-cog w-5"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+</div>
+
+<div id="main-content" class="ml-64">
+    <header id="header" class="bg-slate-800/30 backdrop-blur-lg border-b border-purple-500/30 sticky top-0 z-40">
+        <div class="px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <h1 class="text-2xl font-bold text-white">Dashboard</h1>
+                <div class="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full text-white text-sm font-semibold">Level 42</div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3 bg-slate-700/50 rounded-lg px-4 py-2">
+                    <i class="fas fa-coins text-amber-400"></i>
+                    <span class="text-white font-bold" id="coin-counter">15,847</span>
+                </div>
+                <div class="flex items-center gap-3 bg-slate-700/50 rounded-lg px-4 py-2">
+                    <i class="fas fa-gem text-cyan-400"></i>
+                    <span class="text-white font-bold">342</span>
+                </div>
+                <button class="relative">
+                    <i class="fas fa-bell text-slate-300 text-xl"></i>
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
+                </button>
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" class="w-10 h-10 rounded-full border-2 border-purple-500" alt="User Avatar">
+            </div>
+        </div>
+    </header>
+
+    <main class="p-8">
+        <div id="welcome-section" class="mb-8">
+            <div class="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-2xl p-8 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20">
+                    <div class="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+                    <div class="absolute bottom-10 right-10 w-40 h-40 bg-white rounded-full blur-3xl"></div>
+                </div>
+                <div class="relative z-10">
+                    <h2 class="text-3xl font-bold text-white mb-2">Welcome back, Champion!</h2>
+                    <p class="text-purple-100 text-lg">You're on fire! Complete 2 more missions to unlock the Legendary Badge</p>
+                    <div class="mt-6 flex gap-4">
+                        <button class="px-6 py-3 bg-white text-purple-600 font-bold rounded-lg hover:bg-purple-50 transition-all">View Missions</button>
+                        <button class="px-6 py-3 bg-purple-700/50 text-white font-bold rounded-lg border border-white/30 hover:bg-purple-700 transition-all">Claim Rewards</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stats-grid" class="grid grid-cols-4 gap-6 mb-8">
+            <div class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6 hover:border-purple-500 transition-all">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center float-animation">
+                        <i class="fas fa-trophy text-white text-xl"></i>
+                    </div>
+                    <span class="text-green-400 text-sm font-semibold">+12%</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-1" id="missions-completed">127</div>
+                <div class="text-slate-400 text-sm">Missions Completed</div>
+            </div>
+
+            <div class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6 hover:border-purple-500 transition-all">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center float-animation" style="animation-delay: 0.2s;">
+                        <i class="fas fa-star text-white text-xl"></i>
+                    </div>
+                    <span class="text-green-400 text-sm font-semibold">+8%</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-1">89</div>
+                <div class="text-slate-400 text-sm">Achievements</div>
+            </div>
+
+            <div class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6 hover:border-purple-500 transition-all">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center float-animation" style="animation-delay: 0.4s;">
+                        <i class="fas fa-fire text-white text-xl"></i>
+                    </div>
+                    <span class="text-green-400 text-sm font-semibold">Active</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-1">24</div>
+                <div class="text-slate-400 text-sm">Day Streak</div>
+            </div>
+
+            <div class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6 hover:border-purple-500 transition-all">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center float-animation" style="animation-delay: 0.6s;">
+                        <i class="fas fa-bolt text-white text-xl"></i>
+                    </div>
+                    <span class="text-amber-400 text-sm font-semibold">VIP Gold</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-1">8,542</div>
+                <div class="text-slate-400 text-sm">Total Points</div>
+            </div>
+        </div>
+
+        <div id="main-grid" class="grid grid-cols-3 gap-6 mb-8">
+            <div id="progress-widget" class="col-span-2 bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white">Your Progress</h3>
+                    <select class="bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 text-sm">
+                        <option>This Week</option>
+                        <option>This Month</option>
+                        <option>All Time</option>
+                    </select>
+                </div>
+                <div id="progress-chart" class="h-[300px]"></div>
+            </div>
+
+            <div id="level-widget" class="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-6 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+                </div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-purple-200 text-sm font-semibold">Current Level</span>
+                        <i class="fas fa-chevron-right text-white"></i>
+                    </div>
+                    <div class="text-6xl font-bold text-white mb-2">42</div>
+                    <div class="text-purple-100 mb-6">Master Explorer</div>
+                    
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm text-purple-100 mb-2">
+                            <span>Progress to Level 43</span>
+                            <span class="font-bold">78%</span>
+                        </div>
+                        <div class="w-full h-3 bg-purple-900/50 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-white to-purple-200 rounded-full" style="width: 78%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-purple-100 text-sm">2,340 / 3,000 XP</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="missions-section" class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-white">Active Missions</h3>
+                <button class="text-purple-400 hover:text-purple-300 font-semibold">View All <i class="fas fa-arrow-right ml-2"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-6">
+                <div class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6 hover:border-purple-500 transition-all cursor-pointer">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-gamepad text-white text-2xl"></i>
+                        </div>
+                        <span class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-semibold">Daily</span>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2">Play 5 Mini Games</h4>
+                    <p class="text-slate-400 text-sm mb-4">Complete any 5 mini games today</p>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm text-slate-400 mb-2">
+                            <span>Progress</span>
+                            <span class="text-white font-semibold">3/5</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-amber-400">
+                        <i class="fas fa-coins"></i>
+                        <span class="font-bold">+500 Coins</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6 hover:border-purple-500 transition-all cursor-pointer pulse-glow">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-trophy text-white text-2xl"></i>
+                        </div>
+                        <span class="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-semibold">Weekly</span>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2">Tournament Victory</h4>
+                    <p class="text-slate-400 text-sm mb-4">Win 3 tournament matches</p>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm text-slate-400 mb-2">
+                            <span>Progress</span>
+                            <span class="text-white font-semibold">2/3</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style="width: 66%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-cyan-400">
+                        <i class="fas fa-gem"></i>
+                        <span class="font-bold">+50 Gems</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6 hover:border-purple-500 transition-all cursor-pointer">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-users text-white text-2xl"></i>
+                        </div>
+                        <span class="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-xs font-semibold">Social</span>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2">Refer 3 Friends</h4>
+                    <p class="text-slate-400 text-sm mb-4">Invite friends to join EngageMax</p>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm text-slate-400 mb-2">
+                            <span>Progress</span>
+                            <span class="text-white font-semibold">1/3</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" style="width: 33%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-amber-400">
+                        <i class="fas fa-coins"></i>
+                        <span class="font-bold">+1,000 Coins</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="rewards-jackpot-section" class="grid grid-cols-3 gap-6 mb-8">
+            <div id="daily-rewards" class="col-span-2 bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6">
+                <h3 class="text-xl font-bold text-white mb-6">Daily Login Rewards</h3>
+                <div class="grid grid-cols-7 gap-3">
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg p-4 text-center relative">
+                        <i class="fas fa-check-circle absolute top-2 right-2 text-white text-sm"></i>
+                        <div class="text-white text-2xl mb-2">💰</div>
+                        <div class="text-white font-bold text-sm">Day 1</div>
+                        <div class="text-green-100 text-xs">+100</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg p-4 text-center relative">
+                        <i class="fas fa-check-circle absolute top-2 right-2 text-white text-sm"></i>
+                        <div class="text-white text-2xl mb-2">💎</div>
+                        <div class="text-white font-bold text-sm">Day 2</div>
+                        <div class="text-green-100 text-xs">+5</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg p-4 text-center relative">
+                        <i class="fas fa-check-circle absolute top-2 right-2 text-white text-sm"></i>
+                        <div class="text-white text-2xl mb-2">💰</div>
+                        <div class="text-white font-bold text-sm">Day 3</div>
+                        <div class="text-green-100 text-xs">+150</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg p-4 text-center pulse-glow">
+                        <div class="text-white text-2xl mb-2">🎁</div>
+                        <div class="text-white font-bold text-sm">Day 4</div>
+                        <div class="text-purple-100 text-xs">Claim</div>
+                    </div>
+                    <div class="bg-slate-700/50 rounded-lg p-4 text-center border-2 border-dashed border-slate-600">
+                        <div class="text-slate-500 text-2xl mb-2">💰</div>
+                        <div class="text-slate-500 font-bold text-sm">Day 5</div>
+                        <div class="text-slate-600 text-xs">+200</div>
+                    </div>
+                    <div class="bg-slate-700/50 rounded-lg p-4 text-center border-2 border-dashed border-slate-600">
+                        <div class="text-slate-500 text-2xl mb-2">💎</div>
+                        <div class="text-slate-500 font-bold text-sm">Day 6</div>
+                        <div class="text-slate-600 text-xs">+10</div>
+                    </div>
+                    <div class="bg-slate-700/50 rounded-lg p-4 text-center border-2 border-dashed border-amber-600">
+                        <div class="text-slate-400 text-2xl mb-2">🏆</div>
+                        <div class="text-slate-400 font-bold text-sm">Day 7</div>
+                        <div class="text-amber-600 text-xs">Bonus</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="jackpot-widget" class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-500 rounded-xl p-6 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-30 shimmer"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-trophy text-white text-2xl"></i>
+                        <h3 class="text-xl font-bold text-white">Jackpot</h3>
+                    </div>
+                    <div class="text-5xl font-bold text-white mb-2">$12,547</div>
+                    <p class="text-amber-100 mb-6">Next draw in 2h 34m</p>
+                    <button class="w-full py-3 bg-white text-amber-600 font-bold rounded-lg hover:bg-amber-50 transition-all">Enter Now</button>
+                    <div class="mt-4 text-center text-amber-100 text-sm">
+                        <i class="fas fa-users mr-2"></i>
+                        1,234 participants
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="bottom-section" class="grid grid-cols-3 gap-6">
+            <div id="vip-status" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/50 rounded-xl p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-crown text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">VIP Gold</h3>
+                        <p class="text-slate-400 text-sm">Tier 3 Member</p>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm text-slate-400 mb-2">
+                        <span>Progress to Platinum</span>
+                        <span class="text-white font-semibold">4,200 / 10,000</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" style="width: 42%"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2 text-slate-300 text-sm">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        <span>+20% Bonus Rewards</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-slate-300 text-sm">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        <span>Exclusive Tournaments</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-slate-300 text-sm">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        <span>Priority Support</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="recent-rewards" class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4">Recent Rewards</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-star text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-white font-semibold text-sm">Legendary Badge</div>
+                            <div class="text-slate-400 text-xs">2 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
+                        <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-coins text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-white font-semibold text-sm">+500 Coins</div>
+                            <div class="text-slate-400 text-xs">5 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
+                        <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-gem text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-white font-semibold text-sm">+25 Gems</div>
+                            <div class="text-slate-400 text-xs">1 day ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="leaderboard-widget" class="bg-slate-800/50 backdrop-blur-lg border border-purple-500/30 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-4">Top Players</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="text-2xl">🥇</div>
+                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" class="w-10 h-10 rounded-full" alt="Player">
+                        <div class="flex-1">
+                            <div class="text-white font-semibold text-sm">Alex Storm</div>
+                            <div class="text-slate-400 text-xs">24,567 pts</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-2xl">🥈</div>
+                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" class="w-10 h-10 rounded-full" alt="Player">
+                        <div class="flex-1">
+                            <div class="text-white font-semibold text-sm">Sarah Chen</div>
+                            <div class="text-slate-400 text-xs">23,891 pts</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-2xl">🥉</div>
+                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg" class="w-10 h-10 rounded-full" alt="Player">
+                        <div class="flex-1">
+                            <div class="text-white font-semibold text-sm">Mike Johnson</div>
+                            <div class="text-slate-400 text-xs">22,445 pts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+<script>
+window.addEventListener('load', function() {
+    try {
+        const data = [{
+            type: 'scatter',
+            mode: 'lines',
+            x: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            y: [2400, 3200, 2800, 4100, 3600, 4800, 5200],
+            line: { color: '#a855f7', width: 3 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(168, 85, 247, 0.2)'
+        }];
+        
+        const layout = {
+            margin: { t: 20, r: 20, b: 40, l: 60 },
+            plot_bgcolor: 'rgba(30, 41, 59, 0.3)',
+            paper_bgcolor: 'rgba(30, 41, 59, 0.3)',
+            xaxis: { color: '#94a3b8', gridcolor: 'rgba(148, 163, 184, 0.1)' },
+            yaxis: { color: '#94a3b8', gridcolor: 'rgba(148, 163, 184, 0.1)' },
+            showlegend: false
+        };
+        
+        const config = { responsive: true, displayModeBar: false, displaylogo: false };
+        Plotly.newPlot('progress-chart', data, layout, config);
+    } catch(e) {
+        document.getElementById('progress-chart').innerHTML = '<div class="flex items-center justify-center h-full text-slate-400">Chart unavailable</div>';
+    }
+});
+</script>
+
+</body>
+</html>
