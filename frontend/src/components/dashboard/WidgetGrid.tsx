@@ -1,9 +1,11 @@
 /**
  * WidgetGrid Component
- * Responsive grid layout for dashboard widgets with visibility controls.
+ * Responsive grid layout for dashboard widgets with visibility controls and staggered entrance animations.
  */
 
+import { motion } from 'framer-motion';
 import { useWidgetLayout } from '../../hooks/useWidgetLayout';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 import type { WidgetId } from '../../types/dashboard/widgets';
 import {
   // Phase 4 Widgets
@@ -84,10 +86,11 @@ const WIDGET_LAYOUT: Array<{
 
 /**
  * WidgetGrid component.
- * Renders all dashboard widgets in a responsive grid layout with visibility controls.
+ * Renders all dashboard widgets in a responsive grid layout with visibility controls and staggered animations.
  */
 export function WidgetGrid() {
   const { layout } = useWidgetLayout();
+  const prefersReducedMotion = useReducedMotion();
 
   // Filter visible widgets based on layout configuration
   const visibleWidgets = WIDGET_LAYOUT.filter(
@@ -98,17 +101,26 @@ export function WidgetGrid() {
     <div className="space-y-6">
       {/* Responsive Grid Container */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {visibleWidgets.map((widget) => {
+        {visibleWidgets.map((widget, index) => {
           const WidgetComponent = WIDGET_REGISTRY[widget.id];
 
           return (
-            <div
+            <motion.div
               key={widget.id}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.4,
+                delay: index * 0.05, // 50ms stagger delay
+                type: 'spring',
+                stiffness: 300,
+                damping: 20,
+              }}
               className={widget.className}
               data-widget-id={widget.id}
             >
               <WidgetComponent />
-            </div>
+            </motion.div>
           );
         })}
       </div>

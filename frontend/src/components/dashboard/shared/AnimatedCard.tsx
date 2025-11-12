@@ -45,27 +45,41 @@ export function AnimatedCard({
       initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.5,
+        duration: 0.4,
         delay: delay / 1000,
         type: 'spring',
-        stiffness: 100,
-        damping: 15,
+        stiffness: 300,
+        damping: 20,
       }}
       whileHover={
-        prefersReducedMotion
+        prefersReducedMotion || !isInteractive
           ? undefined
           : {
+              scale: 1.02,
               y: -4,
-              transition: { duration: 0.3 },
+              transition: { duration: 0.2, type: 'spring', stiffness: 400, damping: 25 },
+            }
+      }
+      whileTap={
+        prefersReducedMotion || !isInteractive
+          ? undefined
+          : {
+              scale: 0.95,
+              transition: { duration: 0.1 },
             }
       }
       onClick={onClick}
       className={`
         glass-dark rounded-xl border transition-all duration-300
+        will-change-transform
+        focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900
         ${rarityClasses}
         ${interactiveClasses}
         ${className}
       `}
+      style={{
+        transform: 'translateZ(0)', // GPU acceleration
+      }}
       role={onClick ? 'button' : 'article'}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={
