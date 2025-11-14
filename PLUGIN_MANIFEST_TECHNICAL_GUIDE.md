@@ -189,65 +189,629 @@ INSERT INTO plugin_registry VALUES (
 );
 ```
 
+### Plugin Validation Service
+
+```csharp
+// Platform Core: Smartico.Platform.PluginValidation
+
+/// <summary>
+/// Validates if a plugin is ready to be integrated into the platform
+/// This runs BEFORE registration
+/// </summary>
+public class PluginValidationService
+{
+    private readonly IPluginRepository _pluginRepository;
+    private readonly IManifestValidator _manifestValidator;
+    private readonly IRouteRegistry _routeRegistry;
+    private readonly IKubernetesClient _k8sClient;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<PluginValidationService> _logger;
+
+    /// <summary>
+    /// Comprehensive validation to ensure plugin is ready to plug into platform
+    /// </summary>
+    public async Task<PluginValidationResult> ValidatePluginReadinessAsync(
+        PluginManifest manifest,
+        string dockerImage,
+        string k8sNamespace,
+        string k8sServiceName)
+    {
+        _logger.LogInformation($"Starting validation for plugin {manifest.PluginId} v{manifest.Version}");
+
+        var validationErrors = new List<ValidationError>();
+        var validationWarnings = new List<ValidationWarning>();
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 1: Manifest Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 1: Validating manifest schema");
+
+        var manifestValidation = await _manifestValidator.ValidateSchemaAsync(manifest);
+        if (!manifestValidation.IsValid)
+        {
+            validationErrors.AddRange(manifestValidation.Errors.Select(e =>
+                new ValidationError("ManifestSchema", e)
+            ));
+            // Fatal error - cannot proceed
+            return PluginValidationResult.Failed(validationErrors, validationWarnings);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 2: Dependency Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 2: Validating dependencies");
+
+        // Check core platform version compatibility
+        var currentPlatformVersion = GetCurrentPlatformVersion();
+        if (!IsVersionCompatible(manifest.MinPlatformVersion, currentPlatformVersion))
+        {
+            validationErrors.Add(new ValidationError(
+                "PlatformVersion",
+                $"Plugin requires platform v{manifest.MinPlatformVersion}, but current version is v{currentPlatformVersion}"
+            ));
+        }
+
+        // Check feature dependencies
+        foreach (var dependency in manifest.Dependencies.Features)
+        {
+            var depPlugin = await _pluginRepository.GetActivePluginAsync(dependency.Id);
+
+            if (depPlugin == null)
+            {
+                if (dependency.Optional)
+                {
+                    validationWarnings.Add(new ValidationWarning(
+                        "OptionalDependencyMissing",
+                        $"Optional dependency {dependency.Id} is not installed. Some features may be limited."
+                    ));
+                }
+                else
+                {
+                    validationErrors.Add(new ValidationError(
+                        "RequiredDependencyMissing",
+                        $"Required dependency {dependency.Id} is not installed"
+                    ));
+                }
+            }
+            else
+            {
+                // Check version compatibility
+                if (!IsVersionCompatible(dependency.Version, depPlugin.Version))
+                {
+                    validationErrors.Add(new ValidationError(
+                        "DependencyVersionMismatch",
+                        $"Dependency {dependency.Id} version mismatch: requires {dependency.Version}, found {depPlugin.Version}"
+                    ));
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 3: Route Conflict Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 3: Validating API routes for conflicts");
+
+        var existingRoutes = await _routeRegistry.GetAllRoutesAsync();
+
+        foreach (var endpoint in manifest.Provides.ApiEndpoints)
+        {
+            var routeKey = $"{endpoint.Method}:{endpoint.Path}";
+
+            // Check for exact match conflicts
+            var conflictingRoute = existingRoutes.FirstOrDefault(r =>
+                r.Method == endpoint.Method && r.Path == endpoint.Path
+            );
+
+            if (conflictingRoute != null)
+            {
+                validationErrors.Add(new ValidationError(
+                    "RouteConflict",
+                    $"Route {endpoint.Method} {endpoint.Path} conflicts with existing route from plugin {conflictingRoute.PluginId}"
+                ));
+            }
+
+            // Check for path pattern conflicts (e.g., /api/users/{id} vs /api/users/{userId})
+            var patternConflicts = existingRoutes.Where(r =>
+                r.Method == endpoint.Method && IsPathPatternConflict(r.Path, endpoint.Path)
+            ).ToList();
+
+            foreach (var conflict in patternConflicts)
+            {
+                validationWarnings.Add(new ValidationWarning(
+                    "RoutePatternSimilarity",
+                    $"Route {endpoint.Method} {endpoint.Path} has similar pattern to {conflict.Path} from {conflict.PluginId}. May cause routing ambiguity."
+                ));
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 4: SignalR Event Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 4: Validating SignalR events");
+
+        // Check if published events conflict with existing events
+        var existingEvents = await _routeRegistry.GetAllPublishedEventsAsync();
+
+        foreach (var publishedEvent in manifest.Provides.SignalREvents.Publishes)
+        {
+            var eventKey = $"{manifest.PluginId}:{publishedEvent.Event}";
+
+            var conflictingEvent = existingEvents.FirstOrDefault(e =>
+                e.PluginId == manifest.PluginId && e.EventName == publishedEvent.Event
+            );
+
+            if (conflictingEvent != null)
+            {
+                validationErrors.Add(new ValidationError(
+                    "EventConflict",
+                    $"Event {publishedEvent.Event} is already published by plugin {conflictingEvent.PluginId}"
+                ));
+            }
+        }
+
+        // Validate subscribed events exist
+        foreach (var subscribedEvent in manifest.Provides.SignalREvents.Subscribes)
+        {
+            var eventKey = $"{subscribedEvent.From}:{subscribedEvent.Event}";
+
+            var publisherExists = existingEvents.Any(e =>
+                e.PluginId == subscribedEvent.From && e.EventName == subscribedEvent.Event
+            );
+
+            if (!publisherExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "SubscribedEventNotFound",
+                    $"Plugin subscribes to event {subscribedEvent.Event} from {subscribedEvent.From}, but this event is not published by any plugin"
+                ));
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 5: Kubernetes Service Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 5: Validating Kubernetes deployment");
+
+        try
+        {
+            // Check if namespace exists
+            var namespaceExists = await _k8sClient.NamespaceExistsAsync(k8sNamespace);
+            if (!namespaceExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "NamespaceNotFound",
+                    $"Kubernetes namespace {k8sNamespace} does not exist"
+                ));
+            }
+
+            // Check if service exists
+            var serviceExists = await _k8sClient.ServiceExistsAsync(k8sNamespace, k8sServiceName);
+            if (!serviceExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "ServiceNotFound",
+                    $"Kubernetes service {k8sServiceName} does not exist in namespace {k8sNamespace}"
+                ));
+            }
+            else
+            {
+                // Check if service has endpoints (pods are running)
+                var endpoints = await _k8sClient.GetServiceEndpointsAsync(k8sNamespace, k8sServiceName);
+                if (endpoints == null || !endpoints.Any())
+                {
+                    validationErrors.Add(new ValidationError(
+                        "NoServiceEndpoints",
+                        $"Service {k8sServiceName} has no endpoints. No pods are running."
+                    ));
+                }
+                else
+                {
+                    _logger.LogInformation($"Service has {endpoints.Count} endpoint(s)");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            validationErrors.Add(new ValidationError(
+                "KubernetesValidationFailed",
+                $"Failed to validate Kubernetes resources: {ex.Message}"
+            ));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 6: Health Check Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 6: Validating service health");
+
+        try
+        {
+            var serviceFqdn = $"{k8sServiceName}.{k8sNamespace}.svc.cluster.local";
+            var servicePort = await _k8sClient.GetServicePortAsync(k8sNamespace, k8sServiceName);
+
+            // Check health endpoint
+            var healthUrl = $"http://{serviceFqdn}:{servicePort}{manifest.Monitoring.HealthCheck}";
+            var healthResponse = await CheckEndpointAsync(healthUrl);
+
+            if (!healthResponse.IsSuccessful)
+            {
+                validationErrors.Add(new ValidationError(
+                    "HealthCheckFailed",
+                    $"Health check endpoint {healthUrl} returned status {healthResponse.StatusCode}"
+                ));
+            }
+
+            // Check readiness endpoint
+            var readinessUrl = $"http://{serviceFqdn}:{servicePort}{manifest.Monitoring.ReadinessCheck}";
+            var readinessResponse = await CheckEndpointAsync(readinessUrl);
+
+            if (!readinessResponse.IsSuccessful)
+            {
+                validationErrors.Add(new ValidationError(
+                    "ReadinessCheckFailed",
+                    $"Readiness check endpoint {readinessUrl} returned status {readinessResponse.StatusCode}"
+                ));
+            }
+
+            // Verify plugin manifest is accessible (injected via ConfigMap)
+            var manifestUrl = $"http://{serviceFqdn}:{servicePort}/plugin-info";
+            var manifestResponse = await CheckEndpointAsync(manifestUrl);
+
+            if (!manifestResponse.IsSuccessful)
+            {
+                validationWarnings.Add(new ValidationWarning(
+                    "PluginInfoEndpointMissing",
+                    "Plugin does not expose /plugin-info endpoint. This is optional but recommended for debugging."
+                ));
+            }
+        }
+        catch (Exception ex)
+        {
+            validationErrors.Add(new ValidationError(
+                "HealthCheckException",
+                $"Exception during health check: {ex.Message}"
+            ));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 7: Configuration Schema Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 7: Validating configuration schema");
+
+        if (manifest.Configuration?.Schema != null)
+        {
+            foreach (var configKey in manifest.Configuration.Schema.Keys)
+            {
+                var schema = manifest.Configuration.Schema[configKey];
+
+                // Validate defaults match schema
+                if (manifest.Configuration.Defaults.ContainsKey(configKey))
+                {
+                    var defaultValue = manifest.Configuration.Defaults[configKey];
+
+                    if (!IsValueTypeValid(defaultValue, schema.Type))
+                    {
+                        validationErrors.Add(new ValidationError(
+                            "ConfigurationDefaultTypeMismatch",
+                            $"Configuration key '{configKey}' has default value type mismatch. Expected {schema.Type}."
+                        ));
+                    }
+
+                    // Validate range for numeric types
+                    if (schema.Type == "number")
+                    {
+                        var numValue = Convert.ToDouble(defaultValue);
+
+                        if (schema.Min.HasValue && numValue < schema.Min.Value)
+                        {
+                            validationErrors.Add(new ValidationError(
+                                "ConfigurationDefaultOutOfRange",
+                                $"Configuration key '{configKey}' default value {numValue} is less than minimum {schema.Min}"
+                            ));
+                        }
+
+                        if (schema.Max.HasValue && numValue > schema.Max.Value)
+                        {
+                            validationErrors.Add(new ValidationError(
+                                "ConfigurationDefaultOutOfRange",
+                                $"Configuration key '{configKey}' default value {numValue} is greater than maximum {schema.Max}"
+                            ));
+                        }
+                    }
+                }
+                else
+                {
+                    validationWarnings.Add(new ValidationWarning(
+                        "ConfigurationDefaultMissing",
+                        $"Configuration key '{configKey}' is defined in schema but has no default value"
+                    ));
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 8: Docker Image Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 8: Validating Docker image");
+
+        try
+        {
+            // Check if Docker image exists and is accessible
+            var imageExists = await _k8sClient.CheckImageExistsAsync(dockerImage);
+            if (!imageExists)
+            {
+                validationErrors.Add(new ValidationError(
+                    "DockerImageNotFound",
+                    $"Docker image {dockerImage} not found or not accessible"
+                ));
+            }
+        }
+        catch (Exception ex)
+        {
+            validationWarnings.Add(new ValidationWarning(
+                "DockerImageValidationSkipped",
+                $"Could not validate Docker image existence: {ex.Message}"
+            ));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // PHASE 9: Resource Requirements Validation
+        // ═══════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("Phase 9: Validating resource requirements");
+
+        if (manifest.Resources != null)
+        {
+            // Check if cluster has enough resources
+            var clusterResources = await _k8sClient.GetClusterResourcesAsync();
+
+            var requestedCpu = ParseCpuResource(manifest.Resources.Cpu.Request);
+            var requestedMemory = ParseMemoryResource(manifest.Resources.Memory.Request);
+
+            if (clusterResources.AvailableCpu < requestedCpu)
+            {
+                validationWarnings.Add(new ValidationWarning(
+                    "InsufficientCpuResources",
+                    $"Cluster may not have sufficient CPU. Requested: {manifest.Resources.Cpu.Request}, Available: {clusterResources.AvailableCpu}m"
+                ));
+            }
+
+            if (clusterResources.AvailableMemory < requestedMemory)
+            {
+                validationWarnings.Add(new ValidationWarning(
+                    "InsufficientMemoryResources",
+                    $"Cluster may not have sufficient memory. Requested: {manifest.Resources.Memory.Request}, Available: {clusterResources.AvailableMemory}Mi"
+                ));
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // FINAL RESULT
+        // ═══════════════════════════════════════════════════════════════════
+
+        var isValid = !validationErrors.Any();
+
+        if (isValid)
+        {
+            _logger.LogInformation($"✓ Plugin {manifest.PluginId} passed all validation checks");
+            if (validationWarnings.Any())
+            {
+                _logger.LogWarning($"⚠ {validationWarnings.Count} warning(s) found");
+            }
+        }
+        else
+        {
+            _logger.LogError($"✗ Plugin {manifest.PluginId} failed validation with {validationErrors.Count} error(s)");
+        }
+
+        return new PluginValidationResult
+        {
+            IsValid = isValid,
+            Errors = validationErrors,
+            Warnings = validationWarnings,
+            PluginId = manifest.PluginId,
+            Version = manifest.Version,
+            ValidatedAt = DateTime.UtcNow
+        };
+    }
+
+    private async Task<EndpointCheckResult> CheckEndpointAsync(string url)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(10);
+
+            var response = await client.GetAsync(url);
+
+            return new EndpointCheckResult
+            {
+                IsSuccessful = response.IsSuccessStatusCode,
+                StatusCode = (int)response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+            return new EndpointCheckResult
+            {
+                IsSuccessful = false,
+                StatusCode = 0,
+                Error = ex.Message
+            };
+        }
+    }
+
+    private bool IsPathPatternConflict(string existingPath, string newPath)
+    {
+        // Simple pattern conflict detection
+        // e.g., /api/users/{id} vs /api/users/{userId}
+        var existingSegments = existingPath.Split('/');
+        var newSegments = newPath.Split('/');
+
+        if (existingSegments.Length != newSegments.Length)
+            return false;
+
+        for (int i = 0; i < existingSegments.Length; i++)
+        {
+            var existingSeg = existingSegments[i];
+            var newSeg = newSegments[i];
+
+            // Both are parameters
+            if (existingSeg.StartsWith("{") && newSeg.StartsWith("{"))
+                continue;
+
+            // Exact match
+            if (existingSeg == newSeg)
+                continue;
+
+            // Different segments
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool IsValueTypeValid(object value, string expectedType)
+    {
+        return expectedType.ToLower() switch
+        {
+            "number" => value is int or long or double or decimal,
+            "string" => value is string,
+            "boolean" => value is bool,
+            _ => false
+        };
+    }
+
+    private double ParseCpuResource(string cpu)
+    {
+        // Parse CPU resource like "200m" = 200 millicores
+        if (cpu.EndsWith("m"))
+            return double.Parse(cpu.TrimEnd('m'));
+
+        return double.Parse(cpu) * 1000; // cores to millicores
+    }
+
+    private long ParseMemoryResource(string memory)
+    {
+        // Parse memory resource like "256Mi" = 256 mebibytes
+        if (memory.EndsWith("Mi"))
+            return long.Parse(memory.Replace("Mi", ""));
+
+        if (memory.EndsWith("Gi"))
+            return long.Parse(memory.Replace("Gi", "")) * 1024;
+
+        return long.Parse(memory);
+    }
+}
+
+public class PluginValidationResult
+{
+    public bool IsValid { get; set; }
+    public List<ValidationError> Errors { get; set; } = new();
+    public List<ValidationWarning> Warnings { get; set; } = new();
+    public string PluginId { get; set; }
+    public string Version { get; set; }
+    public DateTime ValidatedAt { get; set; }
+}
+
+public class ValidationError
+{
+    public string Code { get; set; }
+    public string Message { get; set; }
+
+    public ValidationError(string code, string message)
+    {
+        Code = code;
+        Message = message;
+    }
+}
+
+public class ValidationWarning
+{
+    public string Code { get; set; }
+    public string Message { get; set; }
+
+    public ValidationWarning(string code, string message)
+    {
+        Code = code;
+        Message = message;
+    }
+}
+
+public class EndpointCheckResult
+{
+    public bool IsSuccessful { get; set; }
+    public int StatusCode { get; set; }
+    public string Error { get; set; }
+}
+```
+
 ### Plugin Registration Service
 
 ```csharp
 // Platform Core: Smartico.Platform.PluginRegistry
 
+/// <summary>
+/// Registers validated plugins into the platform
+/// This runs AFTER validation passes
+/// </summary>
 public class PluginRegistrationService
 {
     private readonly IPluginRepository _pluginRepository;
-    private readonly IManifestValidator _manifestValidator;
-    private readonly IApiGateway _apiGateway;
+    private readonly IPluginValidationService _validationService;
+    private readonly IHAProxyConfigurator _haproxyConfigurator;
     private readonly IEventBus _eventBus;
+    private readonly ILogger<PluginRegistrationService> _logger;
 
     /// <summary>
-    /// Called during plugin deployment
+    /// Register plugin after validation passes
     /// </summary>
     public async Task<PluginRegistrationResult> RegisterPluginAsync(
         PluginManifest manifest,
-        string dockerImage)
+        string dockerImage,
+        string k8sNamespace,
+        string k8sServiceName)
     {
-        // STEP 1: Validate manifest schema
-        var validationResult = await _manifestValidator.ValidateAsync(manifest);
+        _logger.LogInformation($"Starting registration for plugin {manifest.PluginId} v{manifest.Version}");
+
+        // ═══════════════════════════════════════════════════════════════════
+        // STEP 1: Validate Plugin Readiness
+        // ═══════════════════════════════════════════════════════════════════
+
+        var validationResult = await _validationService.ValidatePluginReadinessAsync(
+            manifest,
+            dockerImage,
+            k8sNamespace,
+            k8sServiceName
+        );
+
         if (!validationResult.IsValid)
         {
-            return PluginRegistrationResult.Failed(validationResult.Errors);
+            _logger.LogError($"Plugin {manifest.PluginId} failed validation");
+
+            return PluginRegistrationResult.Failed(
+                validationResult.Errors.Select(e => e.Message).ToList()
+            );
         }
 
-        // STEP 2: Check dependencies
-        foreach (var dependency in manifest.Dependencies.Features)
+        if (validationResult.Warnings.Any())
         {
-            var depPlugin = await _pluginRepository.GetPluginAsync(dependency.Id);
-            if (depPlugin == null)
-            {
-                return PluginRegistrationResult.Failed(
-                    $"Missing dependency: {dependency.Id}"
-                );
-            }
-
-            if (!VersionMatches(depPlugin.Version, dependency.Version))
-            {
-                return PluginRegistrationResult.Failed(
-                    $"Version mismatch: {dependency.Id} requires {dependency.Version}"
-                );
-            }
+            _logger.LogWarning(
+                $"Plugin {manifest.PluginId} has {validationResult.Warnings.Count} warning(s)"
+            );
         }
 
-        // STEP 3: Check for route conflicts
-        var existingRoutes = await _apiGateway.GetAllRoutesAsync();
-        foreach (var endpoint in manifest.Provides.ApiEndpoints)
-        {
-            var route = $"{endpoint.Method} {endpoint.Path}";
-            if (existingRoutes.Contains(route))
-            {
-                return PluginRegistrationResult.Failed(
-                    $"Route conflict: {route} already registered"
-                );
-            }
-        }
+        // ═══════════════════════════════════════════════════════════════════
+        // STEP 2: Store in Plugin Registry
+        // ═══════════════════════════════════════════════════════════════════
 
-        // STEP 4: Store in registry
         var plugin = new Plugin
         {
             PluginId = manifest.PluginId,
@@ -255,21 +819,168 @@ public class PluginRegistrationService
             Version = manifest.Version,
             ManifestJson = JsonSerializer.Serialize(manifest),
             DockerImage = dockerImage,
+
+            // Kubernetes metadata
+            K8sNamespace = k8sNamespace,
+            K8sServiceName = k8sServiceName,
+            K8sDeploymentName = $"{k8sServiceName.Replace("-service", "")}-deployment",
+
             Status = PluginStatus.Registered,
-            RegisteredAt = DateTime.UtcNow
+            RegisteredAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         await _pluginRepository.AddAsync(plugin);
 
-        // STEP 5: Publish registration event
+        _logger.LogInformation($"✓ Plugin {manifest.PluginId} stored in registry");
+
+        // ═══════════════════════════════════════════════════════════════════
+        // STEP 3: Configure HAProxy Routes
+        // ═══════════════════════════════════════════════════════════════════
+
+        try
+        {
+            await _haproxyConfigurator.ConfigureRoutesAsync(plugin, manifest);
+            _logger.LogInformation($"✓ HAProxy configured for {manifest.PluginId}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to configure HAProxy for {manifest.PluginId}");
+
+            // Rollback registration
+            await _pluginRepository.DeleteAsync(plugin.PluginId);
+
+            return PluginRegistrationResult.Failed(new[]
+            {
+                $"HAProxy configuration failed: {ex.Message}"
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // STEP 4: Update Plugin Status to Active
+        // ═══════════════════════════════════════════════════════════════════
+
+        plugin.Status = PluginStatus.Active;
+        await _pluginRepository.UpdateAsync(plugin);
+
+        _logger.LogInformation($"✓ Plugin {manifest.PluginId} status set to Active");
+
+        // ═══════════════════════════════════════════════════════════════════
+        // STEP 5: Publish Registration Event
+        // ═══════════════════════════════════════════════════════════════════
+
         await _eventBus.PublishAsync(new PluginRegisteredEvent
         {
             PluginId = manifest.PluginId,
             Version = manifest.Version,
-            Manifest = manifest
+            Manifest = manifest,
+            Namespace = k8sNamespace,
+            ServiceName = k8sServiceName,
+            RegisteredAt = plugin.RegisteredAt
         });
 
-        return PluginRegistrationResult.Success(plugin.PluginId);
+        _logger.LogInformation($"✓ Plugin registration event published");
+
+        // ═══════════════════════════════════════════════════════════════════
+        // STEP 6: Return Success Result
+        // ═══════════════════════════════════════════════════════════════════
+
+        return PluginRegistrationResult.Success(
+            plugin.PluginId,
+            validationResult.Warnings.Select(w => w.Message).ToList()
+        );
+    }
+
+    /// <summary>
+    /// Unregister plugin from platform
+    /// </summary>
+    public async Task<PluginUnregistrationResult> UnregisterPluginAsync(string pluginId)
+    {
+        _logger.LogInformation($"Starting unregistration for plugin {pluginId}");
+
+        var plugin = await _pluginRepository.GetActivePluginAsync(pluginId);
+        if (plugin == null)
+        {
+            return PluginUnregistrationResult.Failed($"Plugin {pluginId} not found");
+        }
+
+        var manifest = JsonSerializer.Deserialize<PluginManifest>(plugin.ManifestJson);
+
+        // Remove HAProxy configuration
+        await _haproxyConfigurator.RemoveRoutesAsync(plugin, manifest);
+
+        // Mark as deprecated
+        plugin.Status = PluginStatus.Deprecated;
+        plugin.UpdatedAt = DateTime.UtcNow;
+        await _pluginRepository.UpdateAsync(plugin);
+
+        // Publish unregistration event
+        await _eventBus.PublishAsync(new PluginUnregisteredEvent
+        {
+            PluginId = pluginId,
+            UnregisteredAt = DateTime.UtcNow
+        });
+
+        _logger.LogInformation($"✓ Plugin {pluginId} unregistered successfully");
+
+        return PluginUnregistrationResult.Success(pluginId);
+    }
+}
+
+public class PluginRegistrationResult
+{
+    public bool IsSuccessful { get; set; }
+    public string PluginId { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public List<string> Warnings { get; set; } = new();
+
+    public static PluginRegistrationResult Success(string pluginId, List<string> warnings = null)
+    {
+        return new PluginRegistrationResult
+        {
+            IsSuccessful = true,
+            PluginId = pluginId,
+            Warnings = warnings ?? new List<string>()
+        };
+    }
+
+    public static PluginRegistrationResult Failed(IEnumerable<string> errors)
+    {
+        return new PluginRegistrationResult
+        {
+            IsSuccessful = false,
+            Errors = errors.ToList()
+        };
+    }
+
+    public static PluginRegistrationResult Failed(string error)
+    {
+        return Failed(new[] { error });
+    }
+}
+
+public class PluginUnregistrationResult
+{
+    public bool IsSuccessful { get; set; }
+    public string PluginId { get; set; }
+    public string Error { get; set; }
+
+    public static PluginUnregistrationResult Success(string pluginId)
+    {
+        return new PluginUnregistrationResult
+        {
+            IsSuccessful = true,
+            PluginId = pluginId
+        };
+    }
+
+    public static PluginUnregistrationResult Failed(string error)
+    {
+        return new PluginUnregistrationResult
+        {
+            IsSuccessful = false,
+            Error = error
+        };
     }
 }
 ```
