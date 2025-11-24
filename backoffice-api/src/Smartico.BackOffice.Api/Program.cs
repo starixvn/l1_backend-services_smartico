@@ -1,41 +1,151 @@
+using FluentValidation;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using Smartico.BackOffice.Api.Middleware;
+using Smartico.BackOffice.Application.Leaderboard.Interfaces;
+using Smartico.BackOffice.Application.Leaderboard.Services;
+using Smartico.BackOffice.Application.Tournaments.Interfaces;
+using Smartico.BackOffice.Application.Tournaments.Services;
+using Smartico.BackOffice.Application.Tournaments.Validators;
+using Smartico.BackOffice.Domain.Repositories;
+using Smartico.BackOffice.Infrastructure.Configuration;
+using Smartico.BackOffice.Infrastructure.Data;
+using Smartico.BackOffice.Infrastructure.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Add services to the container
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Configure JSON serialization to handle enums as strings
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
+// Configure MongoDB
+var mongoSettings = builder.Configuration.GetSection("MongoDB").Get<MongoDbSettings>()
+    ?? throw new InvalidOperationException("MongoDB settings not found in configuration");
+
+builder.Services.AddSingleton<MongoDbSettings>(mongoSettings);
+
+// Register MongoDB client and database
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var settings = sp.GetRequiredService<MongoDbSettings>();
+    return new MongoClient(settings.ConnectionString);
+});
+
+builder.Services.AddScoped(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    var settings = sp.GetRequiredService<MongoDbSettings>();
+    return client.GetDatabase(settings.DatabaseName);
+});
+
+// Register MongoDB index setup
+builder.Services.AddScoped<MongoDbIndexSetup>();
+
+// Register HttpContextAccessor for accessing operator context
+builder.Services.AddHttpContextAccessor();
+
+// Register repositories with factory pattern to extract OperatorId from HttpContext
+builder.Services.AddScoped<ITournamentRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new TournamentRepository(database, operatorId);
+});
+
+builder.Services.AddScoped<ILeaderboardRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new LeaderboardRepository(database, operatorId);
+});
+
+// Register validators
+builder.Services.AddValidatorsFromAssemblyContaining<TournamentValidator>();
+
+// Register application services
+builder.Services.AddScoped<ITournamentService, TournamentService>();
+builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+
+// Configure OpenAPI/Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new()
+    {
+        Title = "Smartico Back Office API",
+        Version = "v1",
+        Description = "Campaign Management & Tournament Builder API"
+    });
+
+    // Include XML comments if available
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Initialize MongoDB indexes
+using (var scope = app.Services.CreateScope())
+{
+    var indexSetup = scope.ServiceProvider.GetRequiredService<MongoDbIndexSetup>();
+    await indexSetup.CreateIndexesAsync();
+}
+
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Smartico Back Office API v1");
+    });
 }
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// Enable CORS
+app.UseCors("AllowFrontend");
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// Use authentication & authorization (will be configured in future phases)
+// app.UseAuthentication();
+// app.UseAuthorization();
+
+// Use operator context middleware (extracts OperatorId from claims)
+app.UseOperatorContext();
+
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
