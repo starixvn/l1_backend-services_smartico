@@ -5,7 +5,17 @@
       "Bash(powershell.exe:*)",
       "Bash(test -d \"F:\\Projects\\smartico\\specs\\001-gamification-widget-layout\\checklists\")",
       "Bash(git add:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet sln add:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet nuget list:*)",
+      "Bash(dotnet nuget disable source:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss init -p)",
+      "Bash(node_modules/.bin/tailwindcss:*)"
     ],
     "deny": [],
     "ask": []

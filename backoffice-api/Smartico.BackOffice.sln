@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F7F57A0C-76C9-4412-BE8C-AB2261C76247}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.BackOffice.Api", "src\Smartico.BackOffice.Api\Smartico.BackOffice.Api.csproj", "{D66D14B5-A63C-41BF-B42F-56C2FDAF78E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.BackOffice.Application", "src\Smartico.BackOffice.Application\Smartico.BackOffice.Application.csproj", "{1059D433-50EC-4525-8E69-B635DEDC3F6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.BackOffice.Domain", "src\Smartico.BackOffice.Domain\Smartico.BackOffice.Domain.csproj", "{831BFFD0-587F-4201-B91B-8BB919BCAD0D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.BackOffice.Infrastructure", "src\Smartico.BackOffice.Infrastructure\Smartico.BackOffice.Infrastructure.csproj", "{9A70B58E-532B-4466-BA18-0B296D928AFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2D3F3279-99A6-417E-BD3B-A884E9EA150C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartico.BackOffice.UnitTests", "tests\Smartico.BackOffice.UnitTests\Smartico.BackOffice.UnitTests.csproj", "{0288DD0C-0C08-4FA6-80A9-83E9E381358E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D66D14B5-A63C-41BF-B42F-56C2FDAF78E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D66D14B5-A63C-41BF-B42F-56C2FDAF78E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D66D14B5-A63C-41BF-B42F-56C2FDAF78E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D66D14B5-A63C-41BF-B42F-56C2FDAF78E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1059D433-50EC-4525-8E69-B635DEDC3F6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1059D433-50EC-4525-8E69-B635DEDC3F6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1059D433-50EC-4525-8E69-B635DEDC3F6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1059D433-50EC-4525-8E69-B635DEDC3F6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{831BFFD0-587F-4201-B91B-8BB919BCAD0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{831BFFD0-587F-4201-B91B-8BB919BCAD0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{831BFFD0-587F-4201-B91B-8BB919BCAD0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{831BFFD0-587F-4201-B91B-8BB919BCAD0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A70B58E-532B-4466-BA18-0B296D928AFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A70B58E-532B-4466-BA18-0B296D928AFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A70B58E-532B-4466-BA18-0B296D928AFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A70B58E-532B-4466-BA18-0B296D928AFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0288DD0C-0C08-4FA6-80A9-83E9E381358E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0288DD0C-0C08-4FA6-80A9-83E9E381358E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0288DD0C-0C08-4FA6-80A9-83E9E381358E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0288DD0C-0C08-4FA6-80A9-83E9E381358E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D66D14B5-A63C-41BF-B42F-56C2FDAF78E0} = {F7F57A0C-76C9-4412-BE8C-AB2261C76247}
+		{1059D433-50EC-4525-8E69-B635DEDC3F6E} = {F7F57A0C-76C9-4412-BE8C-AB2261C76247}
+		{831BFFD0-587F-4201-B91B-8BB919BCAD0D} = {F7F57A0C-76C9-4412-BE8C-AB2261C76247}
+		{9A70B58E-532B-4466-BA18-0B296D928AFA} = {F7F57A0C-76C9-4412-BE8C-AB2261C76247}
+		{0288DD0C-0C08-4FA6-80A9-83E9E381358E} = {2D3F3279-99A6-417E-BD3B-A884E9EA150C}
+	EndGlobalSection
+EndGlobal

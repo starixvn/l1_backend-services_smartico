@@ -1,0 +1,6 @@
+@Smartico.BackOffice.Api_HostAddress = http://localhost:5120
+
+GET {{Smartico.BackOffice.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
