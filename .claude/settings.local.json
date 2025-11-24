@@ -4,7 +4,8 @@
       "Bash(dir:*)",
       "Bash(powershell.exe:*)",
       "Bash(test -d \"F:\\Projects\\smartico\\specs\\001-gamification-widget-layout\\checklists\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
