@@ -57,6 +57,14 @@ public class Mission : IOperatorScoped
     public MissionRule Rule { get; set; } = new();
 
     /// <summary>
+    /// Execution-ready rule structure generated when mission is published.
+    /// Linear format optimized for mission processing service.
+    /// Only populated for Active missions.
+    /// </summary>
+    [BsonElement("executionRule")]
+    public MissionExecutionRule? ExecutionRule { get; set; }
+
+    /// <summary>
     /// Player segment that can participate in this mission.
     /// </summary>
     [BsonElement("targetSegment")]

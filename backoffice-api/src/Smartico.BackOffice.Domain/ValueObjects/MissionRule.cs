@@ -243,3 +243,120 @@ public enum RewardType
     /// </summary>
     CashBonus
 }
+
+// ====================================================================================
+// EXECUTION MODEL - Generated from visual rule when mission is published
+// ====================================================================================
+
+/// <summary>
+/// Execution model for mission processing.
+/// This is generated from the visual MissionRule when a mission is published.
+/// The mission processing service uses this structure to execute missions.
+/// </summary>
+public record MissionExecutionRule
+{
+    /// <summary>
+    /// Trigger condition that activates this mission for players.
+    /// </summary>
+    [BsonElement("trigger")]
+    public TriggerCondition Trigger { get; init; } = new();
+
+    /// <summary>
+    /// Sequential list of goals that must be completed in order.
+    /// </summary>
+    [BsonElement("goals")]
+    public List<GoalStep> Goals { get; init; } = new();
+
+    /// <summary>
+    /// Reward to be granted upon mission completion.
+    /// </summary>
+    [BsonElement("reward")]
+    public RewardDefinition Reward { get; init; } = new();
+}
+
+/// <summary>
+/// Defines what event triggers a mission to become available to a player.
+/// </summary>
+public record TriggerCondition
+{
+    /// <summary>
+    /// Type of event that triggers the mission.
+    /// </summary>
+    [BsonElement("type")]
+    [BsonRepresentation(MongoDB.Bson.BsonType.String)]
+    public TriggerType Type { get; init; }
+
+    /// <summary>
+    /// Minimum amount for amount-based triggers (e.g., min bet $10).
+    /// </summary>
+    [BsonElement("minAmount")]
+    public decimal? MinAmount { get; init; }
+
+    /// <summary>
+    /// Specific game ID if trigger is game-specific.
+    /// </summary>
+    [BsonElement("gameId")]
+    public string? GameId { get; init; }
+}
+
+/// <summary>
+/// Defines a single goal/step that must be completed.
+/// </summary>
+public record GoalStep
+{
+    /// <summary>
+    /// Order in which this goal must be completed (1-based).
+    /// </summary>
+    [BsonElement("order")]
+    public int Order { get; init; }
+
+    /// <summary>
+    /// Type of goal (what player needs to do).
+    /// </summary>
+    [BsonElement("type")]
+    [BsonRepresentation(MongoDB.Bson.BsonType.String)]
+    public GoalType Type { get; init; }
+
+    /// <summary>
+    /// Target count for count-based goals (e.g., make 10 bets).
+    /// </summary>
+    [BsonElement("targetCount")]
+    public int? TargetCount { get; init; }
+
+    /// <summary>
+    /// Target amount for amount-based goals (e.g., wager $100).
+    /// </summary>
+    [BsonElement("targetAmount")]
+    public decimal? TargetAmount { get; init; }
+
+    /// <summary>
+    /// Specific game ID if goal is game-specific.
+    /// </summary>
+    [BsonElement("gameId")]
+    public string? GameId { get; init; }
+}
+
+/// <summary>
+/// Defines the reward granted upon mission completion.
+/// </summary>
+public record RewardDefinition
+{
+    /// <summary>
+    /// Type of reward to grant.
+    /// </summary>
+    [BsonElement("type")]
+    [BsonRepresentation(MongoDB.Bson.BsonType.String)]
+    public RewardType Type { get; init; }
+
+    /// <summary>
+    /// Amount of reward (number of free spins or cash bonus amount).
+    /// </summary>
+    [BsonElement("amount")]
+    public decimal Amount { get; init; }
+
+    /// <summary>
+    /// Specific game ID for free spins rewards.
+    /// </summary>
+    [BsonElement("gameId")]
+    public string? GameId { get; init; }
+}

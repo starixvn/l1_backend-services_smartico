@@ -1,4 +1,5 @@
 using MongoDB.Bson;
+using Smartico.BackOffice.Application.Missions.Services;
 using Smartico.BackOffice.Domain.Entities;
 using Smartico.BackOffice.Domain.Repositories;
 using Smartico.BackOffice.Domain.ValueObjects;
@@ -39,6 +40,9 @@ public class PublishMissionCommandHandler
 
         // Validate mission can be published
         ValidateMission(mission);
+
+        // Transform visual rule to execution rule
+        mission.ExecutionRule = MissionRuleTransformer.Transform(mission.Rule);
 
         // Update status to Active
         mission.Status = MissionStatus.Active;

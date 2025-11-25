@@ -24,6 +24,7 @@ export const MissionDetailsPage: React.FC = () => {
   const [mission, setMission] = useState<Mission | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -42,6 +43,23 @@ export const MissionDetailsPage: React.FC = () => {
       console.error('Error loading mission:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!id || !mission) return;
+
+    try {
+      setPublishing(true);
+      setError(null);
+      await missionApi.publishMission(id);
+      // Reload mission to get updated status
+      await loadMission(id);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to publish mission');
+      console.error('Error publishing mission:', err);
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -120,15 +138,27 @@ export const MissionDetailsPage: React.FC = () => {
             </div>
           </div>
           {mission.status === 'Draft' && (
-            <button
-              onClick={() => navigate(`/missions/edit/${mission.id}`)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Edit Mission
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate(`/missions/edit/${mission.id}`)}
+                className="px-4 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Mission
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={publishing}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {publishing ? 'Publishing...' : 'Publish Mission'}
+              </button>
+            </div>
           )}
         </div>
         {mission.description && (
