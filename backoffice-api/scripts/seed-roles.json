@@ -1,0 +1,56 @@
+[
+  {
+    "_id": {"$oid": "507f1f77bcf86cd799439012"},
+    "operatorId": {"$oid": "507f1f77bcf86cd799439011"},
+    "name": "Administrator",
+    "description": "Full system access with all permissions",
+    "permissions": [
+      "tournaments.view",
+      "tournaments.create",
+      "tournaments.edit",
+      "tournaments.delete",
+      "tournaments.publish",
+      "missions.view",
+      "missions.create",
+      "missions.edit",
+      "missions.delete",
+      "missions.publish",
+      "users.view",
+      "users.create",
+      "users.edit",
+      "users.delete",
+      "users.manage_roles",
+      "roles.view",
+      "roles.create",
+      "roles.edit",
+      "roles.delete",
+      "analytics.view",
+      "analytics.export",
+      "settings.operator",
+      "audit.view"
+    ],
+    "isSystem": true,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "507f1f77bcf86cd799439014"},
+    "operatorId": {"$oid": "507f1f77bcf86cd799439011"},
+    "name": "Campaign Manager",
+    "description": "Manage tournaments and missions without user/role administration",
+    "permissions": [
+      "tournaments.view",
+      "tournaments.create",
+      "tournaments.edit",
+      "tournaments.publish",
+      "missions.view",
+      "missions.create",
+      "missions.edit",
+      "missions.publish",
+      "analytics.view"
+    ],
+    "isSystem": false,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  }
+]

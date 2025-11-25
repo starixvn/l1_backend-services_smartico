@@ -22,6 +22,8 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) =>
     switch (tournament.status) {
       case TournamentStatus.ACTIVE:
         return 'bg-success text-white';
+      case TournamentStatus.DRAFT:
+        return 'bg-yellow-500 text-white';
       case TournamentStatus.SCHEDULED:
         return 'bg-info text-white';
       case TournamentStatus.COMPLETED:

@@ -1,14 +1,22 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Root layout component with header navigation
  */
 export const Layout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -41,42 +49,73 @@ export const Layout: React.FC = () => {
             </Link>
 
             {/* Navigation */}
-            <nav className="flex items-center gap-6">
-              <Link
-                to="/tournaments"
-                className={`
-                  px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                  ${
-                    isActive('/tournaments')
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-secondary-700 hover:bg-secondary-100'
-                  }
-                `}
-              >
-                Tournaments
-              </Link>
+            <div className="flex items-center gap-6">
+              <nav className="flex items-center gap-6">
+                <Link
+                  to="/tournaments"
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${
+                      isActive('/tournaments')
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-secondary-700 hover:bg-secondary-100'
+                    }
+                  `}
+                >
+                  Tournaments
+                </Link>
 
-              <Link
-                to="/missions"
-                className={`
-                  px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                  ${
-                    isActive('/missions')
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-secondary-700 hover:bg-secondary-100'
-                  }
-                `}
-              >
-                Missions
-              </Link>
+                <Link
+                  to="/missions"
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${
+                      isActive('/missions')
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-secondary-700 hover:bg-secondary-100'
+                    }
+                  `}
+                >
+                  Missions
+                </Link>
 
-              <Link
-                to="/tournaments/create"
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
-              >
-                Create Tournament
-              </Link>
-            </nav>
+                <Link
+                  to="/tournaments/create"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                >
+                  Create Tournament
+                </Link>
+              </nav>
+
+              {/* User Info & Logout */}
+              <div className="flex items-center gap-3 border-l border-secondary-200 pl-6">
+                <div className="text-right">
+                  <div className="text-sm font-medium text-secondary-900">
+                    {user?.fullName}
+                  </div>
+                  <div className="text-xs text-secondary-500">{user?.email}</div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 text-sm font-medium text-secondary-700 hover:bg-secondary-100 rounded-lg transition-colors"
+                  title="Logout"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>

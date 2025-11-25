@@ -1,0 +1,26 @@
+[
+  {
+    "_id": {"$oid": "507f1f77bcf86cd799439013"},
+    "operatorId": {"$oid": "507f1f77bcf86cd799439011"},
+    "email": "admin@example.com",
+    "fullName": "System Administrator",
+    "passwordHash": "$2a$11$JYMbSMnH9tw1T7O4aBj6LeV7CRPvq/.E3EHp63YecwHvSy30JKr1q",
+    "roleIds": [{"$oid": "507f1f77bcf86cd799439012"}],
+    "isActive": true,
+    "lastLoginAt": null,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "507f1f77bcf86cd799439015"},
+    "operatorId": {"$oid": "507f1f77bcf86cd799439011"},
+    "email": "manager@example.com",
+    "fullName": "Campaign Manager",
+    "passwordHash": "$2a$11$m8CAh8D98dkX02qir00mzeL2SvcrHXFRlDlziGw85k2GiPO2SaxnC",
+    "roleIds": [{"$oid": "507f1f77bcf86cd799439014"}],
+    "isActive": true,
+    "lastLoginAt": null,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  }
+]

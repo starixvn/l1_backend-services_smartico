@@ -1,7 +1,12 @@
+using System.Text;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Smartico.BackOffice.Api.Middleware;
+using Smartico.BackOffice.Application.Auth.Interfaces;
+using Smartico.BackOffice.Application.Auth.Services;
 using Smartico.BackOffice.Application.Leaderboard.Interfaces;
 using Smartico.BackOffice.Application.Leaderboard.Services;
 using Smartico.BackOffice.Application.Missions.Commands;
@@ -86,6 +91,28 @@ builder.Services.AddScoped<IMissionRepository>(sp =>
     return new MissionRepository(database, operatorId);
 });
 
+builder.Services.AddScoped<IUserRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new UserRepository(database, operatorId);
+});
+
+builder.Services.AddScoped<IRoleRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new RoleRepository(database, operatorId);
+});
+
 // Register validators
 builder.Services.AddValidatorsFromAssemblyContaining<TournamentValidator>();
 
@@ -93,9 +120,36 @@ builder.Services.AddValidatorsFromAssemblyContaining<TournamentValidator>();
 builder.Services.AddScoped<ITournamentService, TournamentService>();
 builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 builder.Services.AddScoped<IMissionService, MissionService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Register command handlers
 builder.Services.AddScoped<PublishMissionCommandHandler>();
+
+// Configure JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured");
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience not configured");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // Configure OpenAPI/Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -158,9 +212,9 @@ app.UseHttpsRedirection();
 // Enable CORS
 app.UseCors("AllowFrontend");
 
-// Use authentication & authorization (will be configured in future phases)
-// app.UseAuthentication();
-// app.UseAuthorization();
+// Use authentication & authorization
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Use operator context middleware (extracts OperatorId from claims)
 app.UseOperatorContext();

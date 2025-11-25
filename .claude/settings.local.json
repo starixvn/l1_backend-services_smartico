@@ -23,7 +23,8 @@
       "Bash(npx @tailwindcss/cli:*)",
       "Bash(curl:*)",
       "Bash(npm run build:*)",
-      "Bash(timeout /t 3)"
+      "Bash(timeout /t 3)",
+      "Bash(dotnet remove:*)"
     ],
     "deny": [],
     "ask": []

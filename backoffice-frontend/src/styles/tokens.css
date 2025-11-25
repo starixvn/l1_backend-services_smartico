@@ -33,6 +33,26 @@
   --color-red-700: #b91c1c;
   --color-red-800: #991b1b;
 
+  /* Success colors (green) */
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  --color-success-light: #d1fae5;
+
+  /* Warning colors (yellow) */
+  --color-warning: #f59e0b;
+  --color-warning-dark: #d97706;
+  --color-warning-light: #fef3c7;
+
+  /* Error colors (red) */
+  --color-error: #ef4444;
+  --color-error-dark: #dc2626;
+  --color-error-light: #fee2e2;
+
+  /* Info colors (blue) */
+  --color-info: #3b82f6;
+  --color-info-dark: #2563eb;
+  --color-info-light: #dbeafe;
+
   /* Extended spacing */
   --spacing-128: 32rem;
   --spacing-144: 36rem;

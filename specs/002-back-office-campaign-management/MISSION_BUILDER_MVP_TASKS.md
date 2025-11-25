@@ -185,8 +185,12 @@ The MVP will be considered complete when:
 
 ### Status Filtering
 
-- [ ] T052 Add status filter buttons to MissionsPage (All, Draft, Active, Completed, Cancelled)
-- [ ] T053 Implement client-side filtering logic in MissionList
+- [X] T052 Add status filter buttons to MissionsPage (All, Draft, Active, Completed, Cancelled)
+- [X] T053 Implement client-side filtering logic in MissionList
+- [X] T053a Create MissionCard component with consistent styling to match TournamentCard
+- [X] T053b Update MissionsPage to use grid layout (2 columns) matching tournaments
+- [X] T053c Add semantic colors (success, warning, error, info) to tokens.css
+- [X] T053d Ensure consistent status badge colors across Missions and Tournaments (Draft=yellow)
 
 ### Visual Polish
 

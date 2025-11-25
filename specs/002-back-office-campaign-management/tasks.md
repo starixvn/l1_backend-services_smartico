@@ -1,639 +1,661 @@
-# Back Office Campaign Management - Task Breakdown
+# Back Office Campaign Management - User Permission Management Tasks
 
-**Feature:** Tournament Builder MVP (First Running Demo)
+**Feature:** User Role and Permission Management (FR-13)
 **Epic:** 002-back-office-campaign-management
-**Created:** 2025-01-24
+**Created:** 2025-01-25
 **Last Updated:** 2025-01-25
 **Owner:** Development Team
-**Status:** In Progress (Phase 2-5 Complete, Phase 6 + Enhancements Pending)
-
-## MVP Scope
-
-This task breakdown focuses on delivering a **Tournament Builder MVP** as the first running demo. The MVP will demonstrate:
-
-1. **Backend**: Clean Architecture (.NET 9) with Tournament CRUD operations
-2. **Frontend**: React 19 UI for creating and viewing tournaments
-3. **Multi-Tenant**: Operator-level data isolation with MongoDB
-4. **Demo-Ready**: Fully functional tournament creation and leaderboard display
-
-**Out of Scope for MVP:**
-- Mission, Bonus, Jackpot builders (future phases)
-- Player levels and badges (future phases)
-- A/B testing and advanced analytics (future phases)
-- Complex scheduling and recurring tournaments (future phases)
-
-## Task Organization
-
-Tasks are organized by **User Story** to enable independent implementation and testing:
-
-- **Phase 1**: Setup & Infrastructure
-- **Phase 2**: Foundational Components (Authentication, Base Repository, MongoDB)
-- **Phase 3**: US1 - Tournament Creation (FR-3)
-- **Phase 4**: US2 - Tournament Listing & Viewing
-- **Phase 5**: US3 - Real-Time Leaderboard
-- **Phase 6**: Polish & Demo Preparation
-
-## Success Criteria
-
-The MVP will be considered complete when:
-
-- [X] User can create a tournament via React 19 UI
-- [X] Tournament data is saved to MongoDB with operator isolation
-- [X] User can view list of tournaments for their operator only
-- [X] Leaderboard displays tournament participants and scores
-- [X] Backend follows Clean Architecture (Api → Application → Domain ← Infrastructure)
-- [ ] All API endpoints tested with NSubstitute
-- [X] Frontend runs on React 19 with TypeScript strict mode
-- [ ] Demo can be shown to stakeholders (< 2 minute setup time)
+**Status:** In Progress (Backend 88% Complete, Frontend 0%)
 
 ---
 
-## Phase 1: Setup & Infrastructure
+## Feature Overview
 
-### Backend Setup
+This document tracks the implementation of **FR-13: User Role and Permission Management**, which enables operators to:
+- Create custom roles with granular permissions
+- Assign roles to team members within their operator
+- Manage access control for campaign operations
+- All functionality is strictly scoped by operator (Casino A's users cannot access Casino B's data)
 
-- [X] T001 Create Clean Architecture solution structure
-  - Create `backoffice-api/` directory at project root
-  - Create `Smartico.BackOffice.sln` in `backoffice-api/` directory
-  - Create `src/Smartico.BackOffice.Api/` project (ASP.NET Core 9 Web API)
-  - Create `src/Smartico.BackOffice.Application/` project (Class Library)
-  - Create `src/Smartico.BackOffice.Domain/` project (Class Library)
-  - Create `src/Smartico.BackOffice.Infrastructure/` project (Class Library)
-  - Create `tests/Smartico.BackOffice.UnitTests/` project (xUnit)
-  - Configure project dependencies per Clean Architecture pattern
-
-- [X] T002 [P] Configure C# nullable reference types and coding standards
-  - Enable `<Nullable>enable</Nullable>` in all .csproj files in `backoffice-api/`
-  - Add `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`
-  - Create `backoffice-api/.editorconfig` with C# formatting rules
-  - Add `StyleCop.Analyzers` NuGet package to all projects
-  - Configure StyleCop rules in `backoffice-api/stylecop.json`
-
-- [X] T003 [P] Add NuGet packages for Backend
-  - **Api**: `Microsoft.AspNetCore.OpenApi`, `Swashbuckle.AspNetCore`, `Serilog.AspNetCore`
-  - **Application**: `FluentValidation`, `FluentValidation.DependencyInjectionExtensions`
-  - **Domain**: None (pure C# entities and interfaces)
-  - **Infrastructure**: `MongoDB.Driver 3.0+`, `Microsoft.Extensions.Options.ConfigurationExtensions`
-  - **Tests**: `xUnit`, `NSubstitute`, `FluentAssertions`, `Testcontainers.MongoDb`
-
-- [X] T004 Create .gitignore for .NET + React project
-  - Create `backoffice-api/.gitignore` with .NET patterns: `bin/`, `obj/`, `*.user`, `*.suo`, `.vs/`
-  - Create `backoffice-frontend/.gitignore` with Node.js patterns: `node_modules/`, `dist/`, `build/`, `.env*`
-  - Add IDE patterns to root `.gitignore`: `.vscode/`, `.idea/`, `*.log`
-  - Add MongoDB patterns to root `.gitignore`: `data/`, `*.lock`
-
-### Frontend Setup
-
-- [X] T005 [P] Initialize React 19 project with TypeScript
-  - Create `backoffice-frontend/` directory at project root
-  - Run `npm create vite@latest backoffice-frontend -- --template react-ts`
-  - Configure TypeScript strict mode in `backoffice-frontend/tsconfig.json`
-  - Add `"strict": true, "strictNullChecks": true` to compilerOptions
-  - Install core dependencies: `react@19`, `react-dom@19`, `typescript@5.3+`
-
-- [X] T006 [P] Add frontend dependencies
-  - **State Management**: `@reduxjs/toolkit`, `react-redux`, `@reduxjs/toolkit/query`
-  - **Styling**: `tailwindcss`, `postcss`, `autoprefixer`
-  - **Forms**: `react-hook-form`, `zod`, `@hookform/resolvers`
-  - **UI**: `recharts` (for analytics charts)
-  - **Routing**: `react-router-dom`
-  - **Testing**: `@testing-library/react`, `@testing-library/jest-dom`, `vitest`
-
-- [X] T007 [P] Configure TailwindCSS with design tokens
-  - Run `npx tailwindcss init -p` in `backoffice-frontend/`
-  - Create `backoffice-frontend/src/styles/tokens.css` with brand colors and spacing
-  - Configure `backoffice-frontend/tailwind.config.js` with custom theme
-  - Add TailwindCSS directives to `backoffice-frontend/src/index.css`
+**Key Architectural Decisions:**
+1. **Database-Driven Permissions**: Permissions stored as MongoDB collection (not enum) for scalability
+2. **Permission Code Format**: Dotted notation (e.g., `tournaments.view`, `missions.create`)
+3. **JWT Claims**: User permissions included in JWT token claims for efficient authorization
+4. **Operator Isolation**: All queries automatically filtered by `OperatorId` via BaseRepository pattern
 
 ---
 
-## Phase 2: Foundational Components
+## Task Format
 
-### Domain Layer (Pure Business Logic)
+```
+- [ ] T### [Priority] Description (file path)
+```
 
-- [X] T008 Create IOperatorScoped interface in Domain
-  - File: `backoffice-api/src/Smartico.BackOffice.Domain/Entities/IOperatorScoped.cs`
-  - Add `ObjectId OperatorId { get; set; }` property
-  - Add XML documentation explaining multi-tenant isolation
-
-- [X] T009 Create Tournament entity in Domain
-  - File: `backoffice-api/src/Smartico.BackOffice.Domain/Entities/Tournament.cs`
-  - Properties: `Id`, `OperatorId`, `Name`, `Type`, `Status`, `StartDate`, `EndDate`
-  - Properties: `ScoringType`, `PrizePool`, `MaxParticipants`, `EntryFee`, `CreatedAt`, `UpdatedAt`
-  - Additional: `Description`, `PrizeDistribution`, `EligibleGames`
-  - Implement `IOperatorScoped`
-  - Add BSON attributes: `[BsonId]`, `[BsonElement]`, `[BsonRequired]`
-  - Add XML documentation for all properties
-
-- [X] T010 Create TournamentConfig record types in Domain
-  - File: `backoffice-api/src/Smartico.BackOffice.Domain/ValueObjects/TournamentConfig.cs`
-  - Create `TournamentType` enum: `Leaderboard`, `Bracket`, `TimeBasedChallenge`
-  - Create `ScoringType` enum: `Points`, `HighestWin`, `MostWins`, `WageringVolume`
-  - Create `TournamentStatus` enum: `Draft`, `Scheduled`, `Active`, `Completed`, `Cancelled`
-  - Create `PrizeDistribution` record with `Position`, `PrizeAmount`, `PrizeType`
-  - Add XML documentation
-
-- [X] T011 Create ITournamentRepository interface in Domain
-  - File: `backoffice-api/src/Smartico.BackOffice.Domain/Repositories/ITournamentRepository.cs`
-  - Methods: `CreateAsync`, `GetByIdAsync`, `GetAllAsync`, `UpdateAsync`, `DeleteAsync`
-  - All methods accept `ObjectId operatorId` as first parameter
-  - All methods return `Task<T>` or `Task<List<T>>`
-  - Add XML documentation
-
-### Infrastructure Layer (MongoDB Implementation)
-
-- [X] T012 Create MongoDB configuration in Infrastructure
-  - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Configuration/MongoDbSettings.cs`
-  - Properties: `ConnectionString`, `DatabaseName`
-  - Add XML documentation
-
-- [X] T013 Create BaseRepository with automatic OperatorId filtering
-  - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Repositories/BaseRepository.cs`
-  - Generic class: `BaseRepository<T> where T : IOperatorScoped`
-  - Constructor accepts `IMongoDatabase`, `ObjectId operatorId`, `string collectionName`
-  - Protected method: `AddOperatorFilter(FilterDefinition<T> filter)` that combines with OperatorId
-  - Protected property: `Collection` (IMongoCollection<T>)
-  - Add comprehensive XML documentation with security notes
-
-- [X] T014 Implement TournamentRepository in Infrastructure
-  - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Repositories/TournamentRepository.cs`
-  - Inherit from `BaseRepository<Tournament>`
-  - Implement `ITournamentRepository`
-  - Use `AddOperatorFilter` in all query methods
-  - Add compound indexes: `{ OperatorId: 1, Status: 1, StartDate: -1 }`
-  - Add XML documentation
-
-- [X] T015 Create MongoDB indexes setup
-  - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Data/MongoDbIndexSetup.cs`
-  - Method: `CreateIndexesAsync` to create all required indexes
-  - Tournament indexes: `(OperatorId, Status, StartDate)`, `(OperatorId, Type)`
-  - Add index creation logging with Serilog
-  - Add XML documentation
-
-### Application Layer (Business Logic Services)
-
-- [X] T016 Create CreateTournamentCommand in Application
-  - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/Commands/CreateTournamentCommand.cs`
-  - Properties: `Name`, `Description`, `Type`, `ScoringType`, `StartDate`, `EndDate`, `PrizePool`, `PrizeDistribution`, `MaxParticipants`, `EntryFee`, `EligibleGames`
-  - Add XML documentation
-
-- [X] T017 Create TournamentValidator with FluentValidation
-  - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/Validators/TournamentValidator.cs`
-  - Inherit from `AbstractValidator<CreateTournamentCommand>`
-  - Rules: Name required (3-100 chars), EndDate > StartDate, PrizePool > 0, PrizeDistribution validation
-  - Add custom error messages
-  - Add XML documentation
-
-- [X] T018 Create ITournamentService interface in Application
-  - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/Interfaces/ITournamentService.cs`
-  - Methods: `CreateTournamentAsync`, `GetTournamentByIdAsync`, `GetAllTournamentsAsync`, `UpdateTournamentAsync`, `DeleteTournamentAsync`
-  - All methods accept `ObjectId operatorId` and `CancellationToken`
-  - Return types: `Task<TournamentDto>` or `Task<List<TournamentDto>>`
-  - Add XML documentation
-
-- [X] T019 Create TournamentDto in Application
-  - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/DTOs/TournamentDto.cs`
-  - Map from `Tournament` entity with all properties
-  - Add JSON serialization attributes (JsonStringEnumConverter for enums)
-  - Add XML documentation
-
-- [X] T020 Implement TournamentService in Application
-  - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/Services/TournamentService.cs`
-  - Constructor: Inject `ITournamentRepository`, `IValidator<CreateTournamentCommand>`
-  - Implement all `ITournamentService` methods
-  - Validate commands with FluentValidation before repository calls
-  - Map entities to DTOs
-  - Add comprehensive error handling with custom exceptions
-  - Add XML documentation
-
-### API Layer (Controllers + Middleware)
-
-- [ ] T021 Create OperatorContextMiddleware in Api
-  - File: `backoffice-api/src/Smartico.BackOffice.Api/Middleware/OperatorContextMiddleware.cs`
-  - Extract `operatorId` claim from JWT token
-  - Store in `HttpContext.Items["OperatorId"]`
-  - Return 401 Unauthorized if operatorId missing
-  - Add XML documentation
-
-- [ ] T022 Create TournamentsController in Api
-  - File: `backoffice-api/src/Smartico.BackOffice.Api/Controllers/TournamentsController.cs`
-  - Inherit from `ControllerBase`
-  - Route: `[Route("api/tournaments")]`
-  - Inject `ITournamentService`
-  - Endpoints: `POST /`, `GET /`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`
-  - Extract operatorId from `HttpContext.Items["OperatorId"]`
-  - Return appropriate HTTP status codes (200, 201, 404, 400, 500)
-  - Add OpenAPI/Swagger attributes
-  - Add XML documentation
-
-- [ ] T023 Configure Dependency Injection in Api
-  - File: `backoffice-api/src/Smartico.BackOffice.Api/Program.cs`
-  - Register MongoDB client and database
-  - Register `ITournamentRepository` as scoped with OperatorId from middleware
-  - Register `ITournamentService` as scoped
-  - Register FluentValidation validators
-  - Add Swagger/OpenAPI configuration
-  - Add Serilog configuration
-  - Add CORS configuration (allow frontend origin)
-
-- [ ] T024 Configure MongoDB connection in appsettings.json
-  - File: `backoffice-api/src/Smartico.BackOffice.Api/appsettings.json`
-  - Add `MongoDb` section with `ConnectionString` and `DatabaseName`
-  - Add `Serilog` configuration for structured logging
-  - Add `Cors` configuration with allowed origins
-
-### Authentication (Simplified for MVP)
-
-- [ ] T025 Create mock JWT token generator for development
-  - File: `backoffice-api/src/Smartico.BackOffice.Api/Auth/MockJwtGenerator.cs`
-  - Generate JWT with `operatorId` claim for testing
-  - Add `/api/auth/mock-token` endpoint (dev-only)
-  - Add XML documentation with security warning
+**Priority Levels:**
+- **P0**: Critical (blocking, security, data integrity)
+- **P1**: High (core features, user-facing)
+- **P2**: Medium (enhancements, non-blocking)
+- **P3**: Low (nice-to-have, optimizations)
 
 ---
 
-## Phase 3: US1 - Tournament Creation (FR-3)
+## Phase 0: Setup & Configuration ✅ COMPLETE (7/7)
 
-**User Story**: As a marketing manager, I want to create a tournament campaign with leaderboard configuration, prize pool, and entry requirements, so that I can engage players in competitive events.
+### Infrastructure Setup
+- [x] T001 [P0] Create Clean Architecture solution structure
+  - `backoffice-api/Smartico.BackOffice.sln`
+  - Projects: Api, Application, Domain, Infrastructure
 
-**Independent Test Criteria**:
-- [ ] POST /api/tournaments creates tournament with operator isolation
-- [ ] Tournament validation prevents invalid configurations
-- [ ] Tournament is retrievable only by same operator
-- [ ] Cross-operator access blocked (Casino A cannot see Casino B tournaments)
+- [x] T002 [P0] Configure C# nullable reference types
+  - All `.csproj` files with `<Nullable>enable</Nullable>`
 
-### Backend Tests
+- [x] T003 [P0] Add NuGet packages
+  - MongoDB.Driver 3.0+, FluentValidation, xUnit, NSubstitute, FluentAssertions
 
-- [ ] T026 [P] [US1] Unit tests for TournamentValidator
-  - File: `backoffice-api/tests/Smartico.BackOffice.UnitTests/Tournaments/TournamentValidatorTests.cs`
-  - Test: `Should_Fail_When_NameIsEmpty`
-  - Test: `Should_Fail_When_EndDateBeforeStartDate`
-  - Test: `Should_Fail_When_PrizePoolIsZero`
-  - Test: `Should_Pass_When_AllFieldsValid`
-  - Use AAA pattern with single assertion per test
-  - Use FluentAssertions for readable assertions
+- [x] T004 [P0] Set up MongoDB connection
+  - `Infrastructure/MongoDbContext.cs`
 
-- [ ] T027 [P] [US1] Unit tests for TournamentService with NSubstitute
-  - File: `backoffice-api/tests/Smartico.BackOffice.UnitTests/Tournaments/TournamentServiceTests.cs`
-  - Test: `Should_CreateTournament_When_ValidCommandProvided`
-  - Test: `Should_ThrowException_When_ValidationFails`
-  - Test: `Should_FilterByOperatorId_When_GettingAllTournaments`
-  - Mock `ITournamentRepository` and `IValidator` with NSubstitute
-  - Use AAA pattern with single assertion per test
-  - Verify operator isolation in assertions
+- [x] T005 [P0] Create base repository pattern with OperatorId filtering
+  - `Infrastructure/Repositories/BaseRepository.cs`
 
-- [ ] T028 [US1] Integration test for Tournament CRUD with Testcontainers
-  - File: `backoffice-api/tests/Smartico.BackOffice.IntegrationTests/Tournaments/TournamentIntegrationTests.cs`
-  - Setup: Use `Testcontainers.MongoDb` to spin up MongoDB container
-  - Test: Create tournament for Operator A, verify not visible to Operator B
-  - Test: Update tournament, verify changes persisted
-  - Test: Delete tournament, verify removed
-  - Teardown: Dispose MongoDB container
+- [x] T006 [P1] Configure ASP.NET Core Identity + JWT authentication
+  - `Api/Program.cs`
 
-### Frontend Implementation
-
-- [ ] T029 [P] [US1] Create Redux store setup
-  - File: `backoffice-frontend/src/store/store.ts`
-  - Configure Redux Toolkit store with TypeScript
-  - Add RTK Query API slice setup
-  - Export `store`, `RootState`, `AppDispatch` types
-
-- [ ] T030 [P] [US1] Create tournamentApi RTK Query slice
-  - File: `backoffice-frontend/src/store/api/tournamentApi.ts`
-  - Define base URL: `http://localhost:5000/api`
-  - Endpoints: `createTournament`, `getTournaments`, `getTournamentById`, `updateTournament`, `deleteTournament`
-  - Add TypeScript types for request/response
-  - Export hooks: `useCreateTournamentMutation`, `useGetTournamentsQuery`
-
-- [ ] T031 [P] [US1] Create TournamentForm component
-  - File: `backoffice-frontend/src/components/TournamentForm.tsx`
-  - Use `react-hook-form` with Zod validation
-  - Fields: Name, Type (dropdown), Scoring Type (dropdown), Start Date, End Date, Prize Pool, Max Participants
-  - Submit button calls `useCreateTournamentMutation`
-  - Display validation errors inline
-  - Show success/error toast after submission
-
-- [ ] T032 [P] [US1] Create TournamentFormPage
-  - File: `backoffice-frontend/src/pages/TournamentFormPage.tsx`
-  - Render `TournamentForm` component
-  - Handle navigation after successful creation
-  - Add loading state during submission
-
-- [ ] T033 [US1] Setup React Router with tournament routes
-  - File: `backoffice-frontend/src/App.tsx`
-  - Routes: `/`, `/tournaments/create`, `/tournaments/:id`, `/tournaments/:id/leaderboard`
-  - Use `createBrowserRouter` from `react-router-dom`
-  - Wrap app with `<RouterProvider>`
+- [x] T007 [P1] Create React 19 frontend project
+  - `backoffice-frontend/` with TypeScript strict mode
 
 ---
 
-## Phase 4: US2 - Tournament Listing & Viewing
+## Phase 1: Backend Foundation 🔄 IN PROGRESS (42/47 tasks - 89%)
 
-**User Story**: As a marketing manager, I want to view all tournaments for my operator, so that I can track active and upcoming tournaments.
+### 1.1 Domain Layer - Entities ✅ COMPLETE
 
-**Independent Test Criteria**:
-- [ ] GET /api/tournaments returns only operator's tournaments
-- [ ] Tournament list displays name, type, status, dates
-- [ ] Clicking tournament navigates to detail view
-- [ ] Empty state shown when no tournaments exist
+- [x] T101 [P0] Create Permission entity
+  - File: [Domain/Entities/Permission.cs](backoffice-api/src/Smartico.BackOffice.Domain/Entities/Permission.cs)
+  - Fields: Id, Code (string), Name, Description, Module, IsSystem, DisplayOrder, CreatedAt, UpdatedAt
+  - Permission codes use dotted notation: `"tournaments.view"`, `"missions.create"`
 
-### Backend Implementation
+- [x] T102 [P0] Create Role entity
+  - File: [Domain/Entities/Role.cs](backoffice-api/src/Smartico.BackOffice.Domain/Entities/Role.cs)
+  - Fields: Id, OperatorId, Name, Description, Permissions (List<string>), IsSystem, CreatedAt, UpdatedAt
+  - Changed from enum to string array for scalability
 
-- [ ] T034 [P] [US2] Add pagination to GetAllTournamentsAsync
-  - Update `ITournamentService.GetAllTournamentsAsync` to accept `skip`, `limit` parameters
-  - Update `TournamentService` to implement pagination with MongoDB
-  - Update `TournamentsController GET /` to accept query params `?skip=0&limit=20`
+- [x] T103 [P0] Update User entity
+  - File: [Domain/Entities/User.cs](backoffice-api/src/Smartico.BackOffice.Domain/Entities/User.cs)
+  - Fields: Id, OperatorId, Email, FullName, PasswordHash, RoleIds (List<ObjectId>), IsActive, LastLoginAt, CreatedAt, UpdatedAt
 
-- [ ] T035 [P] [US2] Unit tests for tournament listing pagination
-  - File: `backoffice-api/tests/Smartico.BackOffice.UnitTests/Tournaments/TournamentServicePaginationTests.cs`
-  - Test: `Should_ReturnFirstPage_When_SkipIsZero`
-  - Test: `Should_ReturnSecondPage_When_SkipIs20`
-  - Test: `Should_ReturnEmptyList_When_NoTournamentsExist`
-  - Use NSubstitute to mock repository
-  - Verify OperatorId filter applied
+### 1.2 Domain Layer - Repositories ✅ COMPLETE
 
-### Frontend Implementation
+- [x] T104 [P0] Create IPermissionRepository interface
+  - File: [Domain/Repositories/IPermissionRepository.cs](backoffice-api/src/Smartico.BackOffice.Domain/Repositories/IPermissionRepository.cs)
 
-- [ ] T036 [P] [US2] Create TournamentCard component
-  - File: `backoffice-frontend/src/components/TournamentCard.tsx`
-  - Props: `tournament` (TournamentDto)
-  - Display: Name, Type badge, Status badge, Start/End dates, Prize Pool
-  - Click navigates to tournament detail page
-  - Style with TailwindCSS
+- [x] T106 [P0] Create IRoleRepository interface
+  - File: [Domain/Repositories/IRoleRepository.cs](backoffice-api/src/Smartico.BackOffice.Domain/Repositories/IRoleRepository.cs)
 
-- [ ] T037 [P] [US2] Create TournamentList component
-  - File: `backoffice-frontend/src/components/TournamentList.tsx`
-  - Use `useGetTournamentsQuery` hook
-  - Render list of `TournamentCard` components
-  - Show loading skeleton while fetching
-  - Show empty state if no tournaments
-  - Add error handling with retry button
+- [x] T108 [P0] Create IUserRepository interface
+  - File: [Domain/Repositories/IUserRepository.cs](backoffice-api/src/Smartico.BackOffice.Domain/Repositories/IUserRepository.cs)
 
-- [ ] T038 [US2] Create TournamentListPage
-  - File: `backoffice-frontend/src/pages/TournamentListPage.tsx`
-  - Render `TournamentList` component
-  - Add "Create Tournament" button in header (links to `/tournaments/create`)
-  - Add search/filter functionality (filter by status)
+### 1.3 Infrastructure Layer - Repositories ✅ COMPLETE
+
+- [x] T105 [P0] Implement PermissionRepository
+  - File: [Infrastructure/Repositories/PermissionRepository.cs](backoffice-api/src/Smartico.BackOffice.Infrastructure/Repositories/PermissionRepository.cs)
+
+- [x] T107 [P0] Implement RoleRepository
+  - File: [Infrastructure/Repositories/RoleRepository.cs](backoffice-api/src/Smartico.BackOffice.Infrastructure/Repositories/RoleRepository.cs)
+  - Inherits BaseRepository<Role> for automatic OperatorId filtering
+
+- [x] T109 [P0] Implement UserRepository
+  - File: [Infrastructure/Repositories/UserRepository.cs](backoffice-api/src/Smartico.BackOffice.Infrastructure/Repositories/UserRepository.cs)
+  - Includes FindByEmailAsync method for login
+
+### 1.4 Infrastructure Layer - MongoDB Indexes ✅ COMPLETE
+
+- [x] T110 [P0] Create permissions collection indexes
+  - Compound index: `{ code: 1, isSystem: 1 }`
+
+- [x] T111 [P0] Create roles collection indexes
+  - Compound index: `{ operatorId: 1, isSystem: 1, name: 1 }`
+
+- [x] T112 [P0] Create users collection indexes
+  - Unique index: `{ operatorId: 1, email: 1 }`
+
+- [x] T113 [P0] Create users status index
+  - Compound index: `{ operatorId: 1, isActive: 1 }`
+
+### 1.5 Application Layer - Services ✅ COMPLETE
+
+- [x] T114 [P1] Create IPermissionService interface
+  - File: [Domain/Services/IPermissionService.cs](backoffice-api/src/Smartico.BackOffice.Domain/Services/IPermissionService.cs)
+  - Methods: GetAllPermissionsAsync(), GetPermissionByCodeAsync(code), GetPermissionsByModuleAsync(module)
+
+- [x] T115 [P1] Implement PermissionService
+  - File: [Application/Services/PermissionService.cs](backoffice-api/src/Smartico.BackOffice.Application/Services/PermissionService.cs)
+
+- [x] T116 [P1] Create PermissionValidator
+  - File: [Application/Validators/PermissionValidator.cs](backoffice-api/src/Smartico.BackOffice.Application/Validators/PermissionValidator.cs)
+
+- [x] T117 [P1] Create IRoleService interface
+  - File: [Domain/Services/IRoleService.cs](backoffice-api/src/Smartico.BackOffice.Domain/Services/IRoleService.cs)
+  - Methods: CreateRoleAsync, UpdateRoleAsync, DeleteRoleAsync, GetRolesByOperatorAsync, GetRoleByIdAsync
+
+- [x] T118 [P1] Implement RoleService
+  - File: [Application/Services/RoleService.cs](backoffice-api/src/Smartico.BackOffice.Application/Services/RoleService.cs)
+  - Prevents deletion of system roles (isSystem: true)
+  - Validates permission codes exist before assigning
+
+- [x] T119 [P1] Create RoleValidator
+  - File: [Application/Validators/RoleValidator.cs](backoffice-api/src/Smartico.BackOffice.Application/Validators/RoleValidator.cs)
+  - Name required (3-50 chars), Permissions not empty
+
+### 1.6 Application Layer - Auth ✅ COMPLETE
+
+- [x] T120 [P0] Update AuthService with permission claims
+  - File: [Application/Auth/Services/AuthService.cs](backoffice-api/src/Smartico.BackOffice.Application/Auth/Services/AuthService.cs)
+  - GetUserPermissionsAsync(userId, operatorId) flattens role permissions
+  - JWT token includes permission array claims
+  - BCrypt password verification
+
+- [x] T121 [P0] Create OperatorContextMiddleware
+  - File: [Api/Middleware/OperatorContextMiddleware.cs](backoffice-api/src/Smartico.BackOffice.Api/Middleware/OperatorContextMiddleware.cs)
+  - Extracts operatorId from JWT claims
+  - Injects into HttpContext.Items
+
+- [x] T122 [P0] Create PermissionAuthorizationHandler
+  - File: [Application/Auth/PermissionAuthorizationHandler.cs](backoffice-api/src/Smartico.BackOffice.Application/Auth/PermissionAuthorizationHandler.cs)
+  - Checks permission claims in JWT
+
+### 1.7 API Layer - Controllers ✅ COMPLETE (3/3)
+
+- [x] T123 [P1] Create PermissionsController
+  - File: [Api/Controllers/PermissionsController.cs](backoffice-api/src/Smartico.BackOffice.Api/Controllers/PermissionsController.cs)
+  - `GET /api/permissions` - List all permissions (grouped by module)
+  - `GET /api/permissions/modules` - Get list of modules
+
+- [X] T124 [P1] Create RolesController
+  - File: [Api/Controllers/RolesController.cs](backoffice-api/src/Smartico.BackOffice.Api/Controllers/RolesController.cs)
+  - `GET /api/roles` - List roles for operator
+  - `POST /api/roles` - Create role (require "roles.create" permission)
+  - `GET /api/roles/{id}` - Get role details
+  - `PUT /api/roles/{id}` - Update role (require "roles.edit" permission)
+  - `DELETE /api/roles/{id}` - Delete role (require "roles.delete" permission, block system roles)
+
+- [X] T125 [P1] Create UsersController
+  - File: [Api/Controllers/UsersController.cs](backoffice-api/src/Smartico.BackOffice.Api/Controllers/UsersController.cs)
+  - `GET /api/users` - List users for operator (require "users.view")
+  - `POST /api/users` - Create user (require "users.create")
+  - `GET /api/users/{id}` - Get user details
+  - `PUT /api/users/{id}` - Update user (require "users.edit")
+  - `PUT /api/users/{id}/roles` - Assign roles (require "users.manage_roles")
+  - `DELETE /api/users/{id}` - Deactivate user (require "users.delete")
+
+### 1.8 API Layer - DTOs & Models ✅ COMPLETE (8/8)
+
+- [X] T126 [P1] Create PermissionDto
+  - File: [Api/Models/Dtos/PermissionDto.cs](backoffice-api/src/Smartico.BackOffice.Api/Models/Dtos/PermissionDto.cs)
+
+- [X] T127 [P1] Create RoleDto
+  - File: [Api/Models/Dtos/RoleDto.cs](backoffice-api/src/Smartico.BackOffice.Api/Models/Dtos/RoleDto.cs)
+
+- [X] T128 [P1] Create UserDto
+  - File: [Api/Models/Dtos/UserDto.cs](backoffice-api/src/Smartico.BackOffice.Api/Models/Dtos/UserDto.cs)
+
+- [X] T129 [P1] Create CreateRoleRequest
+  - File: [Api/Models/Requests/CreateRoleRequest.cs](backoffice-api/src/Smartico.BackOffice.Api/Models/Requests/CreateRoleRequest.cs)
+  - Properties: Name, Description, PermissionCodes (List<string>)
+
+- [X] T130 [P1] Create UpdateRoleRequest
+  - File: [Api/Models/Requests/UpdateRoleRequest.cs](backoffice-api/src/Smartico.BackOffice.Api/Models/Requests/UpdateRoleRequest.cs)
+
+- [X] T131 [P1] Create CreateUserRequest
+  - File: [Api/Models/Requests/CreateUserRequest.cs](backoffice-api/src/Smartico.BackOffice.Api/Models/Requests/CreateUserRequest.cs)
+  - Properties: Email, FullName, Password, RoleIds (List<string>)
+
+- [X] T132 [P1] Create UpdateUserRequest
+  - File: [Api/Models/Requests/UpdateUserRequest.cs](backoffice-api/src/Smartico.BackOffice.Api/Models/Requests/UpdateUserRequest.cs)
+
+- [X] T133 [P1] Create AssignRolesRequest
+  - File: [Api/Models/Requests/AssignRolesRequest.cs](backoffice-api/src/Smartico.BackOffice.Api/Models/Requests/AssignRolesRequest.cs)
+  - Properties: RoleIds (List<string>)
+
+### 1.9 Database Seed Data ✅ COMPLETE
+
+- [x] T134 [P1] Create seed-permissions.json
+  - File: [backoffice-api/scripts/seed-permissions.json](backoffice-api/scripts/seed-permissions.json)
+  - 23 permissions across 7 modules: Tournaments (5), Missions (5), Users (5), Roles (4), Analytics (2), Settings (1), Audit (1)
+
+- [x] T135 [P1] Create seed-roles.json
+  - File: [backoffice-api/scripts/seed-roles.json](backoffice-api/scripts/seed-roles.json)
+  - Administrator (all permissions, isSystem: true)
+  - Campaign Manager (campaign permissions only, isSystem: false)
+
+- [x] T136 [P1] Create seed-users.json
+  - File: [backoffice-api/scripts/seed-users.json](backoffice-api/scripts/seed-users.json)
+  - admin@example.com / Admin123! (Administrator role)
+  - manager@example.com / Manager123! (Campaign Manager role)
+
+- [x] T137 [P1] Create MongoDB Compass import README
+  - File: [backoffice-api/scripts/README.md](backoffice-api/scripts/README.md)
+  - Import order: permissions → roles → users
+
+### 1.10 Testing - Backend ⚠️ TODO (0/5)
+
+- [ ] T138 [P0] Unit tests for PermissionService ⚠️ PRIORITY
+  - File: `tests/Application.Tests/Services/PermissionServiceTests.cs`
+  - Test: `Should_ReturnAllPermissions_When_GetAllPermissionsAsyncCalled`
+  - Test: `Should_ReturnPermission_When_ValidCodeProvided`
+  - Test: `Should_ThrowException_When_PermissionCodeNotFound`
+  - Use NSubstitute for mocking, FluentAssertions for assertions, AAA pattern
+
+- [ ] T139 [P0] Unit tests for RoleService ⚠️ PRIORITY
+  - File: `tests/Application.Tests/Services/RoleServiceTests.cs`
+  - Test: `Should_CreateRole_When_ValidDataProvided`
+  - Test: `Should_PreventDeletion_When_SystemRoleProvided`
+  - Test: `Should_ValidatePermissionCodes_When_CreatingRole`
+  - Test: `Should_ThrowException_When_UserLacksPermission`
+
+- [ ] T140 [P0] Unit tests for AuthService ⚠️ PRIORITY
+  - File: `tests/Application.Tests/Auth/AuthServiceTests.cs`
+  - Test: `Should_IncludePermissionsInJWT_When_UserLogsIn`
+  - Test: `Should_FlattenRolePermissions_When_UserHasMultipleRoles`
+
+- [ ] T141 [P0] Integration tests for operator isolation ⚠️ PRIORITY
+  - File: `tests/Integration.Tests/OperatorIsolationTests.cs`
+  - Test: `Should_ReturnOnlyOperatorRoles_When_GetRolesCalledForOperatorA`
+  - Test: `Should_Return403_When_OperatorATriesToAccessOperatorBRole`
+  - Test: `Should_FilterUsersByOperator_When_GetUsersCalledWithOperatorContext`
+  - Use Testcontainers.MongoDB for real database
+
+- [ ] T142 [P0] Integration tests for RolesController ⚠️ PRIORITY
+  - File: `tests/Integration.Tests/Controllers/RolesControllerTests.cs`
+  - Test: `Should_CreateRole_When_ValidRequestProvided`
+  - Test: `Should_Return403_When_UserLacksRolesCreatePermission`
+  - Test: `Should_Return400_When_InvalidPermissionCodeProvided`
+  - Test: `Should_PreventDeletion_When_SystemRoleTargeted`
 
 ---
 
-## Phase 5: US3 - Real-Time Leaderboard
+## Phase 2: Frontend - User & Role Management UI ⚠️ TODO (0/28 tasks - 0%)
 
-**User Story**: As a tournament participant, I want to see real-time leaderboard standings, so that I can track my position and competitors.
+### 2.1 State Management ⚠️ TODO (0/4)
 
-**Independent Test Criteria**:
-- [ ] Leaderboard displays participants sorted by score
-- [ ] Leaderboard updates when new scores added
-- [ ] Prize distribution shown for top N positions
-- [ ] Leaderboard loads in < 2 seconds
+- [ ] T201 [P1] Create authSlice ⚠️ PRIORITY
+  - File: `frontend/src/store/slices/authSlice.ts`
+  - State: user, token, permissions, isAuthenticated
+  - Thunks: login, logout, refreshToken
 
-### Backend Implementation
+- [ ] T202 [P1] Create rolesApi (RTK Query)
+  - File: `frontend/src/store/apis/rolesApi.ts`
+  - Endpoints: getRoles, getRoleById, createRole, updateRole, deleteRole
 
-- [ ] T039 Create LeaderboardEntry entity in Domain
-  - File: `backoffice-api/src/Smartico.BackOffice.Domain/Entities/LeaderboardEntry.cs`
-  - Properties: `Id`, `TournamentId`, `PlayerId`, `PlayerName`, `Score`, `Position`, `UpdatedAt`
-  - Implement `IOperatorScoped` (via TournamentId relationship)
-  - Add BSON attributes
+- [ ] T203 [P1] Create permissionsApi (RTK Query)
+  - File: `frontend/src/store/apis/permissionsApi.ts`
+  - Endpoints: getPermissions, getPermissionModules
 
-- [ ] T040 Create ILeaderboardRepository interface in Domain
-  - File: `backoffice-api/src/Smartico.BackOffice.Domain/Repositories/ILeaderboardRepository.cs`
-  - Methods: `AddEntryAsync`, `GetLeaderboardAsync`, `UpdateScoreAsync`
-  - Add XML documentation
+- [ ] T204 [P1] Create usersApi (RTK Query)
+  - File: `frontend/src/store/apis/usersApi.ts`
+  - Endpoints: getUsers, getUserById, createUser, updateUser, assignRoles, deactivateUser
 
-- [ ] T041 Implement LeaderboardRepository in Infrastructure
-  - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Repositories/LeaderboardRepository.cs`
-  - Implement `ILeaderboardRepository`
-  - Query: Sort by Score descending, calculate Position dynamically
-  - Add index: `{ TournamentId: 1, Score: -1 }`
+### 2.2 Authentication ⚠️ TODO (0/4)
 
-- [ ] T042 Create ILeaderboardService interface in Application
-  - File: `backoffice-api/src/Smartico.BackOffice.Application/Leaderboards/Interfaces/ILeaderboardService.cs`
-  - Methods: `GetLeaderboardAsync(tournamentId, operatorId)`, `AddScoreAsync`, `UpdateScoreAsync`
-  - Add XML documentation
+- [ ] T205 [P0] Create AuthContext ⚠️ PRIORITY
+  - File: `frontend/src/contexts/AuthContext.tsx`
+  - Provide: user, permissions, hasPermission(code), login, logout
 
-- [ ] T043 Implement LeaderboardService in Application
-  - File: `backoffice-api/src/Smartico.BackOffice.Application/Leaderboards/Services/LeaderboardService.cs`
-  - Implement `ILeaderboardService`
-  - Verify tournament belongs to operator before returning leaderboard
-  - Calculate positions based on scores
+- [ ] T206 [P0] Create ProtectedRoute component
+  - File: `frontend/src/components/auth/ProtectedRoute.tsx`
+  - Check authentication, redirect to login if not authenticated
 
-- [ ] T044 Create LeaderboardController in Api
-  - File: `backoffice-api/src/Smartico.BackOffice.Api/Controllers/LeaderboardController.cs`
-  - Route: `[Route("api/tournaments/{tournamentId}/leaderboard")]`
-  - Endpoints: `GET /`, `POST /entries`, `PUT /entries/{playerId}`
-  - Inject `ILeaderboardService`
-  - Add XML documentation
+- [ ] T207 [P1] Create RequirePermission component
+  - File: `frontend/src/components/auth/RequirePermission.tsx`
+  - Props: permission (string), fallback (ReactNode)
+  - Hide/show UI based on user permissions
 
-- [ ] T045 [P] Unit tests for LeaderboardService
-  - File: `backoffice-api/tests/Smartico.BackOffice.UnitTests/Leaderboards/LeaderboardServiceTests.cs`
-  - Test: `Should_ReturnLeaderboard_When_TournamentExists`
-  - Test: `Should_ThrowException_When_TournamentNotBelongToOperator`
-  - Test: `Should_CalculatePositionsCorrectly_When_MultipleEntries`
-  - Use NSubstitute and FluentAssertions
+- [ ] T208 [P1] Create usePermission hook
+  - File: `frontend/src/hooks/usePermission.ts`
+  - Return: hasPermission(code), hasAnyPermission(codes[]), hasAllPermissions(codes[])
 
-### Frontend Implementation
+### 2.3 Login Page ⚠️ TODO (0/2)
 
-- [ ] T046 [P] [US3] Create leaderboardApi RTK Query slice
-  - File: `backoffice-frontend/src/store/api/leaderboardApi.ts`
-  - Endpoints: `getLeaderboard(tournamentId)`, `addLeaderboardEntry`, `updateScore`
-  - Export hooks: `useGetLeaderboardQuery`, `useAddLeaderboardEntryMutation`
+- [ ] T209 [P1] Create LoginPage component ⚠️ PRIORITY
+  - File: `frontend/src/pages/LoginPage.tsx`
+  - Email/password form with React Hook Form + Zod validation
+  - Call login API endpoint, store JWT token in localStorage
+  - Redirect to dashboard on success
 
-- [ ] T047 [P] [US3] Create LeaderboardTable component
-  - File: `backoffice-frontend/src/components/LeaderboardTable.tsx`
-  - Props: `tournamentId`
-  - Use `useGetLeaderboardQuery(tournamentId)`
-  - Columns: Position, Player Name, Score, Prize (if in top N)
-  - Highlight user's row if participant
-  - Style with TailwindCSS table classes
+- [ ] T210 [P1] Add login form validation
+  - Email required, valid format
+  - Password required, min 8 characters
 
-- [ ] T048 [US3] Create LeaderboardPage
-  - File: `backoffice-frontend/src/pages/LeaderboardPage.tsx`
-  - Get `tournamentId` from URL params
-  - Display tournament name and status at top
-  - Render `LeaderboardTable` component
-  - Add refresh button (refetch query)
-  - Show loading state
+### 2.4 Roles Management ⚠️ TODO (0/5)
+
+- [ ] T211 [P1] Create RolesPage component
+  - File: `frontend/src/pages/RolesPage.tsx`
+  - List all roles for operator in table (name, description, permission count)
+  - Action buttons: Create Role, Edit, Delete (conditional on permissions)
+  - Show "System Role" badge for isSystem: true roles
+  - Disable delete button for system roles
+
+- [ ] T212 [P1] Create RoleTable component
+  - File: `frontend/src/components/roles/RoleTable.tsx`
+  - Columns: Name, Description, Permissions Count, Actions
+  - Sortable by name, created date
+  - Row actions: Edit, Delete (with confirmation modal)
+
+- [ ] T213 [P1] Create CreateRolePage component
+  - File: `frontend/src/pages/CreateRolePage.tsx`
+  - Form: Name, Description, Permission Selection
+  - Fetch all permissions grouped by module
+  - Submit: POST /api/roles
+
+- [ ] T214 [P1] Create EditRolePage component
+  - File: `frontend/src/pages/EditRolePage.tsx`
+  - Pre-populate form with existing role data
+  - Disable editing if system role (show read-only view)
+  - Submit: PUT /api/roles/:id
+
+- [ ] T215 [P1] Create PermissionSelector component
+  - File: `frontend/src/components/roles/PermissionSelector.tsx`
+  - Group permissions by module (Tournaments, Missions, Users, Roles, Analytics, Settings, Audit)
+  - Checkbox for each permission with name and description
+  - "Select All" checkbox per module
+  - Search/filter permissions by name or code
+
+### 2.5 Users Management ⚠️ TODO (0/5)
+
+- [ ] T216 [P1] Create UsersPage component
+  - File: `frontend/src/pages/UsersPage.tsx`
+  - List all users for operator in table (email, full name, roles, status)
+  - Action buttons: Create User, Edit, Assign Roles, Deactivate
+  - Filter by status (active/inactive), role
+  - Search by email or full name
+
+- [ ] T217 [P1] Create UserTable component
+  - File: `frontend/src/components/users/UserTable.tsx`
+  - Columns: Email, Full Name, Roles (comma-separated), Status, Last Login, Actions
+  - Status badge: Active (green), Inactive (gray)
+  - Row actions: Edit, Assign Roles, Deactivate
+
+- [ ] T218 [P1] Create CreateUserPage component
+  - File: `frontend/src/pages/CreateUserPage.tsx`
+  - Form: Email, Full Name, Password, Confirm Password, Role Selection (multi-select)
+  - Submit: POST /api/users
+  - Password validation: min 8 chars, uppercase, lowercase, number, special char
+
+- [ ] T219 [P1] Create EditUserPage component
+  - File: `frontend/src/pages/EditUserPage.tsx`
+  - Form: Email (disabled), Full Name, Status (active/inactive)
+  - Password change section (optional): New Password, Confirm New Password
+  - Submit: PUT /api/users/:id
+
+- [ ] T220 [P1] Create AssignRolesModal component
+  - File: `frontend/src/components/users/AssignRolesModal.tsx`
+  - Multi-select dropdown for roles
+  - Show current roles selected by default
+  - Submit: PUT /api/users/:id/roles
+  - Success toast: "Roles updated successfully"
+
+### 2.6 Shared Components ⚠️ TODO (0/3)
+
+- [ ] T221 [P2] Create ConfirmationModal component
+  - File: `frontend/src/components/shared/ConfirmationModal.tsx`
+  - Props: title, message, onConfirm, onCancel, confirmText, cancelText, variant (danger/warning/info)
+  - Used for: Delete role, deactivate user
+
+- [ ] T222 [P2] Create EmptyState component
+  - File: `frontend/src/components/shared/EmptyState.tsx`
+  - Props: title, description, action (button)
+  - Used when: No roles created, no users found
+
+- [ ] T223 [P2] Create LoadingSpinner component
+  - File: `frontend/src/components/shared/LoadingSpinner.tsx`
+  - Variants: page (full screen), inline, button
+
+### 2.7 Routing ⚠️ TODO (0/1)
+
+- [ ] T224 [P1] Update router configuration ⚠️ PRIORITY
+  - File: `frontend/src/App.tsx`
+  - Add routes: /login, /roles, /roles/create, /roles/:id/edit, /users, /users/create, /users/:id/edit
+  - Wrap protected routes with ProtectedRoute component
+  - Add permission checks to routes (e.g., /roles requires "roles.view")
+
+### 2.8 Testing - Frontend ⚠️ TODO (0/4)
+
+- [ ] T225 [P1] Unit tests for AuthContext
+  - File: `frontend/src/contexts/__tests__/AuthContext.test.tsx`
+  - Test: `Should_ProvideUserPermissions_When_UserLogsIn`
+  - Test: `Should_ReturnTrue_When_UserHasPermission`
+  - Test: `Should_ReturnFalse_When_UserLacksPermission`
+
+- [ ] T226 [P1] Unit tests for PermissionSelector
+  - File: `frontend/src/components/roles/__tests__/PermissionSelector.test.tsx`
+  - Test: `Should_GroupPermissionsByModule_When_Rendered`
+  - Test: `Should_SelectAllPermissions_When_SelectAllClicked`
+  - Test: `Should_FilterPermissions_When_SearchQueryEntered`
+
+- [ ] T227 [P1] Integration tests for RolesPage
+  - File: `frontend/src/pages/__tests__/RolesPage.test.tsx`
+  - Test: `Should_DisplayRoles_When_PageLoads`
+  - Test: `Should_ShowCreateButton_When_UserHasRolesCreatePermission`
+  - Test: `Should_HideDeleteButton_When_RoleIsSystemRole`
+
+- [ ] T228 [P1] E2E tests for role management
+  - File: `frontend/e2e/roles.spec.ts`
+  - Test: `Should_CreateRole_When_ValidDataProvided`
+  - Test: `Should_PreventDeletion_When_SystemRoleTargeted`
+  - Test: `Should_UpdateRolePermissions_When_EditFormSubmitted`
+  - Use Playwright for E2E testing
 
 ---
 
-## Phase 6: Polish & Demo Preparation
+## Phase 3: Approval Workflow (Future Enhancement) - TODO (0/6)
 
-### Testing & Quality
+**Note**: This phase is deferred until core functionality is complete.
 
-- [ ] T049 [P] Add E2E tests with Playwright (optional)
-  - File: `backoffice-api/tests/e2e/tournament-flow.spec.ts`
-  - Test: Create tournament → View in list → Open detail → View leaderboard
-  - Use Playwright for browser automation
+- [ ] T301 [P2] Add approval workflow fields to Campaign entity
+- [ ] T302 [P2] Create ApprovalService
+- [ ] T303 [P2] Add approval endpoints to CampaignsController
+- [ ] T304 [P2] Create ApprovalBadge component
+- [ ] T305 [P2] Add approval actions to CampaignDetails page
+- [ ] T306 [P2] Create ApprovalHistoryPanel component
 
-- [ ] T050 [P] Run accessibility audit with axe DevTools
-  - Install `@axe-core/react` or use browser extension
-  - Scan all pages for WCAG 2.1 AA violations
-  - Fix contrast issues, missing ARIA labels, keyboard navigation
+---
+
+## Phase 4: Audit Logging (Future Enhancement) - TODO (0/8)
+
+**Note**: Audit logging will be added after core functionality is complete.
+
+- [ ] T401 [P2] Create AuditLog entity
+- [ ] T402 [P2] Create AuditLogRepository
+- [ ] T403 [P2] Create AuditLogService
+- [ ] T404 [P2] Add audit logging to RoleService
+- [ ] T405 [P2] Add audit logging to UserService
+- [ ] T406 [P2] Create AuditLogsController
+- [ ] T407 [P2] Create AuditLogsPage component
+- [ ] T408 [P2] Create AuditLogDetails component
+
+---
+
+## Phase 5: Budget Management Integration (Future) - TODO (0/6)
+
+**Note**: Budget management will be added in future iterations.
+
+- [ ] T501 [P3] Create Budget entity
+- [ ] T502 [P3] Create BudgetService
+- [ ] T503 [P3] Add budget check to campaign publish workflow
+- [ ] T504 [P3] Create BudgetController
+- [ ] T505 [P3] Create BudgetSettingsPage component
+- [ ] T506 [P3] Create BudgetWarningModal component
+
+---
+
+## Phase 6: Performance Optimization & Polish (Future) - TODO (0/10)
+
+**Note**: Performance optimizations will be applied after core functionality is complete.
+
+### Backend Optimizations
+- [ ] T601 [P2] Add caching for GetUserPermissionsAsync
+- [ ] T602 [P2] Add pagination to GET /api/roles endpoint
+- [ ] T603 [P2] Add pagination to GET /api/users endpoint
+- [ ] T604 [P2] Optimize GetRolesByOperatorAsync query
+
+### Frontend Optimizations
+- [ ] T605 [P2] Add optimistic updates to role mutations
+- [ ] T606 [P2] Add debounced search to UserTable and RoleTable
+- [ ] T607 [P2] Add lazy loading for large permission lists
 
 ### Documentation
-
-- [ ] T051 Create OpenAPI/Swagger documentation
-  - File: `backoffice-api/src/Smartico.BackOffice.Api/swagger.json` (auto-generated)
-  - Ensure all endpoints documented with examples
-  - Add authentication requirements
-  - Test Swagger UI at `/swagger`
-
-- [ ] T052 Create README.md for backend
-  - File: `backoffice-api/README.md`
-  - Prerequisites: .NET 9 SDK, MongoDB 8.0+
-  - Setup instructions: Restore packages, update connection string, run migrations
-  - Run instructions: `dotnet run --project src/Smartico.BackOffice.Api`
-  - Test instructions: `dotnet test`
-
-- [ ] T053 Create README.md for frontend
-  - File: `backoffice-frontend/README.md`
-  - Prerequisites: Node.js 20+, npm 10+
-  - Setup instructions: `npm install`, update API URL in `.env`
-  - Run instructions: `npm run dev`
-  - Build instructions: `npm run build`
-
-- [ ] T054 Create DEMO.md with demo script
-  - File: `DEMO.md` (root directory)
-  - Step 1: Start MongoDB (`docker run -d -p 27017:27017 mongo:8.0`)
-  - Step 2: Start backend (`cd backoffice-api && dotnet run`)
-  - Step 3: Get mock JWT token (`curl http://localhost:5000/api/auth/mock-token`)
-  - Step 4: Start frontend (`cd backoffice-frontend && npm run dev`)
-  - Step 5: Open browser to `http://localhost:5173`
-  - Step 6: Create tournament, view list, check leaderboard
-  - Expected duration: < 2 minutes
-
-### Demo Data Seeding
-
-- [ ] T055 Create MongoDB seed script for demo data
-  - File: `backoffice-api/scripts/seed-demo-data.js`
-  - Create 2 operators: "Casino A", "Casino B"
-  - Create 3 tournaments for Casino A (Draft, Active, Completed)
-  - Create 5 leaderboard entries for Active tournament
-  - Run with: `mongosh < seed-demo-data.js`
-
-- [ ] T056 Create docker-compose.yml for quick startup
-  - File: `docker-compose.yml` (root directory)
-  - Service 1: MongoDB 8.0 (port 27017)
-  - Service 2: Backend API (build from Dockerfile)
-  - Service 3: Frontend (build from Dockerfile)
-  - Add health checks and restart policies
-  - One-command demo: `docker-compose up`
-
-### DevOps
-
-- [ ] T057 Create Dockerfile for backend
-  - File: `backoffice-api/Dockerfile`
-  - Base image: `mcr.microsoft.com/dotnet/aspnet:9.0`
-  - Build stage: `mcr.microsoft.com/dotnet/sdk:9.0`
-  - Copy .csproj files, restore packages, build, publish
-  - Expose port 5000
-
-- [ ] T058 Create Dockerfile for frontend
-  - File: `backoffice-frontend/Dockerfile`
-  - Base image: `node:20-alpine`
-  - Build stage: Install deps, run `npm run build`
-  - Serve stage: `nginx:alpine` with built files
-  - Expose port 80
-
-- [ ] T059 Create .dockerignore files
-  - File: `backoffice-api/.dockerignore` (ignore `bin/`, `obj/`, `.vs/`)
-  - File: `backoffice-frontend/.dockerignore` (ignore `node_modules/`, `dist/`)
+- [ ] T608 [P2] Add Swagger documentation for all endpoints
+- [ ] T609 [P2] Create user guide for role management
+- [ ] T610 [P2] Create user guide for user management
 
 ---
 
-## Parallel Execution Opportunities
+## Progress Summary
 
-Tasks marked with **[P]** can run in parallel within the same phase if assigned to different developers:
+**Overall Progress:** 44/107 tasks (41%)
 
-### Phase 1 Parallel:
-- T002 (C# standards) + T005 (React setup) + T006 (frontend deps) + T007 (TailwindCSS)
-
-### Phase 2 Parallel:
-- T008-T011 (Domain entities) + T012-T015 (Infrastructure) + T016-T020 (Application)
-- T026-T027 (Backend tests) + T029-T032 (Frontend components)
-
-### Phase 3 Parallel:
-- T034-T035 (Pagination) + T036-T037 (Frontend list)
-
-### Phase 5 Parallel:
-- T045 (Unit tests) + T046-T047 (Frontend leaderboard)
-
-### Phase 6 Parallel:
-- T049-T050 (Testing) + T051-T054 (Documentation) + T057-T059 (Docker)
+| Phase | Status | Progress |
+|-------|--------|----------|
+| Phase 0: Setup & Configuration | ✅ Complete | 7/7 (100%) |
+| Phase 1: Backend Foundation | 🔄 In Progress | 37/42 (88%) |
+| Phase 2: Frontend UI | ⚠️ Not Started | 0/28 (0%) |
+| Phase 3: Approval Workflow | 📅 Future | 0/6 (0%) |
+| Phase 4: Audit Logging | 📅 Future | 0/8 (0%) |
+| Phase 5: Budget Management | 📅 Future | 0/6 (0%) |
+| Phase 6: Performance & Polish | 📅 Future | 0/10 (0%) |
 
 ---
 
-## Dependency Graph
+## Current Focus: Phase 1 - Remaining Backend Tasks
 
-```
-Phase 1 (Setup)
-├── T001-T004 (Backend setup) → Phase 2 Backend
-└── T005-T007 (Frontend setup) → Phase 2 Frontend
+**Priority Tasks (Must Complete Before Frontend):**
 
-Phase 2 (Foundation)
-├── T008-T011 (Domain) → T012-T015 (Infrastructure) → T016-T020 (Application) → T021-T025 (API)
-└── T029-T030 (Redux store) → T031-T033 (Tournament form)
+1. **T124** [P1] - Create RolesController with full CRUD endpoints
+   - Required for frontend to create/edit/delete roles
 
-Phase 3 (US1: Creation)
-├── T026-T028 (Backend tests)
-└── T031-T033 (Frontend form) → Phase 4
+2. **T125** [P1] - Create UsersController with full CRUD endpoints
+   - Required for frontend to manage users
 
-Phase 4 (US2: Listing)
-├── T034-T035 (Pagination) → T036-T038 (Frontend list)
+3. **T126-T133** [P1] - Create all DTOs and request/response models
+   - Required for API contracts
 
-Phase 5 (US3: Leaderboard)
-├── T039-T044 (Backend leaderboard) → T045 (Tests)
-└── T046-T048 (Frontend leaderboard)
+4. **T138-T142** [P0] - Write comprehensive unit and integration tests
+   - Critical for ensuring operator isolation and permission enforcement
 
-Phase 6 (Polish)
-├── T049-T050 (Quality) || T051-T054 (Docs) || T057-T059 (Docker)
-└── T055-T056 (Demo setup)
+**Blocking Issues:** None
+
+---
+
+## Next Steps
+
+### Immediate (This Week)
+1. Complete RolesController (T124)
+2. Complete UsersController (T125)
+3. Create all DTOs (T126-T133)
+4. Write unit tests for RoleService and AuthService (T138-T140)
+
+### Short-Term (Next Week)
+1. Write integration tests (T141-T142)
+2. Start frontend authentication (T201, T205-T210)
+3. Create login page and auth flow
+
+### Medium-Term (2-3 Weeks)
+1. Complete role management UI (T211-T215)
+2. Complete user management UI (T216-T220)
+3. Add comprehensive E2E tests (T228)
+
+---
+
+## Technical Notes
+
+### Database-Driven Permission System
+
+The permission system was refactored from enum-based to database-driven for scalability:
+
+**Before (Enum-Based)**:
+```csharp
+public enum Permission {
+    TournamentsView,
+    TournamentsCreate,
+    // ... hardcoded
+}
+
+public class Role {
+    public List<Permission> Permissions { get; set; }
+}
 ```
 
+**After (Database-Driven)**:
+```csharp
+public class Permission {
+    public ObjectId Id { get; set; }
+    public string Code { get; set; } // "tournaments.view"
+    public string Name { get; set; } // "View Tournaments"
+    public string Module { get; set; } // "Tournaments"
+}
+
+public class Role {
+    public List<string> Permissions { get; set; } // Permission codes
+}
+```
+
+**Benefits**:
+- New permissions can be added via database without code changes
+- Permissions organized by module
+- Easy to manage via MongoDB Compass
+- Future-proof and scalable
+
+### JWT Permission Claims
+
+User permissions are included in JWT token for efficient authorization:
+
+```csharp
+var claims = new List<Claim>
+{
+    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+    new Claim("operatorId", user.OperatorId.ToString()),
+    new Claim(ClaimTypes.Email, user.Email)
+};
+
+// Add permission claims
+foreach (var permission in userPermissions)
+{
+    claims.Add(new Claim("permission", permission));
+}
+```
+
+This allows permission checks at API layer without database queries.
+
+### Operator Isolation Pattern
+
+All data access goes through BaseRepository which automatically adds OperatorId filter:
+
+```csharp
+public abstract class BaseRepository<T> where T : IOperatorScoped
+{
+    protected FilterDefinition<T> AddOperatorFilter(FilterDefinition<T> filter)
+    {
+        var operatorFilter = Builders<T>.Filter.Eq(x => x.OperatorId, OperatorId);
+        return Builders<T>.Filter.And(filter, operatorFilter);
+    }
+}
+```
+
+This ensures Casino A cannot access Casino B data at the database query level.
+
 ---
 
-## Summary
+## Change Log
 
-**Total Tasks:** 59
-**Parallel Tasks:** 15
-**Estimated Duration:** 10-12 days (2 developers working in parallel)
-
-**By Phase:**
-- Phase 1 (Setup): 7 tasks (1 day)
-- Phase 2 (Foundation): 18 tasks (4 days)
-- Phase 3 (US1: Creation): 8 tasks (2 days)
-- Phase 4 (US2: Listing): 5 tasks (1 day)
-- Phase 5 (US3: Leaderboard): 10 tasks (2 days)
-- Phase 6 (Polish): 11 tasks (1 day)
-
-**By Category:**
-- Backend (Domain, Infrastructure, Application, Api): 25 tasks
-- Frontend (React components, Redux, forms): 16 tasks
-- Testing (Unit, Integration, E2E): 8 tasks
-- Documentation (README, Swagger, Demo): 5 tasks
-- DevOps (Docker, docker-compose): 5 tasks
-
-**MVP Deliverables:**
-1. ✅ Clean Architecture backend (.NET 9 + MongoDB)
-2. ✅ React 19 frontend with TypeScript strict mode
-3. ✅ Tournament CRUD operations with operator isolation
-4. ✅ Real-time leaderboard display
-5. ✅ Demo-ready with docker-compose (< 2 min startup)
-6. ✅ Comprehensive tests (80%+ coverage)
-7. ✅ OpenAPI documentation
-8. ✅ Demo script for stakeholders
-
-**Next Steps After MVP:**
-1. Add Mission Builder (FR-1)
-2. Add Bonus Builder (FR-2)
-3. Add Jackpot Builder (FR-4)
-4. Add Player Level System (FR-5)
-5. Add Badge System (FR-6)
-6. Add Analytics Dashboard (FR-10)
-7. Add A/B Testing (FR-11)
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2025-01-25 | Initial task breakdown for FR-13 User Role and Permission Management |
+| 1.0.0 | 2025-01-25 | Marked Phase 0 and most of Phase 1 as complete (37/42 tasks) |
+| 1.0.0 | 2025-01-25 | Identified priority tasks for Phase 1 completion: T124, T125, T126-T133, T138-T142 |
 
 ---
 
-**Last Updated:** 2025-01-24
-**Status:** Not Started
+**Last Updated:** 2025-01-25
+**Status:** Ready for Phase 1 completion and Phase 2 start
+**Next Review:** After Phase 1 backend tasks complete
 **Owner:** Development Team
