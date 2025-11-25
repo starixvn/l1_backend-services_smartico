@@ -4,6 +4,10 @@ using MongoDB.Driver;
 using Smartico.BackOffice.Api.Middleware;
 using Smartico.BackOffice.Application.Leaderboard.Interfaces;
 using Smartico.BackOffice.Application.Leaderboard.Services;
+using Smartico.BackOffice.Application.Missions.Commands;
+using Smartico.BackOffice.Application.Missions.Interfaces;
+using Smartico.BackOffice.Application.Missions.Services;
+using Smartico.BackOffice.Application.Missions.Validators;
 using Smartico.BackOffice.Application.Tournaments.Interfaces;
 using Smartico.BackOffice.Application.Tournaments.Services;
 using Smartico.BackOffice.Application.Tournaments.Validators;
@@ -71,12 +75,27 @@ builder.Services.AddScoped<ILeaderboardRepository>(sp =>
     return new LeaderboardRepository(database, operatorId);
 });
 
+builder.Services.AddScoped<IMissionRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new MissionRepository(database, operatorId);
+});
+
 // Register validators
 builder.Services.AddValidatorsFromAssemblyContaining<TournamentValidator>();
 
 // Register application services
 builder.Services.AddScoped<ITournamentService, TournamentService>();
 builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+builder.Services.AddScoped<IMissionService, MissionService>();
+
+// Register command handlers
+builder.Services.AddScoped<PublishMissionCommandHandler>();
 
 // Configure OpenAPI/Swagger
 builder.Services.AddEndpointsApiExplorer();

@@ -22,7 +22,8 @@
       "Bash(npm run dev:*)",
       "Bash(npx @tailwindcss/cli:*)",
       "Bash(curl:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(timeout /t 3)"
     ],
     "deny": [],
     "ask": []

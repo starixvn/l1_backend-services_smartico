@@ -93,3 +93,108 @@ export interface LeaderboardEntry {
   avatarUrl?: string;
   metadata?: Record<string, any>;
 }
+
+// Mission types
+export const MissionStatus = {
+  DRAFT: 'Draft',
+  ACTIVE: 'Active',
+  COMPLETED: 'Completed',
+  CANCELLED: 'Cancelled'
+} as const;
+export type MissionStatus = typeof MissionStatus[keyof typeof MissionStatus];
+
+export const PlayerSegment = {
+  ALL_PLAYERS: 'AllPlayers',
+  VIP_ONLY: 'VipOnly'
+} as const;
+export type PlayerSegment = typeof PlayerSegment[keyof typeof PlayerSegment];
+
+export const NodeType = {
+  TRIGGER: 'Trigger',
+  GOAL: 'Goal',
+  REWARD: 'Reward'
+} as const;
+export type NodeType = typeof NodeType[keyof typeof NodeType];
+
+export const TriggerType = {
+  BET_PLACED: 'BetPlaced',
+  DEPOSIT_MADE: 'DepositMade',
+  GAME_PLAYED: 'GamePlayed'
+} as const;
+export type TriggerType = typeof TriggerType[keyof typeof TriggerType];
+
+export const GoalType = {
+  BET_COUNT: 'BetCount',           // Count number of bets/spins
+  DEPOSIT_AMOUNT: 'DepositAmount', // Sum of deposit amounts
+  WAGERED_AMOUNT: 'WageredAmount', // Sum of wagered amounts
+  COUNT_BASED: 'CountBased'        // Legacy count-based goal
+} as const;
+export type GoalType = typeof GoalType[keyof typeof GoalType];
+
+export const RewardType = {
+  FREE_SPINS: 'FreeSpins',
+  CASH_BONUS: 'CashBonus'
+} as const;
+export type RewardType = typeof RewardType[keyof typeof RewardType];
+
+// Visual rule builder structures
+export interface NodePosition {
+  x: number;
+  y: number;
+}
+
+export interface NodeData {
+  label?: string;
+  // Trigger properties
+  triggerType?: TriggerType;
+  triggerThreshold?: number;
+  gameId?: string; // Specific game ID for GamePlayed triggers
+  // Goal properties
+  goalType?: GoalType;
+  goalCount?: number;
+  // Reward properties
+  rewardType?: RewardType;
+  rewardAmount?: number;
+}
+
+export interface RuleNode {
+  id: string;
+  type: NodeType;
+  position: NodePosition;
+  data: NodeData;
+}
+
+export interface RuleEdge {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+}
+
+export interface MissionRule {
+  nodes: RuleNode[];
+  edges: RuleEdge[];
+}
+
+export interface Mission {
+  id: string;
+  operatorId: string;
+  name: string;
+  description?: string;
+  status: MissionStatus;
+  rule: MissionRule;
+  targetSegment: PlayerSegment;
+  startDate: string; // ISO 8601
+  endDate: string; // ISO 8601
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMissionCommand {
+  name: string;
+  description?: string;
+  rule: MissionRule;
+  targetSegment: PlayerSegment;
+  startDate: string; // ISO 8601
+  endDate: string; // ISO 8601
+}
