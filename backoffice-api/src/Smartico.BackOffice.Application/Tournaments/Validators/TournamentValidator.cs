@@ -46,14 +46,28 @@ public class TournamentValidator : AbstractValidator<CreateTournamentCommand>
         RuleFor(x => x.PrizeDistribution)
             .NotEmpty()
             .WithMessage("At least one prize distribution entry is required.")
-            .Must(pd => pd.All(p => p.Position > 0))
-            .WithMessage("All prize positions must be greater than zero.")
+            .Must(pd => pd.All(p => p.FromPosition > 0))
+            .WithMessage("All prize FromPosition values must be greater than zero.")
+            .Must(pd => pd.All(p => p.ToPosition == null || p.ToPosition >= p.FromPosition))
+            .WithMessage("ToPosition must be greater than or equal to FromPosition when specified.")
             .Must(pd => pd.All(p => p.PrizeAmount > 0))
             .WithMessage("All prize amounts must be greater than zero.");
 
         RuleFor(x => x)
-            .Must(cmd => cmd.PrizeDistribution.Sum(p => p.PrizeAmount) <= cmd.PrizePool)
-            .WithMessage("Total prize distribution cannot exceed the prize pool.");
+            .Must(cmd =>
+            {
+                // Calculate total prize amount considering ranges
+                decimal totalPrize = 0;
+                foreach (var prize in cmd.PrizeDistribution)
+                {
+                    int winnerCount = prize.ToPosition.HasValue
+                        ? (prize.ToPosition.Value - prize.FromPosition + 1)
+                        : 1;
+                    totalPrize += prize.PrizeAmount * winnerCount;
+                }
+                return totalPrize <= cmd.PrizePool;
+            })
+            .WithMessage("Total prize distribution (including ranges) cannot exceed the prize pool.");
 
         RuleFor(x => x.MaxParticipants)
             .GreaterThan(0)

@@ -35,7 +35,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
       description: '',
       prizePool: 0,
       prizeDistribution: [
-        { position: 1, prizeAmount: 0, prizeType: PrizeType.CASH }
+        { fromPosition: 1, toPosition: undefined, prizeAmount: 0, prizeType: PrizeType.CASH }
       ]
     }
   });

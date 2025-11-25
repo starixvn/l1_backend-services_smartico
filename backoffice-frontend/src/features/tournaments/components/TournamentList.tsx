@@ -186,28 +186,28 @@ export const TournamentList: React.FC<TournamentListProps> = ({
                 Leaderboard
               </button>
               <button
-                onClick={() => setTypeFilter(TournamentType.KNOCKOUT)}
+                onClick={() => setTypeFilter(TournamentType.BRACKET)}
                 className={`
                   px-3 py-1 text-sm rounded-lg transition-colors
-                  ${typeFilter === TournamentType.KNOCKOUT
+                  ${typeFilter === TournamentType.BRACKET
                     ? 'bg-primary-600 text-white'
                     : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200'
                   }
                 `}
               >
-                Knockout
+                Bracket
               </button>
               <button
-                onClick={() => setTypeFilter(TournamentType.MISSION_BASED)}
+                onClick={() => setTypeFilter(TournamentType.TIME_BASED_CHALLENGE)}
                 className={`
                   px-3 py-1 text-sm rounded-lg transition-colors
-                  ${typeFilter === TournamentType.MISSION_BASED
+                  ${typeFilter === TournamentType.TIME_BASED_CHALLENGE
                     ? 'bg-primary-600 text-white'
                     : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200'
                   }
                 `}
               >
-                Mission Based
+                Time Based Challenge
               </button>
             </div>
           </div>

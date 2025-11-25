@@ -35,7 +35,7 @@ export const Layout: React.FC = () => {
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-secondary-900">Smartico</h1>
+                <h1 className="text-xl font-bold text-secondary-900">SabaONE</h1>
                 <p className="text-xs text-secondary-500">Back Office</p>
               </div>
             </Link>
@@ -76,7 +76,7 @@ export const Layout: React.FC = () => {
       <footer className="border-t border-secondary-200 bg-white mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between text-sm text-secondary-600">
-            <p>&copy; 2025 Smartico. Back Office Campaign Management.</p>
+            <p>&copy; 2025 SabaONE. Back Office Campaign Management.</p>
             <p>Tournament Builder MVP - Demo</p>
           </div>
         </div>

@@ -3,8 +3,9 @@
 **Feature:** Tournament Builder MVP (First Running Demo)
 **Epic:** 002-back-office-campaign-management
 **Created:** 2025-01-24
+**Last Updated:** 2025-01-25
 **Owner:** Development Team
-**Status:** Not Started
+**Status:** In Progress (Phase 2-5 Complete, Phase 6 + Enhancements Pending)
 
 ## MVP Scope
 
@@ -36,13 +37,13 @@ Tasks are organized by **User Story** to enable independent implementation and t
 
 The MVP will be considered complete when:
 
-- [ ] User can create a tournament via React 19 UI
-- [ ] Tournament data is saved to MongoDB with operator isolation
-- [ ] User can view list of tournaments for their operator only
-- [ ] Leaderboard displays tournament participants and scores
-- [ ] Backend follows Clean Architecture (Api → Application → Domain ← Infrastructure)
+- [X] User can create a tournament via React 19 UI
+- [X] Tournament data is saved to MongoDB with operator isolation
+- [X] User can view list of tournaments for their operator only
+- [X] Leaderboard displays tournament participants and scores
+- [X] Backend follows Clean Architecture (Api → Application → Domain ← Infrastructure)
 - [ ] All API endpoints tested with NSubstitute
-- [ ] Frontend runs on React 19 with TypeScript strict mode
+- [X] Frontend runs on React 19 with TypeScript strict mode
 - [ ] Demo can be shown to stakeholders (< 2 minute setup time)
 
 ---
@@ -110,20 +111,21 @@ The MVP will be considered complete when:
 
 ### Domain Layer (Pure Business Logic)
 
-- [ ] T008 Create IOperatorScoped interface in Domain
+- [X] T008 Create IOperatorScoped interface in Domain
   - File: `backoffice-api/src/Smartico.BackOffice.Domain/Entities/IOperatorScoped.cs`
   - Add `ObjectId OperatorId { get; set; }` property
   - Add XML documentation explaining multi-tenant isolation
 
-- [ ] T009 Create Tournament entity in Domain
+- [X] T009 Create Tournament entity in Domain
   - File: `backoffice-api/src/Smartico.BackOffice.Domain/Entities/Tournament.cs`
   - Properties: `Id`, `OperatorId`, `Name`, `Type`, `Status`, `StartDate`, `EndDate`
   - Properties: `ScoringType`, `PrizePool`, `MaxParticipants`, `EntryFee`, `CreatedAt`, `UpdatedAt`
+  - Additional: `Description`, `PrizeDistribution`, `EligibleGames`
   - Implement `IOperatorScoped`
   - Add BSON attributes: `[BsonId]`, `[BsonElement]`, `[BsonRequired]`
   - Add XML documentation for all properties
 
-- [ ] T010 Create TournamentConfig record types in Domain
+- [X] T010 Create TournamentConfig record types in Domain
   - File: `backoffice-api/src/Smartico.BackOffice.Domain/ValueObjects/TournamentConfig.cs`
   - Create `TournamentType` enum: `Leaderboard`, `Bracket`, `TimeBasedChallenge`
   - Create `ScoringType` enum: `Points`, `HighestWin`, `MostWins`, `WageringVolume`
@@ -131,7 +133,7 @@ The MVP will be considered complete when:
   - Create `PrizeDistribution` record with `Position`, `PrizeAmount`, `PrizeType`
   - Add XML documentation
 
-- [ ] T011 Create ITournamentRepository interface in Domain
+- [X] T011 Create ITournamentRepository interface in Domain
   - File: `backoffice-api/src/Smartico.BackOffice.Domain/Repositories/ITournamentRepository.cs`
   - Methods: `CreateAsync`, `GetByIdAsync`, `GetAllAsync`, `UpdateAsync`, `DeleteAsync`
   - All methods accept `ObjectId operatorId` as first parameter
@@ -140,12 +142,12 @@ The MVP will be considered complete when:
 
 ### Infrastructure Layer (MongoDB Implementation)
 
-- [ ] T012 Create MongoDB configuration in Infrastructure
+- [X] T012 Create MongoDB configuration in Infrastructure
   - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Configuration/MongoDbSettings.cs`
   - Properties: `ConnectionString`, `DatabaseName`
   - Add XML documentation
 
-- [ ] T013 Create BaseRepository with automatic OperatorId filtering
+- [X] T013 Create BaseRepository with automatic OperatorId filtering
   - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Repositories/BaseRepository.cs`
   - Generic class: `BaseRepository<T> where T : IOperatorScoped`
   - Constructor accepts `IMongoDatabase`, `ObjectId operatorId`, `string collectionName`
@@ -153,7 +155,7 @@ The MVP will be considered complete when:
   - Protected property: `Collection` (IMongoCollection<T>)
   - Add comprehensive XML documentation with security notes
 
-- [ ] T014 Implement TournamentRepository in Infrastructure
+- [X] T014 Implement TournamentRepository in Infrastructure
   - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Repositories/TournamentRepository.cs`
   - Inherit from `BaseRepository<Tournament>`
   - Implement `ITournamentRepository`
@@ -161,7 +163,7 @@ The MVP will be considered complete when:
   - Add compound indexes: `{ OperatorId: 1, Status: 1, StartDate: -1 }`
   - Add XML documentation
 
-- [ ] T015 Create MongoDB indexes setup
+- [X] T015 Create MongoDB indexes setup
   - File: `backoffice-api/src/Smartico.BackOffice.Infrastructure/Data/MongoDbIndexSetup.cs`
   - Method: `CreateIndexesAsync` to create all required indexes
   - Tournament indexes: `(OperatorId, Status, StartDate)`, `(OperatorId, Type)`
@@ -170,32 +172,32 @@ The MVP will be considered complete when:
 
 ### Application Layer (Business Logic Services)
 
-- [ ] T016 Create CreateTournamentCommand in Application
+- [X] T016 Create CreateTournamentCommand in Application
   - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/Commands/CreateTournamentCommand.cs`
-  - Properties: `Name`, `Type`, `ScoringType`, `StartDate`, `EndDate`, `PrizePool`, `MaxParticipants`
+  - Properties: `Name`, `Description`, `Type`, `ScoringType`, `StartDate`, `EndDate`, `PrizePool`, `PrizeDistribution`, `MaxParticipants`, `EntryFee`, `EligibleGames`
   - Add XML documentation
 
-- [ ] T017 Create TournamentValidator with FluentValidation
+- [X] T017 Create TournamentValidator with FluentValidation
   - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/Validators/TournamentValidator.cs`
   - Inherit from `AbstractValidator<CreateTournamentCommand>`
-  - Rules: Name required (3-100 chars), EndDate > StartDate, PrizePool > 0, MaxParticipants > 0
+  - Rules: Name required (3-100 chars), EndDate > StartDate, PrizePool > 0, PrizeDistribution validation
   - Add custom error messages
   - Add XML documentation
 
-- [ ] T018 Create ITournamentService interface in Application
+- [X] T018 Create ITournamentService interface in Application
   - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/Interfaces/ITournamentService.cs`
   - Methods: `CreateTournamentAsync`, `GetTournamentByIdAsync`, `GetAllTournamentsAsync`, `UpdateTournamentAsync`, `DeleteTournamentAsync`
   - All methods accept `ObjectId operatorId` and `CancellationToken`
   - Return types: `Task<TournamentDto>` or `Task<List<TournamentDto>>`
   - Add XML documentation
 
-- [ ] T019 Create TournamentDto in Application
+- [X] T019 Create TournamentDto in Application
   - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/DTOs/TournamentDto.cs`
   - Map from `Tournament` entity with all properties
-  - Add JSON serialization attributes
+  - Add JSON serialization attributes (JsonStringEnumConverter for enums)
   - Add XML documentation
 
-- [ ] T020 Implement TournamentService in Application
+- [X] T020 Implement TournamentService in Application
   - File: `backoffice-api/src/Smartico.BackOffice.Application/Tournaments/Services/TournamentService.cs`
   - Constructor: Inject `ITournamentRepository`, `IValidator<CreateTournamentCommand>`
   - Implement all `ITournamentService` methods

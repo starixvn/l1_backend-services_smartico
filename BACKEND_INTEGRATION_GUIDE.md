@@ -1,16 +1,16 @@
-# Smartico Backend Integration Guide
+# SabaONE Backend Integration Guide
 
-> **Technical guide for backend developers integrating casino platforms with Smartico's gamification engine**
+> **Technical guide for backend developers integrating casino platforms with SabaONE's gamification engine**
 
 ---
 
 ## 📋 Overview
 
-This guide covers the backend integration between your casino platform and Smartico. You'll learn:
+This guide covers the backend integration between your casino platform and SabaONE. You'll learn:
 
-1. How Smartico identifies and tracks players
-2. What events to send to Smartico
-3. How Smartico manages bonuses, levels, and progress
+1. How SabaONE identifies and tracks players
+2. What events to send to SabaONE
+3. How SabaONE manages bonuses, levels, and progress
 4. API events and webhook implementation
 
 **Integration Time:** 2-3 days for basic integration
@@ -19,9 +19,9 @@ This guide covers the backend integration between your casino platform and Smart
 
 ## 🔑 Player Identity Model
 
-### How Smartico Identifies Players
+### How SabaONE Identifies Players
 
-Smartico uses a **composite identifier** to uniquely track players across multiple casino operators:
+SabaONE uses a **composite identifier** to uniquely track players across multiple casino operators:
 
 ```
 UNIQUE PLAYER IDENTIFIER = operatorId + playerId
@@ -31,7 +31,7 @@ UNIQUE PLAYER IDENTIFIER = operatorId + playerId
 ```
 Operator: "lucky-casino"
 Player:   "player_123"
-→ Smartico ID: "lucky-casino:player_123"
+→ SabaONE ID: "lucky-casino:player_123"
 ```
 
 ### Why Composite Keys?
@@ -62,10 +62,10 @@ These are DIFFERENT players:
 - Zero data leakage between operators
 ```
 
-**Scenario 2: How Smartico Knows Which Operator**
+**Scenario 2: How SabaONE Knows Which Operator**
 ```
 When you send an event:
-POST https://api.smartico.ai/v1/events
+POST https://api.sabaone.com/v1/events
 Headers: {
   "Authorization": "Bearer YOUR_API_KEY"  // API key identifies YOUR operator
 }
@@ -75,7 +75,7 @@ Body: {
   "amount": 50
 }
 
-Smartico receives:
+SabaONE receives:
 → Decodes API key → knows operator is "lucky-casino"
 → Routes event to lucky-casino:player_123
 → Updates ONLY that player's progress
@@ -103,7 +103,7 @@ Widget receives token:
 │                    INTEGRATION FLOW                             │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  YOUR CASINO                           SMARTICO                 │
+│  YOUR CASINO                           SABAONE                  │
 │  ┌─────────────────────┐              ┌─────────────────────┐  │
 │  │                     │              │                     │  │
 │  │  Player Activity ───┼─── Events ──►│ Gamification       │  │
@@ -128,11 +128,11 @@ Widget receives token:
 
 ### Initial Player Registration
 
-When a player registers at your casino, sync their profile to Smartico.
+When a player registers at your casino, sync their profile to SabaONE.
 
 **API Endpoint:**
 ```
-POST https://api.smartico.ai/v1/players/sync
+POST https://api.sabaone.com/v1/players/sync
 ```
 
 **Request:**
@@ -169,7 +169,7 @@ Update player profiles when important attributes change.
 
 **API Endpoint:**
 ```
-PATCH https://api.smartico.ai/v1/players/{playerId}
+PATCH https://api.sabaone.com/v1/players/{playerId}
 ```
 
 **Request:**
@@ -190,7 +190,7 @@ PATCH https://api.smartico.ai/v1/players/{playerId}
 
 ---
 
-## 📤 Step 2: Send Events to Smartico
+## 📤 Step 2: Send Events to SabaONE
 
 ### Event Types
 
@@ -209,7 +209,7 @@ Send player activity events to trigger gamification rules:
 
 **API Endpoint:**
 ```
-POST https://api.smartico.ai/v1/events
+POST https://api.sabaone.com/v1/events
 ```
 
 **Headers:**
@@ -335,11 +335,11 @@ Content-Type: application/json
 
 ---
 
-## 📥 Step 3: Receive Webhooks from Smartico
+## 📥 Step 3: Receive Webhooks from SabaONE
 
 ### Webhook Events
 
-Smartico sends webhooks when gamification events occur:
+SabaONE sends webhooks when gamification events occur:
 
 | Webhook Event | When Triggered | Action Required |
 |---------------|----------------|-----------------|
@@ -354,13 +354,13 @@ Smartico sends webhooks when gamification events occur:
 
 **Register your webhook endpoint:**
 ```
-POST https://api.smartico.ai/v1/webhooks
+POST https://api.sabaone.com/v1/webhooks
 ```
 
 **Request:**
 ```json
 {
-  "url": "https://your-casino.com/webhooks/smartico",
+  "url": "https://your-casino.com/webhooks/sabaone",
   "events": [
     "mission_completed",
     "bonus_awarded",
@@ -377,7 +377,7 @@ POST https://api.smartico.ai/v1/webhooks
 
 **Webhook Headers:**
 ```
-X-Smartico-Signature: sha256_hash_of_payload
+X-SabaONE-Signature: sha256_hash_of_payload
 Content-Type: application/json
 ```
 
@@ -482,7 +482,7 @@ Content-Type: application/json
 
 **Verify webhook signatures:**
 
-1. Extract signature from header: `X-Smartico-Signature`
+1. Extract signature from header: `X-SabaONE-Signature`
 2. Compute HMAC-SHA256 of payload using your webhook secret
 3. Compare computed signature with received signature
 4. Only process webhook if signatures match
@@ -494,13 +494,13 @@ Content-Type: application/json
 
 ---
 
-## 🎮 How Smartico Manages Gamification
+## 🎮 How SabaONE Manages Gamification
 
 ### Mission Progress Tracking
 
 **Flow:**
-1. You send events (bets, deposits, logins) → Smartico
-2. Smartico matches events against active mission rules
+1. You send events (bets, deposits, logins) → SabaONE
+2. SabaONE matches events against active mission rules
 3. Progress is updated automatically
 4. When mission completes → Webhook sent to you
 
@@ -521,9 +521,9 @@ You receive webhook → Award free spins
 ### Bonus Management
 
 **Flow:**
-1. Campaign manager creates bonus in Smartico Back Office
+1. Campaign manager creates bonus in SabaONE Back Office
 2. Bonus rules trigger when conditions met (e.g., first deposit)
-3. Smartico sends `bonus_awarded` webhook to your backend
+3. SabaONE sends `bonus_awarded` webhook to your backend
 4. You credit the bonus to player's account
 
 **Example:**
@@ -533,15 +533,15 @@ Rule: ON deposit WHERE isFirstDeposit=true THEN award 100% match up to 200
 
 Player deposits $150:
 ├─ You send: deposit event, amount=150, isFirstDeposit=true
-├─ Smartico: Matches bonus rule → Calculates 100% of 150 = 150
-├─ Smartico: Sends webhook → bonus_awarded, amount=150
+├─ SabaONE: Matches bonus rule → Calculates 100% of 150 = 150
+├─ SabaONE: Sends webhook → bonus_awarded, amount=150
 └─ You: Credit $150 bonus to player wallet
 ```
 
 ### Player Level & Progress
 
 **Flow:**
-1. Smartico tracks player XP (experience points) based on activity
+1. SabaONE tracks player XP (experience points) based on activity
 2. XP accumulates from events (bets, missions, tournaments)
 3. When XP threshold reached → Player levels up
 4. Level up triggers webhook with rewards
@@ -559,12 +559,12 @@ Player earns XP:
 ├─ Daily login → +50 XP
 
 Player accumulates 1000 XP:
-└─ Smartico: level_up webhook sent (level 1 → 2)
+└─ SabaONE: level_up webhook sent (level 1 → 2)
 ```
 
 ### Real-Time Updates
 
-Smartico provides real-time progress updates via:
+SabaONE provides real-time progress updates via:
 - **Widget:** Players see live progress on missions, levels, bonuses
 - **API:** Query current player state anytime
 - **Webhooks:** Get notified immediately when events occur
@@ -631,7 +631,7 @@ Headers:
 - Log failed events for debugging
 
 **Handle webhook failures:**
-- Smartico will retry failed webhooks (3 attempts)
+- SabaONE will retry failed webhooks (3 attempts)
 - Return 200 OK even if internal processing fails
 - Process webhooks in background queue
 - Store webhook failures for manual review
@@ -641,23 +641,23 @@ Headers:
 ## 🚀 Integration Checklist
 
 ### Phase 1: Setup (Day 1)
-- [ ] Get Smartico API credentials (API key, webhook secret)
+- [ ] Get SabaONE API credentials (API key, webhook secret)
 - [ ] Set up environment variables
 - [ ] Configure webhook endpoint URL
 - [ ] Test webhook signature verification
 
 ### Phase 2: Player Sync (Day 2)
 - [ ] Implement player profile sync on registration
-- [ ] Test player creation in Smartico
+- [ ] Test player creation in SabaONE
 - [ ] Implement player profile update logic
-- [ ] Verify player data in Smartico dashboard
+- [ ] Verify player data in SabaONE dashboard
 
 ### Phase 3: Events (Day 3)
-- [ ] Implement event sending to Smartico
+- [ ] Implement event sending to SabaONE
 - [ ] Send `player_login` events
 - [ ] Send `bet_placed` events
 - [ ] Send `deposit` events
-- [ ] Verify events in Smartico dashboard
+- [ ] Verify events in SabaONE dashboard
 
 ### Phase 4: Webhooks (Day 4)
 - [ ] Implement webhook endpoint
@@ -714,14 +714,14 @@ Headers:
 ## 📞 Support
 
 **Technical Support:**
-- 📧 Email: [integration@smartico.ai](mailto:integration@smartico.ai)
+- 📧 Email: [integration@sabaone.com](mailto:integration@sabaone.com)
 - 💬 Slack: Join our integration channel
-- 📚 Docs: [docs.smartico.ai](https://docs.smartico.ai)
+- 📚 Docs: [docs.sabaone.com](https://docs.sabaone.com)
 
 **API Reference:**
-- REST API: [docs.smartico.ai/api](https://docs.smartico.ai/api)
-- Webhook Events: [docs.smartico.ai/webhooks](https://docs.smartico.ai/webhooks)
-- SDKs: [github.com/smartico](https://github.com/smartico)
+- REST API: [docs.sabaone.com/api](https://docs.sabaone.com/api)
+- Webhook Events: [docs.sabaone.com/webhooks](https://docs.sabaone.com/webhooks)
+- SDKs: [github.com/sabaone](https://github.com/sabaone)
 
 ---
 

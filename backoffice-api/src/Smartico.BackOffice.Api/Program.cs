@@ -84,7 +84,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new()
     {
-        Title = "Smartico Back Office API",
+        Title = "SabaONE Back Office API",
         Version = "v1",
         Description = "Campaign Management & Tournament Builder API"
     });
@@ -130,7 +130,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Smartico Back Office API v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "SabaONE Back Office API v1");
     });
 }
 

@@ -26,15 +26,25 @@ export const PrizePoolConfig: React.FC<PrizePoolConfigProps> = ({
 
   const handleAddPrize = () => {
     append({
-      position: fields.length + 1,
+      fromPosition: fields.length + 1,
+      toPosition: undefined,
       prizeAmount: 0,
       prizeType: PrizeType.CASH
     });
   };
 
   const totalDistributed = fields.reduce((sum, _, index) => {
-    const field = document.getElementById(`prizeDistribution.${index}.prizeAmount`) as HTMLInputElement;
-    return sum + (parseFloat(field?.value) || 0);
+    const amountField = document.getElementById(`prizeDistribution.${index}.prizeAmount`) as HTMLInputElement;
+    const fromPosField = document.getElementById(`prizeDistribution.${index}.fromPosition`) as HTMLInputElement;
+    const toPosField = document.getElementById(`prizeDistribution.${index}.toPosition`) as HTMLInputElement;
+
+    const amount = parseFloat(amountField?.value) || 0;
+    const fromPos = parseInt(fromPosField?.value) || 1;
+    const toPos = toPosField?.value ? parseInt(toPosField.value) : undefined;
+
+    // Calculate total considering range
+    const winnerCount = toPos ? (toPos - fromPos + 1) : 1;
+    return sum + (amount * winnerCount);
   }, 0);
 
   const remaining = prizePool - totalDistributed;
@@ -86,24 +96,43 @@ export const PrizePoolConfig: React.FC<PrizePoolConfigProps> = ({
             key={field.id}
             className="flex items-start gap-3 p-4 border border-secondary-200 rounded-lg"
           >
-            {/* Position */}
-            <div className="flex-shrink-0 w-20">
+            {/* From Position */}
+            <div className="shrink-0 w-24">
               <label
-                htmlFor={`prizeDistribution.${index}.position`}
+                htmlFor={`prizeDistribution.${index}.fromPosition`}
                 className="block text-xs font-medium text-secondary-700 mb-1"
               >
-                Position
+                From Pos
               </label>
               <input
                 type="number"
-                id={`prizeDistribution.${index}.position`}
-                {...register(`prizeDistribution.${index}.position`, { valueAsNumber: true })}
+                id={`prizeDistribution.${index}.fromPosition`}
+                {...register(`prizeDistribution.${index}.fromPosition`, { valueAsNumber: true })}
+                className="w-full px-2 py-1 text-sm border border-secondary-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* To Position (Optional - for ranges) */}
+            <div className="shrink-0 w-24">
+              <label
+                htmlFor={`prizeDistribution.${index}.toPosition`}
+                className="block text-xs font-medium text-secondary-700 mb-1"
+              >
+                To Pos
+              </label>
+              <input
+                type="number"
+                id={`prizeDistribution.${index}.toPosition`}
+                {...register(`prizeDistribution.${index}.toPosition`, {
+                  setValueAs: (v) => v === '' || v === null ? undefined : Number(v)
+                })}
+                placeholder="Optional"
                 className="w-full px-2 py-1 text-sm border border-secondary-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             {/* Prize Amount */}
-            <div className="flex-grow">
+            <div className="grow">
               <label
                 htmlFor={`prizeDistribution.${index}.prizeAmount`}
                 className="block text-xs font-medium text-secondary-700 mb-1"
@@ -120,7 +149,7 @@ export const PrizePoolConfig: React.FC<PrizePoolConfigProps> = ({
             </div>
 
             {/* Prize Type */}
-            <div className="flex-grow">
+            <div className="grow">
               <label
                 htmlFor={`prizeDistribution.${index}.prizeType`}
                 className="block text-xs font-medium text-secondary-700 mb-1"

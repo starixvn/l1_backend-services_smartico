@@ -32,7 +32,10 @@ export const CreateTournamentPage: React.FC = () => {
         prizeDistribution: data.prizeDistribution,
         maxParticipants: data.maxParticipants,
         entryFee: data.entryFee,
+        // Parse comma-separated game IDs into array
         eligibleGames: data.eligibleGames
+          ? data.eligibleGames.split(',').map(g => g.trim()).filter(g => g.length > 0)
+          : undefined
       };
 
       console.log('Sending tournament creation request:', JSON.stringify(command, null, 2));

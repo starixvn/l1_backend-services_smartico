@@ -100,13 +100,15 @@ public enum PrizeType
 }
 
 /// <summary>
-/// Represents a prize distribution for a specific position in the tournament.
+/// Represents a prize distribution for a specific position or range of positions in the tournament.
 /// </summary>
-/// <param name="Position">The position in the tournament (1 for first place, 2 for second, etc.).</param>
-/// <param name="PrizeAmount">The amount of the prize.</param>
+/// <param name="FromPosition">The starting position in the tournament (1 for first place, 2 for second, etc.).</param>
+/// <param name="ToPosition">The ending position (optional). If null, only FromPosition wins the prize. If set, creates a range (e.g., 4-100).</param>
+/// <param name="PrizeAmount">The amount of the prize (per winner if range is specified).</param>
 /// <param name="PrizeType">The type of prize (Cash, FreeSpins, BonusCredit).</param>
 public record PrizeDistribution(
-    int Position,
+    int FromPosition,
+    int? ToPosition,
     decimal PrizeAmount,
     PrizeType PrizeType
 );

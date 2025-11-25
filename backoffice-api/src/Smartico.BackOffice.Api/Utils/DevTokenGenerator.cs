@@ -12,8 +12,8 @@ namespace Smartico.BackOffice.Api.Utils;
 public static class DevTokenGenerator
 {
     private const string SecretKey = "THIS_IS_A_DEVELOPMENT_SECRET_KEY_DO_NOT_USE_IN_PRODUCTION_12345";
-    private const string Issuer = "smartico-backoffice-dev";
-    private const string Audience = "smartico-backoffice-api";
+    private const string Issuer = "sabaone-backoffice-dev";
+    private const string Audience = "sabaone-backoffice-api";
 
     /// <summary>
     /// Generates a mock JWT token for development/testing purposes.

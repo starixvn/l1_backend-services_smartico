@@ -1,4 +1,4 @@
-# Smartico Back Office - Tournament Builder MVP
+# SabaONE Back Office - Tournament Builder MVP
 
 A demo-ready Back Office Campaign Management system with tournament creation, leaderboard tracking, and real-time rankings.
 
@@ -320,7 +320,7 @@ Without authentication:
 {
   "MongoDB": {
     "ConnectionString": "mongodb://localhost:27017",
-    "DatabaseName": "smartico_backoffice"
+    "DatabaseName": "sabaone_backoffice"
   },
   "Logging": {
     "LogLevel": {
@@ -412,7 +412,7 @@ See the [Main README](./README.md) for contribution guidelines.
 
 ## 📄 License
 
-Proprietary - Smartico
+Proprietary - SabaONE
 
 ---
 

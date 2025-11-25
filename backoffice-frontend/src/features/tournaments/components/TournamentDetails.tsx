@@ -163,16 +163,21 @@ export const TournamentDetails: React.FC<TournamentDetailsProps> = ({
               </thead>
               <tbody>
                 {tournament.prizeDistribution
-                  .sort((a, b) => a.rank - b.rank)
-                  .map((prize) => (
-                    <tr key={prize.rank} className="border-b border-secondary-100">
+                  .sort((a, b) => a.fromPosition - b.fromPosition)
+                  .map((prize, index) => (
+                    <tr key={index} className="border-b border-secondary-100">
                       <td className="py-3 px-4">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-100 text-primary-700 font-semibold">
-                          {prize.rank}
+                        <span className="inline-flex items-center justify-center min-w-[2rem] px-2 h-8 rounded-full bg-primary-100 text-primary-700 font-semibold">
+                          {prize.toPosition
+                            ? `${prize.fromPosition}-${prize.toPosition}`
+                            : prize.fromPosition}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-secondary-900 font-semibold">
                         ${prize.prizeAmount.toLocaleString()}
+                        {prize.toPosition && (
+                          <span className="text-xs text-secondary-500 ml-1">(per winner)</span>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-secondary-100 text-secondary-700">

@@ -36,7 +36,8 @@ export type PrizeType = typeof PrizeType[keyof typeof PrizeType];
 
 // DTOs matching backend
 export interface PrizeDistribution {
-  position: number;
+  fromPosition: number;
+  toPosition?: number; // Optional: if set, creates a range (e.g., 4-100)
   prizeAmount: number;
   prizeType: PrizeType;
 }

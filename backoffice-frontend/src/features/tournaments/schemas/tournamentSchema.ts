@@ -2,15 +2,22 @@ import { z } from 'zod';
 import { TournamentType, ScoringType, PrizeType } from '../../../services/api.types';
 
 /**
- * Prize distribution schema
+ * Prize distribution schema with range support
  */
 export const prizeDistributionSchema = z.object({
-  position: z.number().int().positive('Position must be a positive integer'),
+  fromPosition: z.number().int().positive('From position must be a positive integer'),
+  toPosition: z.number().int().positive('To position must be a positive integer').optional(),
   prizeAmount: z.number().positive('Prize amount must be greater than 0'),
   prizeType: z.enum([PrizeType.CASH, PrizeType.FREE_SPINS, PrizeType.BONUS_CREDIT], {
     message: 'Invalid prize type'
   })
-});
+}).refine(
+  (data) => !data.toPosition || data.toPosition >= data.fromPosition,
+  {
+    message: 'To position must be greater than or equal to from position',
+    path: ['toPosition']
+  }
+);
 
 /**
  * Tournament form validation schema
@@ -54,10 +61,25 @@ export const tournamentFormSchema = z.object({
     .min(1, 'At least one prize distribution is required')
     .refine(
       (distributions) => {
-        const positions = distributions.map(d => d.position);
-        return new Set(positions).size === positions.length;
+        // Check for overlapping ranges
+        for (let i = 0; i < distributions.length; i++) {
+          for (let j = i + 1; j < distributions.length; j++) {
+            const d1 = distributions[i];
+            const d2 = distributions[j];
+            const d1Start = d1.fromPosition;
+            const d1End = d1.toPosition ?? d1.fromPosition;
+            const d2Start = d2.fromPosition;
+            const d2End = d2.toPosition ?? d2.fromPosition;
+
+            // Check if ranges overlap
+            if (d1Start <= d2End && d2Start <= d1End) {
+              return false;
+            }
+          }
+        }
+        return true;
       },
-      'Prize distribution positions must be unique'
+      'Prize distribution positions/ranges must not overlap'
     )
     .refine(
       (distributions) => {
@@ -76,7 +98,7 @@ export const tournamentFormSchema = z.object({
     .nonnegative('Entry fee cannot be negative')
     .optional(),
 
-  eligibleGames: z.array(z.string())
+  eligibleGames: z.string()
     .optional()
 }).refine(
   (data) => {
@@ -90,11 +112,15 @@ export const tournamentFormSchema = z.object({
   }
 ).refine(
   (data) => {
-    const totalPrize = data.prizeDistribution.reduce((sum, d) => sum + d.prizeAmount, 0);
+    // Calculate total prize considering ranges
+    const totalPrize = data.prizeDistribution.reduce((sum, d) => {
+      const winnerCount = d.toPosition ? (d.toPosition - d.fromPosition + 1) : 1;
+      return sum + (d.prizeAmount * winnerCount);
+    }, 0);
     return totalPrize <= data.prizePool;
   },
   {
-    message: 'Total prize distribution cannot exceed prize pool',
+    message: 'Total prize distribution (including ranges) cannot exceed prize pool',
     path: ['prizeDistribution']
   }
 );

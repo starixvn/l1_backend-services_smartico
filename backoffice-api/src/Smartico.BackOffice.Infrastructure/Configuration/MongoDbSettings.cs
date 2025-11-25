@@ -14,6 +14,6 @@ public class MongoDbSettings
     /// <summary>
     /// Gets or sets the name of the database to use.
     /// </summary>
-    /// <example>smartico_backoffice</example>
-    public string DatabaseName { get; set; } = "smartico_backoffice";
+    /// <example>sabaone_backoffice</example>
+    public string DatabaseName { get; set; } = "sabaone_backoffice";
 }

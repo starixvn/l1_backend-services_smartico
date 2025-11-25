@@ -1,4 +1,4 @@
-# Smartico Gamification Platform
+# SabaONE Gamification Platform
 
 A comprehensive gamification platform with a modern, customizable dashboard featuring real-time updates, theme customization, and 14 specialized widgets.
 
@@ -201,7 +201,7 @@ test: add unit tests for theme system
 - [ ] Cross-browser testing
 
 ### Phase 10: Backend Integration (Planned)
-- [ ] Replace mock data with Smartico API
+- [ ] Replace mock data with SabaONE API
 - [ ] SignalR real-time updates
 - [ ] Error handling and retry logic
 - [ ] Loading states optimization
@@ -250,13 +250,13 @@ See [Developer Guide](./frontend/docs/DEVELOPER_GUIDE.md) for detailed developme
 
 ## License
 
-This project is part of the Smartico gamification platform.
+This project is part of the SabaONE gamification platform.
 
 ## Support
 
 - **Issues**: Report bugs and feature requests on [GitLab Issues](https://git3.nexdev.net/l1/backend-services/smartico/-/issues)
 - **Documentation**: See `/frontend/docs/` for detailed guides
-- **Contact**: Smartico support team
+- **Contact**: SabaONE support team
 
 ## Acknowledgments
 

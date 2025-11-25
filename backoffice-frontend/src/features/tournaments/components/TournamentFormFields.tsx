@@ -200,7 +200,9 @@ export const TournamentFormFields: React.FC<TournamentFormFieldsProps> = ({
             <input
               type="number"
               id="maxParticipants"
-              {...register('maxParticipants', { valueAsNumber: true })}
+              {...register('maxParticipants', {
+                setValueAs: (v) => v === '' || v === null ? undefined : Number(v)
+              })}
               placeholder="Unlimited"
               className={`
                 w-full px-3 py-2 border rounded-lg
@@ -227,8 +229,10 @@ export const TournamentFormFields: React.FC<TournamentFormFieldsProps> = ({
                 type="number"
                 id="entryFee"
                 step="0.01"
-                {...register('entryFee', { valueAsNumber: true })}
-                placeholder="0.00"
+                {...register('entryFee', {
+                  setValueAs: (v) => v === '' || v === null ? undefined : Number(v)
+                })}
+                placeholder="Free"
                 className={`
                   w-full pl-8 pr-3 py-2 border rounded-lg
                   focus:ring-2 focus:ring-primary-500 focus:border-transparent
@@ -240,6 +244,33 @@ export const TournamentFormFields: React.FC<TournamentFormFieldsProps> = ({
               <p className="mt-1 text-sm text-error">{errors.entryFee.message}</p>
             )}
           </div>
+        </div>
+
+        {/* Eligible Games */}
+        <div className="mt-4">
+          <label
+            htmlFor="eligibleGames"
+            className="block text-sm font-medium text-secondary-700 mb-2"
+          >
+            Eligible Games
+          </label>
+          <textarea
+            id="eligibleGames"
+            {...register('eligibleGames')}
+            placeholder="Enter game IDs (comma-separated), leave empty for all games"
+            rows={3}
+            className={`
+              w-full px-3 py-2 border rounded-lg
+              focus:ring-2 focus:ring-primary-500 focus:border-transparent
+              ${errors.eligibleGames ? 'border-error focus:ring-error' : 'border-secondary-300'}
+            `}
+          />
+          <p className="mt-1 text-xs text-secondary-500">
+            Leave empty to allow all games. Enter game IDs separated by commas (e.g., game1, game2, game3)
+          </p>
+          {errors.eligibleGames && (
+            <p className="mt-1 text-sm text-error">{errors.eligibleGames.message}</p>
+          )}
         </div>
       </section>
     </div>
