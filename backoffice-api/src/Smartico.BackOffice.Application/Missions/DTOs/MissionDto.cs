@@ -40,10 +40,23 @@ public class MissionDto
     public MissionStatus Status { get; set; }
 
     /// <summary>
+    /// Points awarded when ALL tasks are completed (required).
+    /// </summary>
+    [JsonPropertyName("completionPoints")]
+    public int CompletionPoints { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of tasks for this mission.
+    /// </summary>
+    [JsonPropertyName("tasks")]
+    public List<MissionTaskDto> Tasks { get; set; } = new();
+
+    /// <summary>
     /// Gets or sets the visual rule structure defining the mission flow.
+    /// DEPRECATED: Use tasks instead.
     /// </summary>
     [JsonPropertyName("rule")]
-    public MissionRule Rule { get; set; } = new();
+    public MissionRule? Rule { get; set; }
 
     /// <summary>
     /// Gets or sets the player segment that can participate in this mission.
@@ -75,4 +88,69 @@ public class MissionDto
     /// </summary>
     [JsonPropertyName("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+}
+
+/// <summary>
+/// DTO for a mission task.
+/// </summary>
+public class MissionTaskDto
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("order")]
+    public int Order { get; set; }
+
+    [JsonPropertyName("trigger")]
+    public TaskTriggerDto Trigger { get; set; } = new();
+
+    [JsonPropertyName("goal")]
+    public TaskGoalDto Goal { get; set; } = new();
+
+    [JsonPropertyName("bonusTemplateId")]
+    public string? BonusTemplateId { get; set; }
+
+    [JsonPropertyName("bonusTemplateName")]
+    public string? BonusTemplateName { get; set; }
+}
+
+/// <summary>
+/// DTO for task trigger.
+/// </summary>
+public class TaskTriggerDto
+{
+    [JsonPropertyName("type")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TriggerType Type { get; set; }
+
+    [JsonPropertyName("minAmount")]
+    public decimal? MinAmount { get; set; }
+
+    [JsonPropertyName("gameId")]
+    public string? GameId { get; set; }
+}
+
+/// <summary>
+/// DTO for task goal.
+/// </summary>
+public class TaskGoalDto
+{
+    [JsonPropertyName("type")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public GoalType Type { get; set; }
+
+    [JsonPropertyName("targetCount")]
+    public int? TargetCount { get; set; }
+
+    [JsonPropertyName("targetAmount")]
+    public decimal? TargetAmount { get; set; }
+
+    [JsonPropertyName("eligibleGames")]
+    public List<string>? EligibleGames { get; set; }
 }

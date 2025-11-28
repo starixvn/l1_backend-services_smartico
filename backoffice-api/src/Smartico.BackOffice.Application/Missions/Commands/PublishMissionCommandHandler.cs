@@ -41,8 +41,21 @@ public class PublishMissionCommandHandler
         // Validate mission can be published
         ValidateMission(mission);
 
-        // Transform visual rule to execution rule
-        mission.ExecutionRule = MissionRuleTransformer.Transform(mission.Rule);
+        // Transform to execution rule based on what data is available
+        if (mission.Tasks.Count > 0)
+        {
+            // New task-based approach
+            mission.ExecutionRule = MissionRuleTransformer.TransformFromTasks(mission);
+        }
+        else if (mission.Rule != null)
+        {
+            // Legacy visual rule approach
+            mission.ExecutionRule = MissionRuleTransformer.Transform(mission.Rule);
+        }
+        else
+        {
+            throw new InvalidOperationException("Mission must have either tasks or a visual rule defined");
+        }
 
         // Update status to Active
         mission.Status = MissionStatus.Active;
@@ -72,10 +85,83 @@ public class PublishMissionCommandHandler
             errors.Add("End date must be in the future");
         }
 
-        // Validate rule has at least one node of each type
-        var hasTrigger = mission.Rule.Nodes.Any(n => n.Type == NodeType.Trigger);
-        var hasGoal = mission.Rule.Nodes.Any(n => n.Type == NodeType.Goal);
-        var hasReward = mission.Rule.Nodes.Any(n => n.Type == NodeType.Reward);
+        // Validate based on mission structure type
+        if (mission.Tasks.Count > 0)
+        {
+            // Task-based validation
+            ValidateTaskBasedMission(mission, errors);
+        }
+        else if (mission.Rule != null)
+        {
+            // Legacy visual rule validation
+            ValidateLegacyRuleMission(mission, errors);
+        }
+        else
+        {
+            errors.Add("Mission must have either tasks or a visual rule defined");
+        }
+
+        if (errors.Any())
+        {
+            throw new InvalidOperationException($"Cannot publish mission: {string.Join(", ", errors)}");
+        }
+    }
+
+    private static void ValidateTaskBasedMission(Mission mission, List<string> errors)
+    {
+        // Validate completion points
+        if (mission.CompletionPoints <= 0)
+        {
+            errors.Add("Mission must have positive completion points");
+        }
+
+        // Validate each task
+        foreach (var task in mission.Tasks)
+        {
+            if (string.IsNullOrWhiteSpace(task.Name))
+            {
+                errors.Add($"Task '{task.Id}' must have a name");
+            }
+
+            // Validate trigger
+            if (task.Trigger == null)
+            {
+                errors.Add($"Task '{task.Name}' must have a trigger");
+            }
+
+            // Validate goal
+            if (task.Goal == null)
+            {
+                errors.Add($"Task '{task.Name}' must have a goal");
+            }
+            else
+            {
+                // Check goal has required values based on type
+                if (task.Goal.Type == GoalType.BetCount || task.Goal.Type == GoalType.CountBased || task.Goal.Type == GoalType.LoginCount)
+                {
+                    if (task.Goal.TargetCount == null || task.Goal.TargetCount <= 0)
+                    {
+                        errors.Add($"Task '{task.Name}' must have a valid target count");
+                    }
+                }
+                else
+                {
+                    if (task.Goal.TargetAmount == null || task.Goal.TargetAmount <= 0)
+                    {
+                        errors.Add($"Task '{task.Name}' must have a valid target amount");
+                    }
+                }
+            }
+        }
+    }
+
+    private static void ValidateLegacyRuleMission(Mission mission, List<string> errors)
+    {
+        var rule = mission.Rule!;
+
+        // Validate rule has at least one node of required types
+        var hasTrigger = rule.Nodes.Any(n => n.Type == NodeType.Trigger);
+        var hasGoal = rule.Nodes.Any(n => n.Type == NodeType.Goal);
 
         if (!hasTrigger)
         {
@@ -87,13 +173,10 @@ public class PublishMissionCommandHandler
             errors.Add("Mission must have at least one Goal node");
         }
 
-        if (!hasReward)
-        {
-            errors.Add("Mission must have at least one Reward node");
-        }
+        // Reward node is now optional
 
         // Validate nodes have required configuration
-        foreach (var node in mission.Rule.Nodes)
+        foreach (var node in rule.Nodes)
         {
             switch (node.Type)
             {
@@ -116,27 +199,16 @@ public class PublishMissionCommandHandler
                     break;
 
                 case NodeType.Reward:
-                    if (node.Data.RewardType == null)
-                    {
-                        errors.Add($"Reward node '{node.Id}' must have a reward type");
-                    }
-                    if (node.Data.RewardAmount == null || node.Data.RewardAmount <= 0)
-                    {
-                        errors.Add($"Reward node '{node.Id}' must have a valid reward amount");
-                    }
+                    // Reward node now only validates bonus template if set
+                    // No required fields - bonus template is optional
                     break;
             }
         }
 
         // Validate rule has at least one connection
-        if (mission.Rule.Edges.Count == 0)
+        if (rule.Edges.Count == 0)
         {
             errors.Add("Mission must have at least one connection between nodes");
-        }
-
-        if (errors.Any())
-        {
-            throw new InvalidOperationException($"Cannot publish mission: {string.Join(", ", errors)}");
         }
     }
 }

@@ -7,6 +7,10 @@ using MongoDB.Driver;
 using Smartico.BackOffice.Api.Middleware;
 using Smartico.BackOffice.Application.Auth.Interfaces;
 using Smartico.BackOffice.Application.Auth.Services;
+using Smartico.BackOffice.Application.Bonuses.Commands;
+using Smartico.BackOffice.Application.Bonuses.Interfaces;
+using Smartico.BackOffice.Application.Bonuses.Services;
+using Smartico.BackOffice.Domain.Services;
 using Smartico.BackOffice.Application.Leaderboard.Interfaces;
 using Smartico.BackOffice.Application.Leaderboard.Services;
 using Smartico.BackOffice.Application.Missions.Commands;
@@ -113,6 +117,39 @@ builder.Services.AddScoped<IRoleRepository>(sp =>
     return new RoleRepository(database, operatorId);
 });
 
+builder.Services.AddScoped<IBonusRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new BonusRepository(database, operatorId);
+});
+
+builder.Services.AddScoped<IBonusClaimRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new BonusClaimRepository(database, operatorId);
+});
+
+builder.Services.AddScoped<IOperatorBonusLimitsRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new OperatorBonusLimitsRepository(database, operatorId);
+});
+
 // Register validators
 builder.Services.AddValidatorsFromAssemblyContaining<TournamentValidator>();
 
@@ -121,9 +158,12 @@ builder.Services.AddScoped<ITournamentService, TournamentService>();
 builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 builder.Services.AddScoped<IMissionService, MissionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBonusService, BonusService>();
+builder.Services.AddScoped<IBonusLimitService, BonusLimitService>();
 
 // Register command handlers
 builder.Services.AddScoped<PublishMissionCommandHandler>();
+builder.Services.AddScoped<RecordBonusClaimCommandHandler>();
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");

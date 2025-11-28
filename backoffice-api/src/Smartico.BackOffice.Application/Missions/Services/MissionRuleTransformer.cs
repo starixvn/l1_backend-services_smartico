@@ -1,15 +1,74 @@
+using Smartico.BackOffice.Domain.Entities;
 using Smartico.BackOffice.Domain.ValueObjects;
 
 namespace Smartico.BackOffice.Application.Missions.Services;
 
 /// <summary>
-/// Transforms visual mission rules (nodes/edges) into execution-ready format.
+/// Transforms mission tasks into execution-ready format.
+/// Also supports legacy visual rule transformation for backward compatibility.
 /// </summary>
 public class MissionRuleTransformer
 {
     /// <summary>
-    /// Converts a visual MissionRule (ReactFlow format) into a MissionExecutionRule
-    /// that can be processed by the mission processing service.
+    /// Generates an execution rule from mission tasks.
+    /// This is the new task-based approach.
+    /// </summary>
+    /// <param name="mission">The mission with tasks</param>
+    /// <returns>Execution rule for the mission processing service</returns>
+    public static MissionExecutionRule TransformFromTasks(Mission mission)
+    {
+        if (mission.Tasks == null || mission.Tasks.Count == 0)
+        {
+            throw new InvalidOperationException("Mission must have at least one task");
+        }
+
+        // For execution, we build goals from each task
+        // The first task's trigger becomes the mission trigger
+        var firstTask = mission.Tasks.OrderBy(t => t.Order).First();
+
+        var trigger = new TriggerCondition
+        {
+            Type = firstTask.Trigger.Type,
+            MinAmount = firstTask.Trigger.MinAmount,
+            GameId = firstTask.Trigger.GameId
+        };
+
+        // Build goals from all tasks
+        var goals = mission.Tasks
+            .OrderBy(t => t.Order)
+            .Select((task, index) => new GoalStep
+            {
+                Order = index + 1,
+                Type = task.Goal.Type,
+                TargetCount = task.Goal.TargetCount,
+                TargetAmount = task.Goal.TargetAmount,
+                EligibleGames = task.Goal.EligibleGames
+            })
+            .ToList();
+
+        // For reward, we create a placeholder that references the mission's completion points
+        // Individual task bonuses are handled separately by the mission processing service
+        var reward = new RewardDefinition
+        {
+            // Completion points are stored at mission level, not in execution rule
+            // BonusTemplateId will be set if any task has a bonus template
+            BonusTemplateId = mission.Tasks
+                .Where(t => t.BonusTemplateId.HasValue)
+                .Select(t => t.BonusTemplateId)
+                .FirstOrDefault()
+        };
+
+        return new MissionExecutionRule
+        {
+            Trigger = trigger,
+            Goals = goals,
+            Reward = reward
+        };
+    }
+
+    /// <summary>
+    /// DEPRECATED: Converts a visual MissionRule (ReactFlow format) into a MissionExecutionRule.
+    /// Kept for backward compatibility with existing missions.
     /// </summary>
     /// <param name="visualRule">The visual rule with nodes and edges</param>
     /// <returns>Linear execution rule with trigger, goals, and reward</returns>
@@ -35,23 +94,26 @@ public class MissionRuleTransformer
         {
             throw new InvalidOperationException("Mission must have at least one Goal node");
         }
-        if (rewardNodes.Count == 0)
-        {
-            throw new InvalidOperationException("Mission must have at least one Reward node");
-        }
 
         // For MVP, we use the first trigger node
-        // Future enhancement: support multiple triggers or complex logic
         var triggerNode = triggerNodes.First();
         var trigger = TransformTrigger(triggerNode);
 
         // Build ordered goal chain by following edges from trigger
         var goals = BuildGoalChain(visualRule, triggerNode, goalNodes);
 
-        // For MVP, we use the first reward node connected to goals
-        // Future enhancement: support multiple rewards or conditional rewards
-        var rewardNode = FindRewardNode(visualRule, goalNodes, rewardNodes);
-        var reward = TransformReward(rewardNode);
+        // Reward is now optional - check if we have any
+        RewardDefinition reward;
+        if (rewardNodes.Count > 0)
+        {
+            var rewardNode = FindRewardNode(visualRule, goalNodes, rewardNodes);
+            reward = TransformReward(rewardNode);
+        }
+        else
+        {
+            // No reward node - create empty reward
+            reward = new RewardDefinition();
+        }
 
         return new MissionExecutionRule
         {
@@ -147,8 +209,8 @@ public class MissionRuleTransformer
 
             case GoalType.DepositAmount:
             case GoalType.WageredAmount:
+            case GoalType.TurnoverAmount:
                 // For amount-based goals, we use goalCount as the target amount temporarily
-                // This is a limitation of the current UI - in future, we should have separate fields
                 targetAmount = goalNode.Data.GoalCount;
                 if (targetAmount == null || targetAmount <= 0)
                 {
@@ -189,21 +251,11 @@ public class MissionRuleTransformer
 
     private static RewardDefinition TransformReward(RuleNode rewardNode)
     {
-        if (rewardNode.Data.RewardType == null)
-        {
-            throw new InvalidOperationException($"Reward node '{rewardNode.Id}' must have a reward type");
-        }
-
-        if (rewardNode.Data.RewardAmount == null || rewardNode.Data.RewardAmount <= 0)
-        {
-            throw new InvalidOperationException($"Reward node '{rewardNode.Id}' must have a valid reward amount");
-        }
-
+        // With the simplified model, reward now only supports BonusTemplate
+        // The BonusTemplateId is optional
         return new RewardDefinition
         {
-            Type = rewardNode.Data.RewardType.Value,
-            Amount = rewardNode.Data.RewardAmount.Value,
-            GameId = rewardNode.Data.GameId
+            BonusTemplateId = rewardNode.Data.BonusTemplateId
         };
     }
 }

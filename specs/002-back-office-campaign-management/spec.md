@@ -20,9 +20,10 @@ The Back Office is the management interface for Smartico's gamification platform
 - Campaign creation and configuration for missions, bonuses, tournaments, and jackpots
 - Player progression system configuration (levels, experience points, tier advancement)
 - Badge and achievement system management (badge design, unlock criteria, rewards)
-- Visual campaign builder with drag-and-drop condition/trigger/reward setup
+- **Mission task-based builder** with trigger/goal/reward configuration per task
+- **Visual drag-and-drop builder** for bonus formula configuration (future)
 - Player segmentation and targeting (tier-based, behavioral, custom criteria)
-- Campaign scheduling (start/end dates, recurring schedules)
+- Campaign scheduling (start/end dates)
 - Real-time campaign performance analytics and reporting
 - A/B testing framework for campaign optimization
 - User role and permission management for team collaboration
@@ -65,34 +66,40 @@ The Back Office Campaign Management system will be considered successful when:
 **User Story**: As a marketing manager, I want to create a "Weekend Warrior" mission that rewards VIP players who bet $100 on slots 5 times during Saturday-Sunday, so that I can increase weekend engagement.
 
 **Steps:**
-1. User logs into Back Office and navigates to Mission Builder
-2. User clicks "Create New Mission" and selects mission template
-3. User configures mission:
+1. User logs into Back Office and navigates to Missions
+2. User clicks "Create New Mission"
+3. User configures mission details:
    - Name: "Weekend Warrior"
-   - Trigger condition: "Bet placed on slots"
-   - Trigger amount: $100
-   - Goal: Complete 5 times
-   - Reward: 50 Free Spins
-   - Schedule: Saturday 00:00 - Sunday 23:59 (recurring weekly)
-   - Player segment: VIP tier only
-4. User clicks "Preview" to see how mission appears to players
-5. User clicks "Save Draft" to save progress
-6. User clicks "Publish" when ready to activate
-7. System confirms mission is live and scheduled
+   - Description: "Complete betting tasks this weekend for rewards!"
+   - Completion Points: 100 (awarded when all tasks complete)
+   - Target Segment: VIP Only
+   - Schedule: Saturday 00:00 - Sunday 23:59
+4. User adds Task 1:
+   - Task Name: "Place 5 bets of $100+"
+   - Trigger Type: Bet Placed
+   - Trigger Min Amount: $100
+   - Goal Type: Bet Count
+   - Target Count: 5
+   - Bonus Reward: (Optional) Select "50 Free Spins" bonus template
+5. User can add more tasks if needed (multi-task mission)
+6. User clicks "Save as Draft" to save progress
+7. User clicks "Save & Publish" when ready to activate
+8. System validates tasks have proper triggers/goals and publishes mission
 
 **Acceptance Criteria:**
 - Mission builder loads in under 3 seconds
-- All configuration options are available without scrolling more than 2 screens
-- Preview shows accurate mission card as players will see it
-- Draft saves automatically every 30 seconds
+- Task-based form is intuitive with clear sections for Trigger, Goal, and Reward
+- Mission card in list shows: task count, completion points, bonus count
+- Draft saves without requiring complete task configuration
+- Publish validates all tasks have triggers and goals configured
 - Publish action takes effect within 60 seconds
-- User receives confirmation notification
+- User receives confirmation and is redirected to mission list
 
 **Edge Cases:**
 - User selects invalid date range (end before start) - system shows clear error message
-- User tries to publish without required fields - system highlights missing fields
-- User accidentally closes browser - draft is preserved and recoverable
-- Multiple users edit same campaign - last save wins with conflict notification
+- User tries to publish without any tasks - system shows validation error
+- User tries to publish with incomplete task (no goal) - system highlights missing fields
+- User accidentally closes browser - draft can be recovered via edit
 
 ### Scenario 2: Operator Monitors Active Campaign Performance
 
@@ -206,21 +213,33 @@ The Back Office Campaign Management system will be considered successful when:
 
 ## Functional Requirements
 
-### FR-1: Campaign Builder - Mission Configuration
+### FR-1: Campaign Builder - Mission Configuration (Task-Based)
 **Priority:** Critical
 
-**Description:** Users must be able to create and configure mission campaigns through a visual builder that supports trigger conditions, goals, rewards, scheduling, and player targeting without writing code.
+**Description:** Users must be able to create and configure mission campaigns through a task-based builder. Each mission consists of one or more tasks, where each task defines a trigger (what starts tracking), a goal (what to achieve), and an optional bonus template reward. Mission-level completion points are awarded when all tasks are completed.
+
+**Architecture:**
+- **Mission**: Container with name, description, completion points, schedule, and player targeting
+- **Tasks**: List of 1+ tasks that must be completed
+- **Task**: Trigger + Goal + Optional Bonus Template reward
+- **Completion Points**: Required mission-level reward (points awarded when ALL tasks complete)
+- **Per-Task Bonus**: Optional bonus template reference per task (granted when specific task completes)
 
 **Acceptance Criteria:**
-- [ ] Mission builder supports 8+ trigger types (bet placed, deposit made, game played, login, win amount, etc.)
-- [ ] Users can set numeric thresholds for triggers (minimum bet amount, win multiplier, etc.)
+- [ ] Mission builder uses task-based form UI (not drag-and-drop visual builder)
+- [ ] Each mission requires at least one task to be published
+- [ ] Mission-level completion points are required (awarded when all tasks complete)
+- [ ] Task trigger types: Bet Placed, Deposit Made, Game Played, Daily Login
+- [ ] Task goal types: Bet Count, Deposit Amount, Wagered Amount, Turnover Amount, Login Count
+- [ ] Users can set numeric thresholds for triggers (minimum bet amount, etc.)
 - [ ] Goal configuration supports count-based (complete 5 times) and value-based (wager $1000 total) goals
-- [ ] Reward selection includes free spins, cash bonus, bonus balance, tournament entries
-- [ ] Schedule supports one-time, recurring daily/weekly/monthly, and date range campaigns
-- [ ] Player segment targeting supports tier-based (VIP, new, dormant) and custom criteria (country, last active date)
-- [ ] Mission preview accurately shows player-facing mission card with all configured details
-- [ ] Draft auto-saves every 30 seconds and preserves unsaved changes if browser closes
-- [ ] Publish action validates all required fields and shows clear error messages for missing data
+- [ ] Per-task bonus reward is optional - references a Bonus Template from the Bonus system
+- [ ] Tasks can be reordered via up/down controls
+- [ ] Schedule supports one-time and date range campaigns (start date, end date)
+- [ ] Player segment targeting supports tier-based (All Players, VIP Only)
+- [ ] Mission card preview shows task count, completion points, and bonus count
+- [ ] Draft saves without full validation (allows incomplete configuration)
+- [ ] Publish action validates all tasks have valid triggers and goals
 - [ ] Published missions activate within 60 seconds and appear to eligible players immediately
 
 ### FR-2: Campaign Builder - Bonus Configuration
@@ -239,6 +258,32 @@ The Back Office Campaign Management system will be considered successful when:
 - [ ] Preview shows bonus terms and conditions exactly as players will see them
 - [ ] Multi-currency support displays correct amounts for each operator's currency
 - [ ] Bonus activation can be automatic (on deposit) or manual (player claims via code)
+
+### FR-2.1: Bonus-Mission Linked Flow (Turnover Requirements)
+**Priority:** High
+
+**Description:** Users must be able to link bonuses (especially free spins) to turnover missions, where bonus winnings are held in a locked balance until the player completes a wagering requirement tracked via a mission.
+
+**Use Case Example:**
+1. Player enters gift code → receives 50 free spins
+2. Player wins $200 from spins → goes to Locked Balance
+3. System creates linked mission: "Wager 5x ($1000) on eligible games"
+4. Player completes turnover → $200 released to Real Balance
+
+**Acceptance Criteria:**
+- [ ] Bonus configuration includes "Winnings Destination" option (Real Balance / Locked Balance)
+- [ ] When Locked Balance selected, Turnover Requirement section becomes available
+- [ ] Turnover configuration supports multiplier (e.g., 5x) based on winnings or fixed amount
+- [ ] Turnover can specify eligible games (defaults to same games as bonus)
+- [ ] System auto-creates linked Mission when bonus with turnover is saved
+- [ ] Linked mission uses new trigger type "BonusActivated" and goal type "TurnoverAmount"
+- [ ] Linked mission reward is "ReleaseLockedBalance" (not cash/spins)
+- [ ] Bonus details page shows link to view/manage linked mission
+- [ ] Mission list indicates which missions are "Bonus-Linked" (auto-generated)
+- [ ] Editing bonus turnover settings syncs changes to linked mission
+- [ ] Deleting bonus cascade-deletes linked mission (if in Draft status)
+
+**See:** [tasks-bonus-mission-integration.md](tasks-bonus-mission-integration.md) for implementation details
 
 ### FR-3: Campaign Builder - Tournament Configuration
 **Priority:** High
@@ -542,16 +587,56 @@ The Back Office Campaign Management system will be considered successful when:
 
 ## Key Entities
 
-### Campaign
-Represents a gamification campaign (mission, bonus, tournament, or jackpot) with configuration, status, and performance data. **Operator-scoped**: Each campaign belongs to exactly one operator.
+### Mission
+Represents a mission campaign with task-based configuration. **Operator-scoped**: Each mission belongs to exactly one operator.
+
+**Architecture:** Missions use a task-based structure where each mission contains one or more tasks. Each task defines a trigger (what starts tracking), a goal (what to achieve), and an optional bonus template reward. Mission-level completion points are awarded when all tasks are completed.
+
+**Attributes:**
+- Unique identifier
+- **Operator ID** (foreign key - determines data isolation boundary)
+- Mission name
+- Description (optional)
+- Status (Draft, Active, Completed, Cancelled)
+- **Completion Points** (required - points awarded when ALL tasks complete)
+- **Tasks** (list of MissionTask objects - at least 1 required for publishing)
+- Player segment targeting (All Players, VIP Only)
+- Start date
+- End date
+- Created date
+- Last modified date
+
+### Mission Task
+Represents a single task within a mission. Each task defines what the player needs to do to make progress.
+
+**Attributes:**
+- Unique identifier (within mission)
+- Task name
+- Description (optional)
+- Order (display/execution order)
+- **Trigger** (what starts tracking progress):
+  - Type: Bet Placed, Deposit Made, Game Played, Daily Login
+  - Min Amount (optional - minimum threshold)
+  - Game ID (optional - specific game filter)
+- **Goal** (what to achieve):
+  - Type: Bet Count, Deposit Amount, Wagered Amount, Turnover Amount, Login Count
+  - Target Count (for count-based goals)
+  - Target Amount (for value-based goals)
+  - Eligible Games (optional - games that count toward goal)
+- **Bonus Template ID** (optional - references a Bonus Template to grant when this task completes)
+
+### Campaign (Generic)
+Represents a gamification campaign (bonus, tournament, or jackpot) with configuration, status, and performance data. **Operator-scoped**: Each campaign belongs to exactly one operator.
+
+**Note:** Missions are now managed separately with task-based architecture (see Mission entity above).
 
 **Attributes:**
 - Unique identifier
 - **Operator ID** (foreign key - determines data isolation boundary)
 - Campaign name
-- Campaign type (mission, bonus, tournament, jackpot)
+- Campaign type (bonus, tournament, jackpot)
 - Status (draft, scheduled, active, paused, completed, archived)
-- Configuration (trigger conditions, goals, rewards, rules)
+- Configuration (type-specific rules and rewards)
 - Player segment targeting
 - Schedule (start date, end date, recurring pattern)
 - Created by (user ID + operator ID)
@@ -754,6 +839,7 @@ Represents an achievement badge with unlock criteria and rewards. **Operator-sco
 | 1.1.0   | 2025-01-24 | AI Assistant | Resolved 3 design decisions, added FR-13 (Budget) and FR-14 (Retention)                                   |
 | 1.2.0   | 2025-01-24 | AI Assistant | Added FR-5 (Player Levels), FR-6 (Badges), updated scope, entities, dependencies, target users            |
 | 1.3.0   | 2025-01-24 | AI Assistant | **CRITICAL**: Clarified multi-tenant operator isolation - all data scoped by operatorId, zero cross-access |
+| 1.4.0   | 2025-01-27 | AI Assistant | **ARCHITECTURE CHANGE**: Missions now use task-based builder instead of visual drag-and-drop. Updated FR-1, Scenario 1, added Mission and Mission Task entities. Tasks have Trigger + Goal + Optional Bonus Template reward. Mission-level completion points replace node-based rewards. |
 
 ## Approval
 

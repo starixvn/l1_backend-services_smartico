@@ -49,12 +49,27 @@ public class Mission : IOperatorScoped
     public MissionStatus Status { get; set; } = MissionStatus.Draft;
 
     /// <summary>
+    /// Points awarded to player when ALL tasks in this mission are completed.
+    /// This is the primary mission reward - bonus templates on tasks are optional additional rewards.
+    /// </summary>
+    [BsonElement("completionPoints")]
+    public int CompletionPoints { get; set; }
+
+    /// <summary>
+    /// List of tasks that must be completed to finish this mission.
+    /// Each task has a trigger, goal, and optional bonus template reward.
+    /// </summary>
+    [BsonElement("tasks")]
+    [BsonIgnoreIfNull]
+    public List<MissionTask> Tasks { get; set; } = new();
+
+    /// <summary>
     /// Visual rule structure defining the mission flow (triggers, goals, rewards).
     /// Stored as a graph of nodes and connections from the visual builder.
+    /// DEPRECATED: Will be removed after migration to task-based system.
     /// </summary>
     [BsonElement("rule")]
-    [BsonRequired]
-    public MissionRule Rule { get; set; } = new();
+    public MissionRule? Rule { get; set; }
 
     /// <summary>
     /// Execution-ready rule structure generated when mission is published.
@@ -102,3 +117,4 @@ public class Mission : IOperatorScoped
     [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+

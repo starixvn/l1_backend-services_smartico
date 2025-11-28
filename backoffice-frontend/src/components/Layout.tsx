@@ -80,10 +80,17 @@ export const Layout: React.FC = () => {
                 </Link>
 
                 <Link
-                  to="/tournaments/create"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                  to="/bonuses"
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${
+                      isActive('/bonuses')
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-secondary-700 hover:bg-secondary-100'
+                    }
+                  `}
                 >
-                  Create Tournament
+                  Bonuses
                 </Link>
               </nav>
 

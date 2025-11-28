@@ -6,6 +6,7 @@ namespace Smartico.BackOffice.Application.Missions.Validators;
 
 /// <summary>
 /// Validator for mission creation commands.
+/// Supports both task-based (new) and visual rule-based (legacy) mission definitions.
 /// </summary>
 public class MissionValidator : AbstractValidator<CreateMissionCommand>
 {
@@ -26,9 +27,7 @@ public class MissionValidator : AbstractValidator<CreateMissionCommand>
 
         RuleFor(x => x.StartDate)
             .NotEmpty()
-            .WithMessage("Start date is required.")
-            .GreaterThan(DateTime.UtcNow.AddHours(-1))
-            .WithMessage("Start date must be in the future or very recent past.");
+            .WithMessage("Start date is required.");
 
         RuleFor(x => x.EndDate)
             .NotEmpty()
@@ -36,11 +35,15 @@ public class MissionValidator : AbstractValidator<CreateMissionCommand>
             .GreaterThan(x => x.StartDate)
             .WithMessage("End date must be after start date.");
 
-        RuleFor(x => x.Rule)
-            .NotNull()
-            .WithMessage("Mission rule is required.");
+        // CompletionPoints is required for task-based missions
+        RuleFor(x => x.CompletionPoints)
+            .GreaterThan(0)
+            .When(x => x.Tasks != null && x.Tasks.Count > 0)
+            .WithMessage("Completion points must be greater than 0 for task-based missions.");
 
-        // Note: Rule structure validation (nodes, connections, node data) is intentionally
-        // relaxed for drafts. Full validation happens only when publishing via PublishMissionCommandHandler.
+        // Note: Either Tasks OR Rule should be provided, but this is validated at publish time.
+        // For drafts, we allow saving with incomplete configuration.
+        // Full validation (tasks have triggers/goals, rule has nodes/connections) happens
+        // only when publishing via PublishMissionCommandHandler.
     }
 }

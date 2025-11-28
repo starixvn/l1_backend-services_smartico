@@ -1,13 +1,311 @@
-# Back Office Campaign Management - User Permission Management Tasks
+# Back Office Campaign Management - Implementation Tasks
 
-**Feature:** User Role and Permission Management (FR-13)
 **Epic:** 002-back-office-campaign-management
 **Created:** 2025-01-25
-**Last Updated:** 2025-01-25
+**Last Updated:** 2025-01-26
 **Owner:** Development Team
-**Status:** In Progress (Backend 88% Complete, Frontend 0%)
 
 ---
+
+## Active Features
+
+| Feature | Status | Progress |
+|---------|--------|----------|
+| FR-13: User Permission Management | In Progress | Backend 100%, Frontend 80% |
+| FR-2.2: Bonus Template System | ✅ Complete | 100% |
+| FR-1.1: Mission Reward Integration | ✅ Complete | 100% |
+
+---
+
+# Feature: FR-2.2 Bonus Template System (REVISED)
+
+## Overview
+
+**Previous Understanding (Incorrect):**
+- Bonus creates linked mission for turnover tracking
+- Bonus → Mission relationship
+
+**Revised Understanding (Correct):**
+- Bonus is a **template** that defines reward calculation rules
+- Bonuses can have **dynamic calculations** based on player activity
+- Mission reward nodes **reference bonus templates** to issue rewards
+- Mission → Bonus relationship
+- External platforms (casino/sportsbook) execute actual bonus wagering
+
+## Bonus Template Concept
+
+A bonus is a **reusable template** that defines:
+1. **Reward Type**: Free spins, cash bonus, points
+2. **Calculation Rules**: Fixed amount OR dynamic based on player activity
+3. **Limits**: Per-player and global limits
+4. **Eligibility**: Player segments, availability windows
+
+### Examples
+
+| Bonus Template | Type | Calculation |
+|----------------|------|-------------|
+| "Win {x} free spins on {game}" | FreeSpins | x = dynamic based on bet volume |
+| "Earn {amount}$ for 1000 bets" | CashBonus | amount = 0.01 * total_bet_volume |
+| "50 Free Spins Welcome" | FreeSpins | Fixed: 50 spins |
+
+---
+
+## Phase B1: Domain Model Revision ✅ COMPLETE
+
+### B1.1 Remove Incorrect Fields from Bonus Entity ✅ COMPLETE
+
+- [x] TB101 [P0] Remove `linkedMissionId` from Bonus entity
+  - File: `Domain/Entities/Bonus.cs`
+  - Bonus no longer creates missions
+
+- [x] TB102 [P0] Remove `WinningsDestination` from Bonus entity
+  - File: `Domain/Entities/Bonus.cs`
+  - External platform handles balance management
+
+- [x] TB103 [P0] Remove `TurnoverConfig` from Bonus entity
+  - File: `Domain/ValueObjects/BonusConfig.cs`
+  - External platform handles wagering requirements
+
+- [x] TB104 [P0] Remove bonus-mission linking logic from BonusService
+  - File: `Application/Bonuses/Services/BonusService.cs`
+  - Remove auto-creation of linked missions
+
+### B1.2 Add Bonus Template Features ✅ COMPLETE
+
+- [x] TB105 [P1] Add `BonusCalculationRule` value object
+  - File: `Domain/ValueObjects/BonusConfig.cs`
+  - Fields:
+    - `CalculationType`: Fixed | Dynamic
+    - `TieredCalculation`: basedOn, tiers[], defaultValue
+    - `Formula`: string (generated from tier config)
+    - `MinAmount`: decimal (floor for dynamic)
+    - `MaxAmount`: decimal (cap for dynamic)
+
+- [x] TB106 [P1] Add `BonusLimits` value object
+  - File: `Domain/ValueObjects/BonusConfig.cs`
+  - Fields:
+    - `MaxTotalClaims`: int? (global inventory)
+    - `MaxClaimsPerPlayer`: int? (lifetime per player)
+    - `AmountLimits`: minAmount, maxAmount (CAP)
+    - `Approval`: autoApprove, autoApproveThreshold
+
+- [x] TB107 [P1] Add `OperatorBonusLimits` entity
+  - File: `Domain/Entities/OperatorBonusLimits.cs`
+  - Global limits across all bonuses for an operator
+
+- [x] TB108 [P1] Update Bonus entity with new fields
+  - File: `Domain/Entities/Bonus.cs`
+  - Simplified to 3 award types: FreeSpins, Cash, Points
+  - Add: `CalculationRule`, `Limits`
+  - Keep: Basic info, type, schedule
+
+### B1.3 Add Bonus Claim Tracking ✅ COMPLETE
+
+- [x] TB109 [P1] Create `BonusClaim` entity for tracking
+  - File: `Domain/Entities/BonusClaim.cs`
+
+- [x] TB110 [P1] Create `IBonusClaimRepository` interface
+  - File: `Domain/Repositories/IBonusClaimRepository.cs`
+
+- [x] TB111 [P1] Implement `BonusClaimRepository`
+  - File: `Infrastructure/Repositories/BonusClaimRepository.cs`
+
+---
+
+## Phase B2: Application Layer Updates ✅ COMPLETE
+
+### B2.1 Update Commands and DTOs ✅ COMPLETE
+
+- [x] TB201 [P1] Update `CreateBonusCommand` - remove turnover fields
+  - File: `Application/Bonuses/Commands/CreateBonusCommand.cs`
+
+- [x] TB202 [P1] Update `UpdateBonusCommand` - remove turnover fields
+  - File: `Application/Bonuses/Commands/UpdateBonusCommand.cs`
+
+- [x] TB203 [P1] Add `BonusCalculationRuleDto`
+  - Integrated into BonusDto
+
+- [x] TB204 [P1] Add `BonusLimitsDto`
+  - Integrated into BonusDto with AmountLimits and Approval settings
+
+- [x] TB205 [P1] Update `BonusDto` with new fields
+  - File: `Application/Bonuses/DTOs/BonusDto.cs`
+
+### B2.2 Update Validators ✅ COMPLETE
+
+- [x] TB206 [P1] Update `CreateBonusCommandValidator`
+  - File: `Application/Bonuses/Validators/CreateBonusCommandValidator.cs`
+  - Removed turnover validation
+  - Added calculation rule validation
+  - Added limits validation
+
+### B2.3 Add Limit Checking Service ✅ COMPLETE
+
+- [x] TB207 [P1] Create `IBonusLimitService` interface
+  - File: `Domain/Services/IBonusLimitService.cs`
+  - Methods:
+    - `CheckPlayerCanClaimAsync(operatorId, playerId, bonusId, claimValue, currency)`
+    - `GetPlayerDailyTotalAsync(operatorId, playerId, currency)`
+    - `GetPlayerWeeklyTotalAsync(operatorId, playerId, currency)`
+    - `GetPlayerMonthlyTotalAsync(operatorId, playerId, currency)`
+    - `GetPlayerRemainingDailyLimitAsync(operatorId, playerId, currency)`
+    - `GetPlayerRemainingWeeklyLimitAsync(operatorId, playerId, currency)`
+    - `GetPlayerRemainingMonthlyLimitAsync(operatorId, playerId, currency)`
+  - Includes `BonusClaimCheckResult` record and `BonusLimitType` enum
+
+- [x] TB208 [P1] Implement `BonusLimitService`
+  - File: `Application/Bonuses/Services/BonusLimitService.cs`
+  - Checks per-bonus limits (MaxTotalClaims, MaxClaimsPerPlayer, MaxClaimsPerPlayerPerDay/Week/Month, MaxTotalValue)
+  - Checks global operator limits (MaxDailyBonusValuePerPlayer, MaxWeeklyBonusValuePerPlayer, MaxMonthlyBonusValuePerPlayer)
+  - Returns detailed rejection reasons with limit type, value, and current usage
+
+- [x] TB209 [P1] Create `RecordBonusClaimCommand`
+  - File: `Application/Bonuses/Commands/RecordBonusClaimCommand.cs`
+  - Includes `RecordBonusClaimResult` for success/failure tracking
+  - `RecordBonusClaimCommandHandler` validates limits before recording claim
+  - Supports updating claim status after external API response
+
+---
+
+## Phase B3: Frontend Updates ✅ COMPLETE
+
+### B3.1 Update Types ✅ COMPLETE
+
+- [x] TB301 [P1] Update `api.types.ts` - remove turnover types
+  - Removed: `WinningsDestination`, `TurnoverConfig`, `WageringRequirement`
+  - Added: `BonusCalculationType`, `FormulaVariableType`
+  - Added: `BonusCalculationRule`, `BonusLimits`, `BonusAmountLimits`, `BonusApprovalSettings`
+  - Simplified BonusType to 3 award types: FreeSpins, Cash, Points
+
+### B3.2 Update Bonus Form ✅ COMPLETE
+
+- [x] TB302 [P1] Remove Winnings Destination section from CreateBonusPage
+  - File: `features/bonuses/pages/CreateBonusPage.tsx`
+  - Removed wagering requirements entirely
+
+- [x] TB303 [P1] Add Calculation Rules section to CreateBonusPage
+  - Fixed vs Tiered toggle with visual cards
+  - Tiered: TieredCalculationBuilder with basedOn selector, tier management
+  - Example calculations based on award type (spins/pts/$)
+  - Min/Max amount fields (moved to Limits section)
+
+- [x] TB304 [P1] Add Limits & Approval section to CreateBonusPage
+  - Bonus Amount Limits: min, max (CAP)
+  - Claim Limits: max total claims, max per player
+  - Approval Settings: auto-approve toggle, threshold for manual approval
+
+### B3.3 Add Operator Settings ✅ COMPLETE
+
+- [x] TB305 [P2] Create GlobalLimitsPage (OperatorBonusSettings)
+  - File: `features/bonuses/pages/GlobalLimitsPage.tsx`
+  - Configure global limits for operator:
+    - Max Daily/Weekly/Monthly Bonus Value Per Player
+    - Max Active Bonuses Per Player
+    - Currency selection
+  - Validation: daily <= weekly <= monthly hierarchy
+  - Reset to unlimited option
+  - Route: `/bonuses/limits`
+
+---
+
+# Feature: FR-1.1 Mission Reward Integration ✅ COMPLETE
+
+## Overview
+
+Missions now use a **task-based structure** where each task can optionally reward a bonus template when completed. Mission completion awards points (completionPoints).
+
+## Mission Task Structure
+
+| Field | Description |
+|-------|-------------|
+| `tasks[]` | Array of mission tasks |
+| `task.trigger` | What action triggers progress (BetPlaced, DepositMade, etc.) |
+| `task.goal` | Target to achieve (BetCount, WageredAmount, etc.) |
+| `task.bonusTemplateId` | Optional bonus template to award on task completion |
+| `completionPoints` | Points awarded when ALL tasks complete |
+
+---
+
+## Phase M1: Domain Model Updates ✅ COMPLETE
+
+### M1.1 Update Mission Structure ✅ COMPLETE
+
+- [x] TM101 [P1] Add task-based mission structure
+  - File: `Domain/Entities/Mission.cs`
+  - Added: `MissionTask` with trigger, goal, bonusTemplateId
+
+- [x] TM102 [P1] Add `BONUS_TEMPLATE` RewardType
+  - File: `Domain/ValueObjects/MissionRule.cs`
+  - Reward nodes can reference bonus templates
+
+- [x] TM103 [P1] Update `NodeData` to include bonus template reference
+  - File: `Domain/ValueObjects/MissionRule.cs`
+  - Added: `bonusTemplateId`, `bonusTemplateName`
+
+### M1.2 Remove Incorrect Mission Fields ✅ COMPLETE
+
+- [x] TM104 [P0] Remove `MissionSource` enum
+  - All missions manually created
+
+- [x] TM105 [P0] Remove `SourceBonusId` from Mission entity
+
+- [x] TM106 [P0] Simplify RewardType to BONUS_TEMPLATE only
+  - Points are at mission level (completionPoints)
+  - Other rewards via bonus templates
+
+---
+
+## Phase M2: Application Layer Updates ✅ COMPLETE
+
+### M2.1 Update Mission Service ✅ COMPLETE
+
+- [x] TM201 [P1] Update mission structure with tasks
+  - MissionService handles task-based missions
+  - Tasks have trigger/goal/optional bonus
+
+### M2.2 Update DTOs ✅ COMPLETE
+
+- [x] TM202 [P1] Update DTOs for task-based structure
+  - `MissionDto` includes tasks array
+  - `MissionTaskDto` with trigger, goal, bonusTemplateId
+
+- [x] TM203 [P1] Update `CreateMissionCommand`
+  - Removed source fields
+  - Added tasks array
+
+---
+
+## Phase M3: Frontend Updates ✅ COMPLETE
+
+### M3.1 Update Types ✅ COMPLETE
+
+- [x] TM301 [P1] Update `api.types.ts`
+  - Added `MissionTask`, `TaskTrigger`, `TaskGoal`
+  - Added `bonusTemplateId` to NodeData
+  - Simplified RewardType to BONUS_TEMPLATE only
+
+### M3.2 Update Mission Builder ✅ COMPLETE
+
+- [x] TM302 [P1] Create TaskBuilder component
+  - File: `features/missions/components/TaskBuilder.tsx`
+  - Task-based UI with trigger, goal, bonus template selector
+
+- [x] TM303 [P1] Add Bonus Template selector to tasks
+  - Dropdown to select active bonus templates
+  - Shows bonus template name in UI
+
+### M3.3 Update Mission Schema ✅ COMPLETE
+
+- [x] TM304 [P1] Update `missionSchema.ts`
+  - Task-based validation
+  - `bonusTemplateId` validation
+  - Removed legacy rule validation
+
+---
+
+# Feature: FR-13 User Role and Permission Management
+
+**Status:** In Progress (Backend 88% Complete, Frontend 0%)
 
 ## Feature Overview
 
@@ -512,7 +810,25 @@ This document tracks the implementation of **FR-13: User Role and Permission Man
 
 ## Progress Summary
 
-**Overall Progress:** 44/107 tasks (41%)
+### FR-2.2: Bonus Template System
+
+| Phase | Status | Progress |
+|-------|--------|----------|
+| Phase B1: Domain Model Revision | ✅ Complete | 11/11 (100%) |
+| Phase B2: Application Layer | ✅ Complete | 9/9 (100%) |
+| Phase B3: Frontend Updates | ✅ Complete | 5/5 (100%) |
+| **Total** | **✅ Complete** | **25/25 (100%)** |
+
+### FR-1.1: Mission Reward Integration
+
+| Phase | Status | Progress |
+|-------|--------|----------|
+| Phase M1: Domain Model Updates | ✅ Complete | 6/6 (100%) |
+| Phase M2: Application Layer | ✅ Complete | 3/3 (100%) |
+| Phase M3: Frontend Updates | ✅ Complete | 4/4 (100%) |
+| **Total** | **Complete** | **13/13 (100%)** |
+
+### FR-13: User Permission Management
 
 | Phase | Status | Progress |
 |-------|--------|----------|
@@ -523,24 +839,27 @@ This document tracks the implementation of **FR-13: User Role and Permission Man
 | Phase 4: Audit Logging | 📅 Future | 0/8 (0%) |
 | Phase 5: Budget Management | 📅 Future | 0/6 (0%) |
 | Phase 6: Performance & Polish | 📅 Future | 0/10 (0%) |
+| **Total** | **In Progress** | **44/107 (41%)** |
 
 ---
 
-## Current Focus: Phase 1 - Remaining Backend Tasks
+## Current Focus
+
+### FR-2.2: Bonus Template System - ✅ COMPLETE
+
+All tasks completed:
+- Domain Model (entities, value objects, repositories)
+- Application Layer (services, commands, validators)
+- Frontend (CreateBonusPage, GlobalLimitsPage, API types)
+
+### FR-13: User Permission Management - Backend Completion
 
 **Priority Tasks (Must Complete Before Frontend):**
 
 1. **T124** [P1] - Create RolesController with full CRUD endpoints
-   - Required for frontend to create/edit/delete roles
-
 2. **T125** [P1] - Create UsersController with full CRUD endpoints
-   - Required for frontend to manage users
-
 3. **T126-T133** [P1] - Create all DTOs and request/response models
-   - Required for API contracts
-
 4. **T138-T142** [P0] - Write comprehensive unit and integration tests
-   - Critical for ensuring operator isolation and permission enforcement
 
 **Blocking Issues:** None
 
@@ -548,18 +867,16 @@ This document tracks the implementation of **FR-13: User Role and Permission Man
 
 ## Next Steps
 
-### Immediate (This Week)
-1. Complete RolesController (T124)
-2. Complete UsersController (T125)
-3. Create all DTOs (T126-T133)
-4. Write unit tests for RoleService and AuthService (T138-T140)
+### Immediate
+1. Complete RolesController and UsersController (T124-T125)
+2. Create all DTOs (T126-T133)
 
-### Short-Term (Next Week)
-1. Write integration tests (T141-T142)
-2. Start frontend authentication (T201, T205-T210)
-3. Create login page and auth flow
+### Short-Term
+1. Write unit tests for RoleService and AuthService (T138-T140)
+2. Write integration tests (T141-T142)
+3. Start frontend authentication (T201, T205-T210)
 
-### Medium-Term (2-3 Weeks)
+### Medium-Term
 1. Complete role management UI (T211-T215)
 2. Complete user management UI (T216-T220)
 3. Add comprehensive E2E tests (T228)
@@ -652,10 +969,15 @@ This ensures Casino A cannot access Casino B data at the database query level.
 | 1.0.0 | 2025-01-25 | Initial task breakdown for FR-13 User Role and Permission Management |
 | 1.0.0 | 2025-01-25 | Marked Phase 0 and most of Phase 1 as complete (37/42 tasks) |
 | 1.0.0 | 2025-01-25 | Identified priority tasks for Phase 1 completion: T124, T125, T126-T133, T138-T142 |
+| 1.1.0 | 2025-01-26 | **MAJOR REVISION**: Added FR-2.2 Bonus Template System tasks (25 tasks) |
+| 1.1.0 | 2025-01-26 | **MAJOR REVISION**: Added FR-1.1 Mission Reward Integration tasks (13 tasks) |
+| 1.1.0 | 2025-01-26 | Corrected Bonus-Mission relationship: Mission → Bonus (not Bonus → Mission) |
+| 1.1.0 | 2025-01-26 | Bonus is now a template with dynamic calculation rules and limits |
+| 1.1.0 | 2025-01-26 | Removed turnover/locked balance from Bonus (handled by external platform) |
 
 ---
 
-**Last Updated:** 2025-01-25
-**Status:** Ready for Phase 1 completion and Phase 2 start
-**Next Review:** After Phase 1 backend tasks complete
+**Last Updated:** 2025-01-26
+**Status:** Planning FR-2.2 and FR-1.1 revisions
+**Next Review:** After domain model revision tasks complete
 **Owner:** Development Team

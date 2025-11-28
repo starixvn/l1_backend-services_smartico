@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import ReactFlow, {
   Controls,
   Background,
@@ -8,7 +8,7 @@ import ReactFlow, {
   BackgroundVariant,
   MarkerType,
 } from 'reactflow';
-import type { Node, Edge, Connection } from 'reactflow';
+import type { Node, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 import { TriggerNode } from './nodes/TriggerNode';
@@ -16,7 +16,7 @@ import { GoalNode } from './nodes/GoalNode';
 import { RewardNode } from './nodes/RewardNode';
 import { RuleBuilderToolbox } from './RuleBuilderToolbox';
 import { NodeConfigPanel } from './NodeConfigPanel';
-import type { MissionRule, NodeData, NodeType } from '../../../services/api.types';
+import type { MissionRule, NodeData } from '../../../services/api.types';
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -62,7 +62,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ value, onChange }) => 
         id: e.id,
         source: e.source,
         target: e.target,
-        label: e.label,
+        label: typeof e.label === 'string' ? e.label : undefined,
       })),
     });
   }, [nodes, edges, onChange]);

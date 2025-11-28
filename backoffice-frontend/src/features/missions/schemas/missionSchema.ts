@@ -1,70 +1,59 @@
 import { z } from 'zod';
 import {
   PlayerSegment,
-  NodeType,
   TriggerType,
-  GoalType,
-  RewardType
+  GoalType
 } from '../../../services/api.types';
 
 /**
- * Node position schema for visual builder
+ * Task trigger schema
  */
-export const nodePositionSchema = z.object({
-  x: z.number(),
-  y: z.number()
+export const taskTriggerSchema = z.object({
+  type: z.enum([
+    TriggerType.BET_PLACED,
+    TriggerType.DEPOSIT_MADE,
+    TriggerType.GAME_PLAYED,
+    TriggerType.DAILY_LOGIN
+  ], { message: 'Please select a trigger type' }),
+  minAmount: z.number().positive('Minimum amount must be positive').optional(),
+  gameId: z.string().optional()
 });
 
 /**
- * Node data schema with validation for different node types
+ * Task goal schema
  */
-export const nodeDataSchema = z.object({
-  label: z.string().optional(),
-  // Trigger properties
-  triggerType: z.enum([TriggerType.BET_PLACED, TriggerType.DEPOSIT_MADE, TriggerType.GAME_PLAYED]).optional(),
-  triggerThreshold: z.number().positive('Trigger threshold must be positive').optional(),
-  // Goal properties
-  goalType: z.enum([GoalType.BET_COUNT, GoalType.DEPOSIT_AMOUNT, GoalType.WAGERED_AMOUNT, GoalType.COUNT_BASED]).optional(),
-  goalCount: z.number().int().positive('Goal count must be a positive integer').optional(),
-  // Reward properties
-  rewardType: z.enum([RewardType.FREE_SPINS, RewardType.CASH_BONUS]).optional(),
-  rewardAmount: z.number().positive('Reward amount must be positive').optional()
+export const taskGoalSchema = z.object({
+  type: z.enum([
+    GoalType.BET_COUNT,
+    GoalType.DEPOSIT_AMOUNT,
+    GoalType.WAGERED_AMOUNT,
+    GoalType.TURNOVER_AMOUNT,
+    GoalType.COUNT_BASED, // Legacy, kept for backward compatibility
+    GoalType.LOGIN_COUNT  // For daily login missions
+  ], { message: 'Please select a goal type' }),
+  targetCount: z.number().int().positive('Target count must be a positive integer').optional(),
+  targetAmount: z.number().positive('Target amount must be positive').optional(),
+  eligibleGames: z.array(z.string()).optional()
 });
 
 /**
- * Rule node schema for visual flow builder
- * Note: Field validation is relaxed for drafts - full validation happens on publish
+ * Mission task schema - each task has trigger, goal, and optional bonus reward
  */
-export const ruleNodeSchema = z.object({
-  id: z.string().min(1, 'Node ID is required'),
-  type: z.enum([NodeType.TRIGGER, NodeType.GOAL, NodeType.REWARD], {
-    message: 'Invalid node type'
-  }),
-  position: nodePositionSchema,
-  data: nodeDataSchema
+export const missionTaskSchema = z.object({
+  id: z.string().min(1, 'Task ID is required'),
+  name: z.string()
+    .min(1, 'Task name is required')
+    .max(100, 'Task name must not exceed 100 characters'),
+  description: z.string().max(500, 'Description must not exceed 500 characters').optional(),
+  order: z.number().int().min(0),
+  trigger: taskTriggerSchema,
+  goal: taskGoalSchema,
+  bonusTemplateId: z.string().optional(),
+  bonusTemplateName: z.string().optional()
 });
 
 /**
- * Rule edge schema for node connections
- */
-export const ruleEdgeSchema = z.object({
-  id: z.string().min(1, 'Edge ID is required'),
-  source: z.string().min(1, 'Source node ID is required'),
-  target: z.string().min(1, 'Target node ID is required'),
-  label: z.string().optional()
-});
-
-/**
- * Mission rule schema (visual flow structure)
- * Note: Validation is relaxed for drafts - full validation happens on publish
- */
-export const missionRuleSchema = z.object({
-  nodes: z.array(ruleNodeSchema),
-  edges: z.array(ruleEdgeSchema)
-});
-
-/**
- * Mission form validation schema
+ * Mission form validation schema (task-based)
  */
 export const missionFormSchema = z.object({
   name: z.string()
@@ -75,7 +64,12 @@ export const missionFormSchema = z.object({
     .max(500, 'Description must not exceed 500 characters')
     .optional(),
 
-  rule: missionRuleSchema,
+  completionPoints: z.number()
+    .int('Points must be a whole number')
+    .positive('Points must be greater than 0'),
+
+  tasks: z.array(missionTaskSchema)
+    .min(1, 'At least one task is required'),
 
   targetSegment: z.enum([PlayerSegment.ALL_PLAYERS, PlayerSegment.VIP_ONLY], {
     message: 'Please select a target player segment'
@@ -107,3 +101,6 @@ export const missionFormSchema = z.object({
 );
 
 export type MissionFormData = z.infer<typeof missionFormSchema>;
+export type MissionTaskData = z.infer<typeof missionTaskSchema>;
+export type TaskTriggerData = z.infer<typeof taskTriggerSchema>;
+export type TaskGoalData = z.infer<typeof taskGoalSchema>;

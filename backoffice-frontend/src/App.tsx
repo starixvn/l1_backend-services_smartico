@@ -10,6 +10,9 @@ import { LeaderboardPage } from './features/leaderboard/pages/LeaderboardPage';
 import { MissionsPage } from './features/missions/pages/MissionsPage';
 import { CreateMissionPage } from './features/missions/pages/CreateMissionPage';
 import { MissionDetailsPage } from './features/missions/pages/MissionDetailsPage';
+import { BonusesPage } from './features/bonuses/pages/BonusesPage';
+import { CreateBonusPage } from './features/bonuses/pages/CreateBonusPage';
+import { GlobalLimitsPage } from './features/bonuses/pages/GlobalLimitsPage';
 
 function App() {
   return (
@@ -29,6 +32,8 @@ function App() {
             }
           >
             <Route index element={<Navigate to="/tournaments" replace />} />
+
+            {/* Tournaments */}
             <Route path="tournaments" element={<TournamentsPage />} />
             <Route
               path="tournaments/create"
@@ -40,6 +45,8 @@ function App() {
             />
             <Route path="tournaments/:id" element={<TournamentDetailsPage />} />
             <Route path="tournaments/:tournamentId/leaderboard" element={<LeaderboardPage />} />
+
+            {/* Missions */}
             <Route path="missions" element={<MissionsPage />} />
             <Route
               path="missions/create"
@@ -51,6 +58,21 @@ function App() {
             />
             <Route path="missions/edit/:id" element={<CreateMissionPage />} />
             <Route path="missions/:id" element={<MissionDetailsPage />} />
+
+            {/* Bonuses */}
+            <Route path="bonuses" element={<BonusesPage />} />
+            <Route
+              path="bonuses/create"
+              element={
+                <ProtectedRoute requirePermission="bonuses.create">
+                  <CreateBonusPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="bonuses/limits" element={<GlobalLimitsPage />} />
+            <Route path="bonuses/:id" element={<CreateBonusPage />} />
+            <Route path="bonuses/edit/:id" element={<CreateBonusPage />} />
+
             <Route path="*" element={<Navigate to="/tournaments" replace />} />
           </Route>
         </Routes>

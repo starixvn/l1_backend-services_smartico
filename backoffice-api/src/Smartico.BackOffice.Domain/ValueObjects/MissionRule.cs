@@ -113,7 +113,7 @@ public record NodeData
 
     // Trigger node properties
     /// <summary>
-    /// Type of trigger (BetPlaced, DepositMade, GamePlayed).
+    /// Type of trigger (BetPlaced, DepositMade, GamePlayed, BonusActivated).
     /// </summary>
     [BsonElement("triggerType")]
     [BsonRepresentation(MongoDB.Bson.BsonType.String)]
@@ -133,7 +133,7 @@ public record NodeData
 
     // Goal node properties
     /// <summary>
-    /// Type of goal (CountBased).
+    /// Type of goal (CountBased, TurnoverAmount, etc.).
     /// </summary>
     [BsonElement("goalType")]
     [BsonRepresentation(MongoDB.Bson.BsonType.String)]
@@ -145,19 +145,35 @@ public record NodeData
     [BsonElement("goalCount")]
     public int? GoalCount { get; init; }
 
-    // Reward node properties
     /// <summary>
-    /// Type of reward (FreeSpins, CashBonus).
+    /// List of game IDs that count toward the goal. Empty means all games.
     /// </summary>
+    [BsonElement("eligibleGames")]
+    public List<string>? EligibleGames { get; init; }
+
+    // Reward node properties (simplified - only BonusTemplate is supported)
+    /// <summary>
+    /// Reference to a bonus template ID.
+    /// When the task is completed, this bonus template will be issued to the player.
+    /// Optional - if not set, no bonus is granted for this specific task.
+    /// </summary>
+    [BsonElement("bonusTemplateId")]
+    [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
+    public MongoDB.Bson.ObjectId? BonusTemplateId { get; init; }
+
+    // Legacy fields - kept for backward compatibility, will be removed
     [BsonElement("rewardType")]
     [BsonRepresentation(MongoDB.Bson.BsonType.String)]
+    [BsonIgnoreIfNull]
     public RewardType? RewardType { get; init; }
 
-    /// <summary>
-    /// Amount of the reward.
-    /// </summary>
     [BsonElement("rewardAmount")]
+    [BsonIgnoreIfNull]
     public decimal? RewardAmount { get; init; }
+
+    [BsonElement("pointsAmount")]
+    [BsonIgnoreIfNull]
+    public int? PointsAmount { get; init; }
 }
 
 /// <summary>
@@ -199,7 +215,12 @@ public enum TriggerType
     /// <summary>
     /// Mission triggers when player plays a game.
     /// </summary>
-    GamePlayed
+    GamePlayed,
+
+    /// <summary>
+    /// Mission triggers when player logs in (daily login tracking).
+    /// </summary>
+    DailyLogin
 }
 
 /// <summary>
@@ -225,23 +246,33 @@ public enum GoalType
     /// <summary>
     /// Generic count-based goal (legacy, use BetCount instead).
     /// </summary>
-    CountBased
+    CountBased,
+
+    /// <summary>
+    /// Goal is to complete turnover requirements (wager X times the locked amount).
+    /// Used for bonus-linked missions to release locked balance.
+    /// </summary>
+    TurnoverAmount,
+
+    /// <summary>
+    /// Goal is to reach a certain number of logins (for daily login missions).
+    /// </summary>
+    LoginCount
 }
 
 /// <summary>
-/// Types of rewards for mission completion.
+/// Types of rewards for mission task completion.
+/// NOTE: FreeSpins, CashBonus, and Points have been removed.
+/// - FreeSpins and CashBonus should be configured via Bonus Templates
+/// - Points are now a mission-level field (completionPoints)
 /// </summary>
 public enum RewardType
 {
     /// <summary>
-    /// Reward is free spins.
+    /// Reward is a bonus template (issues a bonus from the Bonus Templates system).
+    /// The task references a bonus template by ID, which will be issued to the player upon task completion.
     /// </summary>
-    FreeSpins,
-
-    /// <summary>
-    /// Reward is cash bonus.
-    /// </summary>
-    CashBonus
+    BonusTemplate
 }
 
 // ====================================================================================
@@ -334,29 +365,45 @@ public record GoalStep
     /// </summary>
     [BsonElement("gameId")]
     public string? GameId { get; init; }
+
+    /// <summary>
+    /// List of game IDs that count toward the goal. Empty means all games.
+    /// </summary>
+    [BsonElement("eligibleGames")]
+    public List<string>? EligibleGames { get; init; }
 }
 
 /// <summary>
-/// Defines the reward granted upon mission completion.
+/// Defines the reward granted upon task completion.
+/// SIMPLIFIED: Now only supports BonusTemplate.
+/// Points are handled at mission level (completionPoints).
+/// FreeSpins/CashBonus are configured via Bonus Templates.
 /// </summary>
 public record RewardDefinition
 {
     /// <summary>
-    /// Type of reward to grant.
+    /// Reference to a bonus template ID.
+    /// When the task is completed, this bonus template will be issued to the player.
     /// </summary>
+    [BsonElement("bonusTemplateId")]
+    [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
+    public MongoDB.Bson.ObjectId? BonusTemplateId { get; init; }
+
+    // Legacy fields - kept for backward compatibility during migration
     [BsonElement("type")]
     [BsonRepresentation(MongoDB.Bson.BsonType.String)]
-    public RewardType Type { get; init; }
+    [BsonIgnoreIfNull]
+    public RewardType? Type { get; init; }
 
-    /// <summary>
-    /// Amount of reward (number of free spins or cash bonus amount).
-    /// </summary>
     [BsonElement("amount")]
-    public decimal Amount { get; init; }
+    [BsonIgnoreIfNull]
+    public decimal? Amount { get; init; }
 
-    /// <summary>
-    /// Specific game ID for free spins rewards.
-    /// </summary>
     [BsonElement("gameId")]
+    [BsonIgnoreIfNull]
     public string? GameId { get; init; }
+
+    [BsonElement("pointsAmount")]
+    [BsonIgnoreIfNull]
+    public int? PointsAmount { get; init; }
 }

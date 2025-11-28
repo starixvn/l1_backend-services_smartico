@@ -52,6 +52,8 @@ public class MissionService : IMissionService
             Name = command.Name,
             Description = command.Description,
             Status = MissionStatus.Draft,
+            CompletionPoints = command.CompletionPoints,
+            Tasks = MapTasksFromDto(command.Tasks),
             Rule = command.Rule,
             TargetSegment = command.TargetSegment,
             StartDate = command.StartDate,
@@ -107,6 +109,8 @@ public class MissionService : IMissionService
         // Update properties
         existing.Name = command.Name;
         existing.Description = command.Description;
+        existing.CompletionPoints = command.CompletionPoints;
+        existing.Tasks = MapTasksFromDto(command.Tasks);
         existing.Rule = command.Rule;
         existing.TargetSegment = command.TargetSegment;
         existing.StartDate = command.StartDate;
@@ -138,6 +142,8 @@ public class MissionService : IMissionService
             Name = mission.Name,
             Description = mission.Description,
             Status = mission.Status,
+            CompletionPoints = mission.CompletionPoints,
+            Tasks = MapTasksToDto(mission.Tasks),
             Rule = mission.Rule,
             TargetSegment = mission.TargetSegment,
             StartDate = mission.StartDate,
@@ -145,5 +151,68 @@ public class MissionService : IMissionService
             CreatedAt = mission.CreatedAt,
             UpdatedAt = mission.UpdatedAt
         };
+    }
+
+    /// <summary>
+    /// Maps task DTOs to domain entities.
+    /// </summary>
+    private static List<MissionTask> MapTasksFromDto(List<MissionTaskDto> tasks)
+    {
+        return tasks.Select(t => new MissionTask
+        {
+            Id = t.Id,
+            Name = t.Name,
+            Description = t.Description,
+            Order = t.Order,
+            Trigger = new TaskTrigger
+            {
+                Type = t.Trigger.Type,
+                MinAmount = t.Trigger.MinAmount,
+                GameId = t.Trigger.GameId
+            },
+            Goal = new TaskGoal
+            {
+                Type = t.Goal.Type,
+                TargetCount = t.Goal.TargetCount,
+                TargetAmount = t.Goal.TargetAmount,
+                EligibleGames = t.Goal.EligibleGames
+            },
+            BonusTemplateId = !string.IsNullOrEmpty(t.BonusTemplateId)
+                ? ObjectId.Parse(t.BonusTemplateId)
+                : null
+        }).ToList();
+    }
+
+    /// <summary>
+    /// Maps domain task entities to DTOs.
+    /// </summary>
+    private static List<MissionTaskDto> MapTasksToDto(List<MissionTask>? tasks)
+    {
+        if (tasks == null || tasks.Count == 0)
+        {
+            return new List<MissionTaskDto>();
+        }
+
+        return tasks.Select(t => new MissionTaskDto
+        {
+            Id = t.Id,
+            Name = t.Name,
+            Description = t.Description,
+            Order = t.Order,
+            Trigger = new TaskTriggerDto
+            {
+                Type = t.Trigger.Type,
+                MinAmount = t.Trigger.MinAmount,
+                GameId = t.Trigger.GameId
+            },
+            Goal = new TaskGoalDto
+            {
+                Type = t.Goal.Type,
+                TargetCount = t.Goal.TargetCount,
+                TargetAmount = t.Goal.TargetAmount,
+                EligibleGames = t.Goal.EligibleGames
+            },
+            BonusTemplateId = t.BonusTemplateId?.ToString()
+        }).ToList();
     }
 }

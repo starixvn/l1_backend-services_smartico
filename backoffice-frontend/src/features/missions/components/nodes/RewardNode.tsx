@@ -9,6 +9,8 @@ interface RewardNodeProps {
 
 /**
  * Custom Reward Node component (green) for the visual rule builder
+ * NOTE: This component is deprecated. Use TaskBuilder component instead.
+ * Now only supports Bonus Template reward type.
  */
 export const RewardNode: React.FC<RewardNodeProps> = memo(({ data, selected }) => {
   return (
@@ -34,25 +36,27 @@ export const RewardNode: React.FC<RewardNodeProps> = memo(({ data, selected }) =
         </div>
       </div>
 
-      {/* Content */}
-      {data.rewardType && (
-        <div className="text-xs text-gray-600 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Type:</span>
-            <span className="text-green-700">
-              {data.rewardType === 'FreeSpins' ? 'Free Spins' : 'Cash Bonus'}
-            </span>
-          </div>
-          {data.rewardAmount !== undefined && (
+      {/* Content - Now only shows bonus template info */}
+      <div className="text-xs text-gray-600 space-y-1">
+        {data.bonusTemplateId ? (
+          <>
             <div className="flex items-center justify-between">
-              <span className="font-medium">Amount:</span>
-              <span className="text-green-700 font-bold">
-                {data.rewardType === 'FreeSpins' ? `${data.rewardAmount} spins` : `$${data.rewardAmount}`}
+              <span className="font-medium">Type:</span>
+              <span className="text-green-700">Bonus Template</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Template:</span>
+              <span className="text-green-700 font-bold truncate max-w-[120px]" title={data.bonusTemplateName || data.bonusTemplateId || ''}>
+                {data.bonusTemplateName || 'Selected'}
               </span>
             </div>
-          )}
-        </div>
-      )}
+          </>
+        ) : (
+          <div className="text-center py-1 text-gray-400 italic">
+            No bonus template selected
+          </div>
+        )}
+      </div>
 
       {/* Input Handle */}
       <Handle

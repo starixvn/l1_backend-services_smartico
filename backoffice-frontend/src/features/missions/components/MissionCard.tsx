@@ -55,16 +55,9 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission }) => {
     return null;
   };
 
-  const getTriggerCount = () => {
-    return mission.rule.nodes.filter(n => n.type === 'Trigger').length;
-  };
-
-  const getGoalCount = () => {
-    return mission.rule.nodes.filter(n => n.type === 'Goal').length;
-  };
-
-  const getRewardCount = () => {
-    return mission.rule.nodes.filter(n => n.type === 'Reward').length;
+  // Get task count (new task-based) or fallback to node count (legacy)
+  const getTaskCount = () => {
+    return mission.tasks?.length || 0;
   };
 
   return (
@@ -101,16 +94,18 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission }) => {
             </p>
           </div>
           <div>
-            <p className="text-xs text-secondary-500 mb-1">Triggers</p>
-            <p className="text-sm font-medium text-secondary-900">{getTriggerCount()}</p>
+            <p className="text-xs text-secondary-500 mb-1">Tasks</p>
+            <p className="text-sm font-medium text-secondary-900">{getTaskCount()}</p>
           </div>
           <div>
-            <p className="text-xs text-secondary-500 mb-1">Goals</p>
-            <p className="text-sm font-medium text-secondary-900">{getGoalCount()}</p>
+            <p className="text-xs text-secondary-500 mb-1">Points</p>
+            <p className="text-sm font-medium text-secondary-900">{mission.completionPoints || 0}</p>
           </div>
           <div>
-            <p className="text-xs text-secondary-500 mb-1">Rewards</p>
-            <p className="text-sm font-medium text-secondary-900">{getRewardCount()}</p>
+            <p className="text-xs text-secondary-500 mb-1">Bonuses</p>
+            <p className="text-sm font-medium text-secondary-900">
+              {mission.tasks?.filter(t => t.bonusTemplateId).length || 0}
+            </p>
           </div>
         </div>
 
@@ -143,15 +138,27 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission }) => {
           )}
         </div>
 
-        {/* Rule Complexity */}
-        <div className="mt-4 pt-4 border-t border-secondary-100">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-secondary-600">Total Nodes:</span>
-            <span className="text-sm font-semibold text-secondary-900">
-              {mission.rule.nodes.length}
-            </span>
+        {/* Task Preview (show first 2 tasks) */}
+        {mission.tasks && mission.tasks.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-secondary-100">
+            <p className="text-xs text-secondary-500 mb-2">Tasks:</p>
+            <div className="space-y-1">
+              {mission.tasks.slice(0, 2).map((task, idx) => (
+                <div key={task.id} className="text-xs text-secondary-700 flex items-center gap-2">
+                  <span className="w-5 h-5 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-medium">
+                    {idx + 1}
+                  </span>
+                  <span className="truncate">{task.name}</span>
+                </div>
+              ))}
+              {mission.tasks.length > 2 && (
+                <div className="text-xs text-secondary-500">
+                  +{mission.tasks.length - 2} more tasks
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Link>
   );

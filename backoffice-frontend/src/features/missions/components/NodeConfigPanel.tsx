@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Node } from 'reactflow';
-import type { NodeData, TriggerType, GoalType, RewardType } from '../../../services/api.types';
+import type { NodeData, TriggerType, GoalType, Bonus } from '../../../services/api.types';
+import { bonusApi } from '../../../services/bonusApi';
 
 interface NodeConfigPanelProps {
   node: Node<NodeData> | null;
@@ -10,7 +11,9 @@ interface NodeConfigPanelProps {
 }
 
 /**
- * Side panel for configuring selected nodes
+ * Side panel for configuring selected nodes (Legacy - for visual rule builder)
+ * NOTE: This component is deprecated and will be removed.
+ * Use TaskBuilder component instead.
  */
 export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
   node,
@@ -19,6 +22,22 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
   onClose,
 }) => {
   const [localData, setLocalData] = useState<NodeData>({});
+  const [bonusTemplates, setBonusTemplates] = useState<Bonus[]>([]);
+  const [loadingBonuses, setLoadingBonuses] = useState(false);
+
+  // Load bonus templates when reward type is set
+  useEffect(() => {
+    if (node?.type === 'reward') {
+      setLoadingBonuses(true);
+      bonusApi.getAllBonuses()
+        .then(bonuses => {
+          // Filter to only show active bonus templates
+          setBonusTemplates(bonuses.filter(b => b.status === 'Active' || b.status === 'Draft'));
+        })
+        .catch(console.error)
+        .finally(() => setLoadingBonuses(false));
+    }
+  }, [node?.type]);
 
   // Only reset local data when node ID changes, not when data changes
   useEffect(() => {
@@ -196,43 +215,52 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
         </>
       )}
 
-      {/* Reward Configuration */}
+      {/* Reward Configuration - Simplified to only BonusTemplate */}
       {node.type === 'reward' && (
-        <>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-secondary-700 mb-1">
-              Reward Type
-            </label>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-secondary-700 mb-1">
+            Bonus Template (optional)
+          </label>
+          {loadingBonuses ? (
+            <div className="flex items-center gap-2 text-secondary-500 text-sm py-2">
+              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Loading bonus templates...
+            </div>
+          ) : (
             <select
-              value={localData.rewardType || ''}
+              value={localData.bonusTemplateId || ''}
               onChange={(e) => {
-                setLocalData({ ...localData, rewardType: e.target.value as RewardType });
+                const selectedId = e.target.value;
+                const selectedBonus = bonusTemplates.find(b => b.id === selectedId);
+                setLocalData({
+                  ...localData,
+                  bonusTemplateId: selectedId || undefined,
+                  bonusTemplateName: selectedBonus ? `${selectedBonus.name} (${selectedBonus.type})` : undefined,
+                });
                 setTimeout(handleUpdate, 0);
               }}
               className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="">Select reward type</option>
-              <option value="FreeSpins">Free Spins</option>
-              <option value="CashBonus">Cash Bonus</option>
+              <option value="">No bonus (use mission points)</option>
+              {bonusTemplates.map((bonus) => (
+                <option key={bonus.id} value={bonus.id}>
+                  {bonus.name} ({bonus.type})
+                </option>
+              ))}
             </select>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-secondary-700 mb-1">
-              Reward Amount *
-            </label>
-            <input
-              type="number"
-              value={localData.rewardAmount || ''}
-              onChange={(e) => setLocalData({ ...localData, rewardAmount: parseFloat(e.target.value) })}
-              onBlur={handleUpdate}
-              className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder={localData.rewardType === 'FreeSpins' ? 'Number of spins' : 'Cash amount'}
-              min="0"
-              step={localData.rewardType === 'FreeSpins' ? '1' : '0.01'}
-            />
-          </div>
-        </>
+          )}
+          <p className="text-xs text-secondary-500 mt-1">
+            Select a bonus template to grant on completion, or leave empty to only award mission points.
+          </p>
+          {bonusTemplates.length === 0 && !loadingBonuses && (
+            <p className="text-xs text-amber-600 mt-1">
+              No bonus templates available. Create one in the Bonuses section first.
+            </p>
+          )}
+        </div>
       )}
 
       {/* Delete Button */}
