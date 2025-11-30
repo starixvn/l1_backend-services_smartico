@@ -120,6 +120,20 @@ export const Layout: React.FC = () => {
                 >
                   Badges
                 </Link>
+
+                <Link
+                  to="/jackpots"
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${
+                      isActive('/jackpots')
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-secondary-700 hover:bg-secondary-100'
+                    }
+                  `}
+                >
+                  Jackpots
+                </Link>
               </nav>
 
               {/* User Info & Logout */}

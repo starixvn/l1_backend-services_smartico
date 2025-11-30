@@ -426,17 +426,56 @@ The Back Office Campaign Management system will be considered successful when:
 
 **Description:** Users must be able to create progressive and fixed jackpots with contribution rates, trigger conditions, and prize distribution rules.
 
+**Jackpot Types:**
+| Type | Description | Contribution Rate |
+|------|-------------|-------------------|
+| `Progressive` | Jackpot grows with each qualifying bet | > 0% required for at least one tier |
+| `Fixed` | Static jackpot amount, does not grow | Must be 0% for all tiers |
+
+**Trigger Types:**
+Each jackpot tier can have one of the following trigger conditions:
+
+| Trigger Type | Description | Required Fields |
+|--------------|-------------|-----------------|
+| `Random` | Probability-based trigger per qualifying bet | `probability` (0.000001 - 0.1) |
+| `ValueBased` | Triggers when bet meets threshold | `betThreshold` (minimum bet amount) |
+| `TimeBased` | Must-drop at scheduled time | `timeInterval` (Hourly/Daily/Weekly), `timeOfDay` (optional) |
+| `AmountBased` | Must-drop when jackpot reaches target value | `triggerAmount` (target jackpot value) |
+
+**Prize Distribution Types:**
+| Distribution Type | Description | Required Fields |
+|-------------------|-------------|-----------------|
+| `WinnerTakesAll` | Single winner receives entire jackpot | None |
+| `SplitAmongWinners` | Prize split among top N winners | `maxWinners` (≥2), `winnerPercentages` (optional, must sum to 100%) |
+| `ProportionalToWager` | Prize distributed proportionally based on wager amounts | `maxWinners` (≥1), `minimumWagerToQualify` (optional), `maxPercentagePerPlayer` (1-100%, optional) |
+
+**Reset Behaviors:**
+| Behavior | Description |
+|----------|-------------|
+| `ResetToSeed` | Jackpot resets to seed amount after trigger |
+| `ResetToZero` | Jackpot resets to zero after trigger |
+| `KeepRemainder` | Keeps any remainder after prize distribution |
+
 **Acceptance Criteria:**
-- [ ] Jackpot builder supports progressive (grows with contributions) and fixed (static amount) types
-- [ ] Progressive jackpot contribution rate configurable per game (0.5% of each bet)
-- [ ] Trigger conditions support random (probability-based), value-based (bet threshold), and time-based (hourly drop)
-- [ ] Seed amount configuration sets initial jackpot value
-- [ ] Multi-tier jackpots support (mini, minor, major, grand) with independent triggers
-- [ ] Prize distribution supports winner-takes-all or split among multiple players
-- [ ] Reset behavior configurable (reset to seed, reset to zero, keep remainder)
-- [ ] Eligible games selection allows inclusion/exclusion of specific games
-- [ ] Maximum jackpot cap prevents runaway growth
-- [ ] Jackpot preview shows current value, contribution rate, and trigger conditions
+- [x] Jackpot builder supports progressive (grows with contributions) and fixed (static amount) types
+- [x] Progressive jackpot contribution rate configurable per tier (0% - 100%)
+- [x] Trigger conditions support Random, ValueBased, TimeBased, and AmountBased types
+- [x] AmountBased trigger allows "must-drop" at target value (e.g., jackpot explodes at $2000)
+- [x] Seed amount configuration sets initial jackpot value per tier
+- [x] Multi-tier jackpots support (Mini, Minor, Major, Grand) with independent triggers per tier
+- [x] Quick "Add Standard Tiers" button creates Mini/Minor/Major/Grand with sensible defaults
+- [x] Prize distribution supports WinnerTakesAll, SplitAmongWinners, and ProportionalToWager
+- [x] ProportionalToWager distribution allows minimum wager qualification and max percentage per player
+- [x] Reset behavior configurable (ResetToSeed, ResetToZero, KeepRemainder)
+- [x] Eligible games selection allows specifying which games contribute to jackpot
+- [x] Maximum jackpot cap (maxValue) prevents runaway growth per tier
+- [x] Currency configuration (3-character code, e.g., USD, EUR)
+- [x] Schedule configuration with optional start and end dates
+- [x] Tier display order configurable for UI presentation
+- [x] Validation ensures progressive jackpots have at least one tier with contribution rate > 0
+- [x] Validation ensures fixed jackpots have contribution rate = 0 for all tiers
+- [x] Validation ensures tier names are unique within jackpot
+- [x] Validation ensures end date is after start date if both specified
 
 ### FR-5: Player Level and Progression System
 **Priority:** Critical
@@ -911,6 +950,50 @@ Represents the progression system configuration with levels, XP requirements, an
 - Created date
 - Last modified date
 
+### Jackpot
+Represents a jackpot campaign with tier configuration, trigger conditions, and prize distribution. **Operator-scoped**: Each jackpot belongs to exactly one operator.
+
+**Attributes:**
+- Unique identifier
+- **Operator ID** (foreign key - determines data isolation boundary)
+- Jackpot name
+- Description (optional)
+- Status (Draft, Active, Paused, Completed, Archived)
+- **Type** (Progressive, Fixed)
+- **Currency** (3-character code, e.g., USD, EUR)
+- **Tiers** (list of JackpotTier objects - at least 1 required)
+- **Prize Distribution**:
+  - Distribution Type (WinnerTakesAll, SplitAmongWinners, ProportionalToWager)
+  - Max Winners (required for Split/Proportional)
+  - Winner Percentages (optional for Split - must sum to 100%)
+  - Minimum Wager to Qualify (optional for Proportional)
+  - Max Percentage Per Player (optional for Proportional, 1-100%)
+- **Reset Behavior** (ResetToSeed, ResetToZero, KeepRemainder)
+- **Eligible Games** (optional - list of game IDs that contribute to jackpot)
+- Start date (optional)
+- End date (optional)
+- Created date
+- Last modified date
+
+### Jackpot Tier
+Represents a single tier within a jackpot (e.g., Mini, Minor, Major, Grand).
+
+**Attributes:**
+- Tier ID (unique within jackpot)
+- Tier name (e.g., "Grand", "Major", "Minor", "Mini")
+- Seed amount (initial jackpot value)
+- Contribution rate (0-100% - percentage of qualifying bets added to jackpot)
+- Current value (real-time jackpot amount)
+- Max value (optional cap to prevent runaway growth)
+- Display order (for UI presentation - higher values show first)
+- **Trigger Condition**:
+  - Trigger Type (Random, ValueBased, TimeBased, AmountBased)
+  - Probability (for Random - decimal 0.000001 to 0.1)
+  - Bet Threshold (for ValueBased - minimum bet to qualify)
+  - Time Interval (for TimeBased - Hourly, Daily, Weekly)
+  - Time of Day (for TimeBased - optional UTC time)
+  - Trigger Amount (for AmountBased - jackpot value that triggers must-drop)
+
 ### Badge
 Represents an achievement badge with unlock criteria and rewards. **Operator-scoped**: Each operator creates their own badges. Casino A players cannot earn Casino B badges.
 
@@ -1060,6 +1143,7 @@ Represents a thematic grouping of related badges. **Operator-scoped**.
 | 1.4.0   | 2025-01-27 | AI Assistant | **ARCHITECTURE CHANGE**: Missions now use task-based builder instead of visual drag-and-drop. Updated FR-1, Scenario 1, added Mission and Mission Task entities. Tasks have Trigger + Goal + Optional Bonus Template reward. Mission-level completion points replace node-based rewards. |
 | 1.5.0   | 2025-01-28 | AI Assistant | **UNIFIED XP SYSTEM**: Replaced "Completion Points" with "Completion XP" across missions. XP directly contributes to player level progression (FR-5). Added Scenario 4 for Level System configuration. Updated FR-1, FR-5, and Mission entity. Removed MissionComplete XP action type (missions now award XP directly). |
 | 1.6.0   | 2025-11-30 | AI Assistant | **BADGE SYSTEM DETAIL**: Added concrete Badge Unlock Criteria Types (14 types including MissionCompleted, WagerAmount, LoginStreak, etc.), Badge Reward Types (None, XpBoost, FreeSpins, Cash, BonusTemplate), Level System integration notes, edge cases, and expanded Badge entity attributes. Added Badge Series entity. |
+| 1.7.0   | 2025-11-30 | AI Assistant | **FR-4 JACKPOT COMPLETE**: Expanded FR-4 with detailed Jackpot Types, Trigger Types (Random, ValueBased, TimeBased, AmountBased), Prize Distribution Types (WinnerTakesAll, SplitAmongWinners, ProportionalToWager), Reset Behaviors. Added Jackpot and JackpotTier entities with full attribute documentation. Marked all FR-4 acceptance criteria as complete. |
 
 ## Approval
 

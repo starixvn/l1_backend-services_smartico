@@ -708,3 +708,141 @@ export interface UpdateBadgeSeriesCommand {
   iconUrl?: string;
   displayOrder?: number;
 }
+
+// ============================================
+// JACKPOT SYSTEM TYPES
+// ============================================
+
+export const JackpotType = {
+  PROGRESSIVE: 'Progressive',
+  FIXED: 'Fixed'
+} as const;
+export type JackpotType = typeof JackpotType[keyof typeof JackpotType];
+
+export const JackpotStatus = {
+  DRAFT: 'Draft',
+  ACTIVE: 'Active',
+  PAUSED: 'Paused',
+  COMPLETED: 'Completed',
+  ARCHIVED: 'Archived'
+} as const;
+export type JackpotStatus = typeof JackpotStatus[keyof typeof JackpotStatus];
+
+export const JackpotTriggerType = {
+  RANDOM: 'Random',
+  VALUE_BASED: 'ValueBased',
+  TIME_BASED: 'TimeBased',
+  AMOUNT_BASED: 'AmountBased'
+} as const;
+export type JackpotTriggerType = typeof JackpotTriggerType[keyof typeof JackpotTriggerType];
+
+export const JackpotResetBehavior = {
+  RESET_TO_SEED: 'ResetToSeed',
+  RESET_TO_ZERO: 'ResetToZero',
+  KEEP_REMAINDER: 'KeepRemainder'
+} as const;
+export type JackpotResetBehavior = typeof JackpotResetBehavior[keyof typeof JackpotResetBehavior];
+
+export const JackpotPrizeDistributionType = {
+  WINNER_TAKES_ALL: 'WinnerTakesAll',
+  SPLIT_AMONG_WINNERS: 'SplitAmongWinners',
+  PROPORTIONAL_TO_WAGER: 'ProportionalToWager'
+} as const;
+export type JackpotPrizeDistributionType = typeof JackpotPrizeDistributionType[keyof typeof JackpotPrizeDistributionType];
+
+export const JackpotTimeInterval = {
+  HOURLY: 'Hourly',
+  DAILY: 'Daily',
+  WEEKLY: 'Weekly'
+} as const;
+export type JackpotTimeInterval = typeof JackpotTimeInterval[keyof typeof JackpotTimeInterval];
+
+export interface JackpotTriggerCondition {
+  triggerType: JackpotTriggerType;
+  probability?: number;
+  betThreshold?: number;
+  timeInterval?: JackpotTimeInterval;
+  timeOfDay?: string;
+  triggerAmount?: number;
+}
+
+export interface JackpotTier {
+  tierId: string;
+  tierName: string;
+  seedAmount: number;
+  contributionRate: number;
+  maxValue?: number;
+  currentValue: number;
+  triggerCondition: JackpotTriggerCondition;
+  displayOrder: number;
+}
+
+// Input type for creating/updating jackpot tiers (currentValue is optional)
+export interface JackpotTierInput {
+  tierId?: string;
+  tierName: string;
+  seedAmount: number;
+  contributionRate: number;
+  maxValue?: number;
+  currentValue?: number;
+  triggerCondition: JackpotTriggerCondition;
+  displayOrder: number;
+}
+
+export interface JackpotPrizeDistributionConfig {
+  distributionType: JackpotPrizeDistributionType;
+  maxWinners?: number;
+  winnerPercentages?: number[];
+  // ProportionalToWager specific fields
+  minimumWagerToQualify?: number;
+  maxPercentagePerPlayer?: number;
+}
+
+export interface Jackpot {
+  id: string;
+  operatorId: string;
+  name: string;
+  description?: string;
+  type: JackpotType;
+  status: JackpotStatus;
+  tiers: JackpotTier[];
+  eligibleGames: string[];
+  prizeDistribution: JackpotPrizeDistributionConfig;
+  resetBehavior: JackpotResetBehavior;
+  currency: string;
+  startDate?: string;
+  endDate?: string;
+  totalContributions: number;
+  totalPayouts: number;
+  lastWonAt?: string;
+  lastWinnerPlayerId?: string;
+  lastWinAmount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateJackpotCommand {
+  name: string;
+  description?: string;
+  type: JackpotType;
+  tiers: JackpotTierInput[];
+  eligibleGames: string[];
+  prizeDistribution: JackpotPrizeDistributionConfig;
+  resetBehavior: JackpotResetBehavior;
+  currency: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface UpdateJackpotCommand {
+  name: string;
+  description?: string;
+  type: JackpotType;
+  tiers: JackpotTierInput[];
+  eligibleGames: string[];
+  prizeDistribution: JackpotPrizeDistributionConfig;
+  resetBehavior: JackpotResetBehavior;
+  currency: string;
+  startDate?: string;
+  endDate?: string;
+}

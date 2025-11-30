@@ -20,6 +20,10 @@ import { CreateBadgePage } from './features/badges/pages/CreateBadgePage';
 import { BadgeDetailsPage } from './features/badges/pages/BadgeDetailsPage';
 import { BadgeSeriesPage } from './features/badges/pages/BadgeSeriesPage';
 import { CreateBadgeSeriesPage } from './features/badges/pages/CreateBadgeSeriesPage';
+import { JackpotsPage } from './features/jackpots/pages/JackpotsPage';
+import { CreateJackpotPage } from './features/jackpots/pages/CreateJackpotPage';
+import { JackpotDetailsPage } from './features/jackpots/pages/JackpotDetailsPage';
+import { EditJackpotPage } from './features/jackpots/pages/EditJackpotPage';
 
 function App() {
   return (
@@ -115,6 +119,26 @@ function App() {
             <Route path="badges/series/:id" element={<CreateBadgeSeriesPage />} />
             <Route path="badges/:id" element={<BadgeDetailsPage />} />
             <Route path="badges/:id/edit" element={<CreateBadgePage />} />
+
+            {/* Jackpots */}
+            <Route path="jackpots" element={<JackpotsPage />} />
+            <Route
+              path="jackpots/new"
+              element={
+                <ProtectedRoute requirePermission="jackpots.create">
+                  <CreateJackpotPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="jackpots/:id" element={<JackpotDetailsPage />} />
+            <Route
+              path="jackpots/:id/edit"
+              element={
+                <ProtectedRoute requirePermission="jackpots.edit">
+                  <EditJackpotPage />
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="*" element={<Navigate to="/tournaments" replace />} />
           </Route>

@@ -438,5 +438,60 @@
     "displayOrder": 6,
     "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
     "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000029"},
+    "code": "jackpots.view",
+    "name": "View Jackpots",
+    "description": "View jackpot list and details",
+    "module": "Jackpots",
+    "isSystem": true,
+    "displayOrder": 1,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000002a"},
+    "code": "jackpots.create",
+    "name": "Create Jackpots",
+    "description": "Create new jackpots",
+    "module": "Jackpots",
+    "isSystem": true,
+    "displayOrder": 2,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000002b"},
+    "code": "jackpots.edit",
+    "name": "Edit Jackpots",
+    "description": "Edit existing jackpots",
+    "module": "Jackpots",
+    "isSystem": true,
+    "displayOrder": 3,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000002c"},
+    "code": "jackpots.delete",
+    "name": "Delete Jackpots",
+    "description": "Delete jackpots",
+    "module": "Jackpots",
+    "isSystem": true,
+    "displayOrder": 4,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000002d"},
+    "code": "jackpots.activate",
+    "name": "Activate Jackpots",
+    "description": "Activate, pause, and resume jackpots",
+    "module": "Jackpots",
+    "isSystem": true,
+    "displayOrder": 5,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
   }
 ]

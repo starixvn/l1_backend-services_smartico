@@ -16,6 +16,8 @@ using Smartico.BackOffice.Application.Badges.Interfaces;
 using Smartico.BackOffice.Application.Badges.Services;
 using Smartico.BackOffice.Application.BadgeSeries.Interfaces;
 using Smartico.BackOffice.Application.BadgeSeries.Services;
+using Smartico.BackOffice.Application.Jackpots.Interfaces;
+using Smartico.BackOffice.Application.Jackpots.Services;
 using Smartico.BackOffice.Domain.Services;
 using Smartico.BackOffice.Application.Leaderboard.Interfaces;
 using Smartico.BackOffice.Application.Leaderboard.Services;
@@ -189,6 +191,17 @@ builder.Services.AddScoped<IBadgeSeriesRepository>(sp =>
     return new BadgeSeriesRepository(database, operatorId);
 });
 
+builder.Services.AddScoped<IJackpotRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new JackpotRepository(database, operatorId);
+});
+
 // Register validators
 builder.Services.AddValidatorsFromAssemblyContaining<TournamentValidator>();
 
@@ -202,6 +215,7 @@ builder.Services.AddScoped<IBonusLimitService, BonusLimitService>();
 builder.Services.AddScoped<ILevelSystemService, LevelSystemService>();
 builder.Services.AddScoped<IBadgeService, BadgeService>();
 builder.Services.AddScoped<IBadgeSeriesService, BadgeSeriesService>();
+builder.Services.AddScoped<IJackpotService, JackpotService>();
 
 // Register command handlers
 builder.Services.AddScoped<PublishMissionCommandHandler>();

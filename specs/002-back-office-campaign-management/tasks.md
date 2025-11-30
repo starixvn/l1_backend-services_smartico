@@ -11,10 +11,104 @@
 
 | Feature | Status | Progress |
 |---------|--------|----------|
+| FR-4: Jackpot System | ✅ Complete | 100% |
 | FR-6: Badge and Achievement System | ✅ Complete | 100% |
 | FR-13: User Permission Management | In Progress | Backend 100%, Frontend 80% |
 | FR-2.2: Bonus Template System | ✅ Complete | 100% |
 | FR-1.1: Mission Reward Integration | ✅ Complete | 100% |
+
+---
+
+# Feature: FR-4 Jackpot System ✅ COMPLETE
+
+## Overview
+
+The Jackpot System allows operators to create progressive and fixed jackpots with multi-tier configurations, various trigger conditions, and flexible prize distribution options.
+
+## Implementation Summary
+
+### Backend (100% Complete)
+- **Domain Layer**: Jackpot entity, JackpotTier, JackpotTriggerCondition, JackpotPrizeDistribution value objects
+- **Repository**: IJackpotRepository with full CRUD operations
+- **Service**: JackpotService with create, update, publish, archive operations
+- **DTOs**: Complete DTO layer for API communication
+- **Validators**: CreateJackpotCommandValidator with comprehensive validation
+
+### Frontend (100% Complete)
+- **List Page**: JackpotsPage with filtering, status badges, tier display
+- **Create Page**: CreateJackpotPage with JackpotForm component
+- **Edit Page**: EditJackpotPage for draft jackpots
+- **Details Page**: JackpotDetailsPage with full tier information
+- **Components**: TierBuilder for multi-tier configuration
+
+## Completed Tasks
+
+### J1: Domain Layer ✅
+- [x] TJ101 Create Jackpot entity with tiers, triggers, and prize distribution
+- [x] TJ102 Create JackpotTier value object with trigger conditions
+- [x] TJ103 Create JackpotTriggerCondition with 4 trigger types (Random, ValueBased, TimeBased, AmountBased)
+- [x] TJ104 Create JackpotPrizeDistribution with 3 distribution types (WinnerTakesAll, SplitAmongWinners, ProportionalToWager)
+- [x] TJ105 Create IJackpotRepository interface
+- [x] TJ106 Implement JackpotRepository with MongoDB
+
+### J2: Application Layer ✅
+- [x] TJ201 Create JackpotService with CRUD operations
+- [x] TJ202 Create JackpotDto and related DTOs
+- [x] TJ203 Create CreateJackpotCommand and handler
+- [x] TJ204 Create UpdateJackpotCommand and handler
+- [x] TJ205 Create PublishJackpotCommand and handler
+- [x] TJ206 Create CreateJackpotCommandValidator with comprehensive rules
+
+### J3: API Layer ✅
+- [x] TJ301 Create JackpotsController with full CRUD endpoints
+- [x] TJ302 Add publish/archive endpoints
+- [x] TJ303 Register services in DI container
+
+### J4: Frontend ✅
+- [x] TJ401 Add Jackpot types to api.types.ts
+- [x] TJ402 Create jackpotApi.ts service
+- [x] TJ403 Create JackpotsPage (list view)
+- [x] TJ404 Create CreateJackpotPage with form
+- [x] TJ405 Create EditJackpotPage
+- [x] TJ406 Create JackpotDetailsPage
+- [x] TJ407 Create JackpotForm component
+- [x] TJ408 Create TierBuilder component
+- [x] TJ409 Create jackpotSchema.ts with Zod validation
+- [x] TJ410 Add routes to App.tsx
+- [x] TJ411 Add Jackpots to navigation
+
+## Features Implemented
+
+### Jackpot Types
+- **Progressive**: Grows from bet contributions (configurable contribution rate per tier)
+- **Fixed**: Static prize amounts
+
+### Trigger Types
+- **Random**: Probability-based trigger on each qualifying bet
+- **Value-Based**: Triggered when bet amount meets threshold
+- **Time-Based**: Scheduled drops (hourly, daily, weekly)
+- **Amount-Based**: Must-drop when jackpot reaches target amount
+
+### Prize Distribution Types
+- **Winner Takes All**: Single winner gets entire prize
+- **Split Among Winners**: Fixed percentage split (custom or equal)
+- **Proportional to Wager**: Prize distributed based on player betting volume
+  - Max Winners configuration
+  - Minimum Wager to Qualify
+  - Max Percentage Per Player (cap to prevent monopoly)
+
+### Multi-Tier Support
+- Multiple tiers per jackpot (Mini, Minor, Major, Grand)
+- Independent configuration per tier
+- Display order control
+- Seed amounts and max value caps
+
+### Additional Features
+- Eligible games filtering
+- Schedule configuration (start/end dates)
+- Reset behavior (ResetToSeed, ResetToZero, KeepRemainder)
+- Status workflow (Draft → Active → Paused → Completed → Archived)
+- Currency support
 
 ---
 
@@ -810,6 +904,16 @@ This document tracks the implementation of **FR-13: User Role and Permission Man
 ---
 
 ## Progress Summary
+
+### FR-4: Jackpot System
+
+| Phase | Status | Progress |
+|-------|--------|----------|
+| Phase J1: Domain Layer | ✅ Complete | 6/6 (100%) |
+| Phase J2: Application Layer | ✅ Complete | 6/6 (100%) |
+| Phase J3: API Layer | ✅ Complete | 3/3 (100%) |
+| Phase J4: Frontend | ✅ Complete | 11/11 (100%) |
+| **Total** | **✅ Complete** | **26/26 (100%)** |
 
 ### FR-2.2: Bonus Template System
 
