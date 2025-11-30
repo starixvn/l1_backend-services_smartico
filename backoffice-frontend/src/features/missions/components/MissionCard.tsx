@@ -98,8 +98,8 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission }) => {
             <p className="text-sm font-medium text-secondary-900">{getTaskCount()}</p>
           </div>
           <div>
-            <p className="text-xs text-secondary-500 mb-1">Points</p>
-            <p className="text-sm font-medium text-secondary-900">{mission.completionPoints || 0}</p>
+            <p className="text-xs text-secondary-500 mb-1">XP Reward</p>
+            <p className="text-sm font-medium text-secondary-900">{mission.completionXp || 0} XP</p>
           </div>
           <div>
             <p className="text-xs text-secondary-500 mb-1">Bonuses</p>
@@ -148,7 +148,14 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission }) => {
                   <span className="w-5 h-5 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-medium">
                     {idx + 1}
                   </span>
-                  <span className="truncate">{task.name}</span>
+                  <span className="truncate flex-1">{task.name}</span>
+                  {task.trigger.eligibleGames && task.trigger.eligibleGames.length > 0 && (
+                    <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                      {task.trigger.eligibleGames.length === 1
+                        ? task.trigger.eligibleGames[0]
+                        : `${task.trigger.eligibleGames.length} games`}
+                    </span>
+                  )}
                 </div>
               ))}
               {mission.tasks.length > 2 && (

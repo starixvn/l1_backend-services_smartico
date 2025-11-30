@@ -11,6 +11,7 @@
 
 | Feature | Status | Progress |
 |---------|--------|----------|
+| FR-6: Badge and Achievement System | ✅ Complete | 100% |
 | FR-13: User Permission Management | In Progress | Backend 100%, Frontend 80% |
 | FR-2.2: Bonus Template System | ✅ Complete | 100% |
 | FR-1.1: Mission Reward Integration | ✅ Complete | 100% |

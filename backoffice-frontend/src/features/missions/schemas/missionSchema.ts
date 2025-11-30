@@ -64,9 +64,10 @@ export const missionFormSchema = z.object({
     .max(500, 'Description must not exceed 500 characters')
     .optional(),
 
-  completionPoints: z.number()
-    .int('Points must be a whole number')
-    .positive('Points must be greater than 0'),
+  completionXp: z.number()
+    .int('XP must be a whole number')
+    .min(0, 'XP must be 0 or greater')
+    .max(100000, 'XP cannot exceed 100,000'),
 
   tasks: z.array(missionTaskSchema)
     .min(1, 'At least one task is required'),

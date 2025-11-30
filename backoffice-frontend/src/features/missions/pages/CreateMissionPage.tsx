@@ -31,7 +31,7 @@ export const CreateMissionPage: React.FC = () => {
     defaultValues: {
       name: '',
       description: '',
-      completionPoints: 10,
+      completionXp: 100,
       tasks: [],
       targetSegment: PlayerSegment.ALL_PLAYERS,
       startDate: new Date().toISOString().slice(0, 16),
@@ -53,7 +53,7 @@ export const CreateMissionPage: React.FC = () => {
       reset({
         name: mission.name,
         description: mission.description || '',
-        completionPoints: mission.completionPoints || 10,
+        completionXp: mission.completionXp || 100,
         tasks: mission.tasks || [],
         targetSegment: mission.targetSegment,
         startDate: new Date(mission.startDate).toISOString().slice(0, 16),
@@ -112,7 +112,7 @@ export const CreateMissionPage: React.FC = () => {
         await missionApi.updateMission(id, {
           name: data.name,
           description: data.description,
-          completionPoints: data.completionPoints,
+          completionXp: data.completionXp,
           tasks: data.tasks,
           targetSegment: data.targetSegment,
           startDate: new Date(data.startDate).toISOString(),
@@ -122,7 +122,7 @@ export const CreateMissionPage: React.FC = () => {
         await missionApi.createMission({
           name: data.name,
           description: data.description,
-          completionPoints: data.completionPoints,
+          completionXp: data.completionXp,
           tasks: data.tasks,
           targetSegment: data.targetSegment,
           startDate: new Date(data.startDate).toISOString(),
@@ -153,7 +153,7 @@ export const CreateMissionPage: React.FC = () => {
         await missionApi.updateMission(id, {
           name: data.name,
           description: data.description,
-          completionPoints: data.completionPoints,
+          completionXp: data.completionXp,
           tasks: data.tasks,
           targetSegment: data.targetSegment,
           startDate: new Date(data.startDate).toISOString(),
@@ -163,7 +163,7 @@ export const CreateMissionPage: React.FC = () => {
         const createdMission = await missionApi.createMission({
           name: data.name,
           description: data.description,
-          completionPoints: data.completionPoints,
+          completionXp: data.completionXp,
           tasks: data.tasks,
           targetSegment: data.targetSegment,
           startDate: new Date(data.startDate).toISOString(),
@@ -330,22 +330,22 @@ export const CreateMissionPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Completion Reward */}
+        {/* Completion XP Reward */}
         <div className="bg-white rounded-lg border border-secondary-200 p-6">
           <h2 className="text-lg font-semibold text-secondary-900 mb-2">
-            Completion Reward
+            Completion XP
           </h2>
           <p className="text-sm text-secondary-600 mb-4">
-            Points awarded to the player when ALL tasks are completed
+            XP awarded to the player when ALL tasks are completed (contributes to level progression)
           </p>
 
           <div className="flex items-center gap-4">
             <div className="w-48">
               <label className="block text-sm font-medium text-secondary-700 mb-1">
-                Points *
+                XP Amount *
               </label>
               <Controller
-                name="completionPoints"
+                name="completionXp"
                 control={control}
                 render={({ field }) => (
                   <input
@@ -354,13 +354,14 @@ export const CreateMissionPage: React.FC = () => {
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="e.g., 100"
-                    min="1"
+                    min="0"
+                    max="100000"
                     step="1"
                   />
                 )}
               />
-              {errors.completionPoints && (
-                <p className="text-red-600 text-sm mt-1">{errors.completionPoints.message}</p>
+              {errors.completionXp && (
+                <p className="text-red-600 text-sm mt-1">{errors.completionXp.message}</p>
               )}
             </div>
             <div className="flex-1 p-3 bg-purple-50 rounded-lg">
@@ -369,7 +370,7 @@ export const CreateMissionPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-sm">
-                  These points are awarded when the player completes ALL tasks in the mission.
+                  This XP is added to the player's level progression when they complete ALL tasks.
                   Individual tasks can also grant bonus rewards.
                 </span>
               </div>

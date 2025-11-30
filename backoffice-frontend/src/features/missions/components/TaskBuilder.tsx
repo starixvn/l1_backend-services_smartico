@@ -180,7 +180,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
     const trigger = getTriggerLabel(task.trigger.type);
     const goal = getGoalLabel(task.goal.type);
     const target = task.goal.targetCount || task.goal.targetAmount || 0;
-    return `${trigger} → ${goal}: ${target}`;
+    const games = task.trigger.eligibleGames?.length
+      ? ` (${task.trigger.eligibleGames.slice(0, 2).join(', ')}${task.trigger.eligibleGames.length > 2 ? '...' : ''})`
+      : '';
+    return `${trigger}${games} → ${goal}: ${target}`;
   };
 
   return (
@@ -313,20 +316,29 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   />
                 </div>
               </div>
-              {task.trigger.type === TriggerTypeEnum.GAME_PLAYED && (
+              {(task.trigger.type === TriggerTypeEnum.BET_PLACED || task.trigger.type === TriggerTypeEnum.GAME_PLAYED) && (
                 <div className="mt-3">
                   <label className="block text-xs font-medium text-secondary-600 mb-1">
-                    Game ID (optional)
+                    Eligible Games (optional)
                   </label>
                   <input
                     type="text"
-                    value={task.trigger.gameId || ''}
-                    onChange={(e) => onUpdate({
-                      trigger: { ...task.trigger, gameId: e.target.value || undefined }
-                    })}
+                    value={task.trigger.eligibleGames?.join(', ') || ''}
+                    onChange={(e) => {
+                      const games = e.target.value
+                        .split(',')
+                        .map(g => g.trim())
+                        .filter(g => g.length > 0);
+                      onUpdate({
+                        trigger: { ...task.trigger, eligibleGames: games.length > 0 ? games : undefined }
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                    placeholder="Specific game ID"
+                    placeholder="e.g., wukong, candy-land, olympub"
                   />
+                  <p className="text-xs text-secondary-500 mt-1">
+                    Comma-separated game IDs. Leave empty for all games.
+                  </p>
                 </div>
               )}
             </div>

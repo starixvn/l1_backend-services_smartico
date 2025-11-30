@@ -13,6 +13,13 @@ import { MissionDetailsPage } from './features/missions/pages/MissionDetailsPage
 import { BonusesPage } from './features/bonuses/pages/BonusesPage';
 import { CreateBonusPage } from './features/bonuses/pages/CreateBonusPage';
 import { GlobalLimitsPage } from './features/bonuses/pages/GlobalLimitsPage';
+import { LevelSystemsPage } from './features/levels/pages/LevelSystemsPage';
+import { CreateLevelSystemPage } from './features/levels/pages/CreateLevelSystemPage';
+import { BadgesPage } from './features/badges/pages/BadgesPage';
+import { CreateBadgePage } from './features/badges/pages/CreateBadgePage';
+import { BadgeDetailsPage } from './features/badges/pages/BadgeDetailsPage';
+import { BadgeSeriesPage } from './features/badges/pages/BadgeSeriesPage';
+import { CreateBadgeSeriesPage } from './features/badges/pages/CreateBadgeSeriesPage';
 
 function App() {
   return (
@@ -72,6 +79,42 @@ function App() {
             <Route path="bonuses/limits" element={<GlobalLimitsPage />} />
             <Route path="bonuses/:id" element={<CreateBonusPage />} />
             <Route path="bonuses/edit/:id" element={<CreateBonusPage />} />
+
+            {/* Level Systems */}
+            <Route path="levels" element={<LevelSystemsPage />} />
+            <Route
+              path="levels/create"
+              element={
+                <ProtectedRoute requirePermission="levels.create">
+                  <CreateLevelSystemPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="levels/:id" element={<CreateLevelSystemPage />} />
+            <Route path="levels/:id/edit" element={<CreateLevelSystemPage />} />
+
+            {/* Badges */}
+            <Route path="badges" element={<BadgesPage />} />
+            <Route
+              path="badges/new"
+              element={
+                <ProtectedRoute requirePermission="badges.create">
+                  <CreateBadgePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="badges/series" element={<BadgeSeriesPage />} />
+            <Route
+              path="badges/series/new"
+              element={
+                <ProtectedRoute requirePermission="badges.manage_series">
+                  <CreateBadgeSeriesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="badges/series/:id" element={<CreateBadgeSeriesPage />} />
+            <Route path="badges/:id" element={<BadgeDetailsPage />} />
+            <Route path="badges/:id/edit" element={<CreateBadgePage />} />
 
             <Route path="*" element={<Navigate to="/tournaments" replace />} />
           </Route>

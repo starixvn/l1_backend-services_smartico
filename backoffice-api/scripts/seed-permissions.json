@@ -251,5 +251,192 @@
     "displayOrder": 1,
     "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
     "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000018"},
+    "code": "bonuses.view",
+    "name": "View Bonuses",
+    "description": "View bonus templates list and details",
+    "module": "Bonuses",
+    "isSystem": true,
+    "displayOrder": 1,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000019"},
+    "code": "bonuses.create",
+    "name": "Create Bonuses",
+    "description": "Create new bonus templates",
+    "module": "Bonuses",
+    "isSystem": true,
+    "displayOrder": 2,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000001a"},
+    "code": "bonuses.edit",
+    "name": "Edit Bonuses",
+    "description": "Edit existing bonus templates",
+    "module": "Bonuses",
+    "isSystem": true,
+    "displayOrder": 3,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000001b"},
+    "code": "bonuses.delete",
+    "name": "Delete Bonuses",
+    "description": "Delete bonus templates",
+    "module": "Bonuses",
+    "isSystem": true,
+    "displayOrder": 4,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000001c"},
+    "code": "bonuses.activate",
+    "name": "Activate Bonuses",
+    "description": "Activate and pause bonus templates",
+    "module": "Bonuses",
+    "isSystem": true,
+    "displayOrder": 5,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000001d"},
+    "code": "bonuses.manage_limits",
+    "name": "Manage Global Limits",
+    "description": "Configure operator-wide bonus limits",
+    "module": "Bonuses",
+    "isSystem": true,
+    "displayOrder": 6,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000001e"},
+    "code": "levels.view",
+    "name": "View Level Systems",
+    "description": "View level system configurations and details",
+    "module": "Levels",
+    "isSystem": true,
+    "displayOrder": 1,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "60000000000000000000001f"},
+    "code": "levels.create",
+    "name": "Create Level Systems",
+    "description": "Create new level system configurations",
+    "module": "Levels",
+    "isSystem": true,
+    "displayOrder": 2,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000020"},
+    "code": "levels.edit",
+    "name": "Edit Level Systems",
+    "description": "Edit existing level system configurations",
+    "module": "Levels",
+    "isSystem": true,
+    "displayOrder": 3,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000021"},
+    "code": "levels.delete",
+    "name": "Delete Level Systems",
+    "description": "Delete level system configurations",
+    "module": "Levels",
+    "isSystem": true,
+    "displayOrder": 4,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000022"},
+    "code": "levels.activate",
+    "name": "Activate Level Systems",
+    "description": "Activate and pause level systems",
+    "module": "Levels",
+    "isSystem": true,
+    "displayOrder": 5,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000023"},
+    "code": "badges.view",
+    "name": "View Badges",
+    "description": "View badge list and details",
+    "module": "Badges",
+    "isSystem": true,
+    "displayOrder": 1,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000024"},
+    "code": "badges.create",
+    "name": "Create Badges",
+    "description": "Create new badges",
+    "module": "Badges",
+    "isSystem": true,
+    "displayOrder": 2,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000025"},
+    "code": "badges.edit",
+    "name": "Edit Badges",
+    "description": "Edit existing badges",
+    "module": "Badges",
+    "isSystem": true,
+    "displayOrder": 3,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000026"},
+    "code": "badges.delete",
+    "name": "Delete Badges",
+    "description": "Delete badges",
+    "module": "Badges",
+    "isSystem": true,
+    "displayOrder": 4,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000027"},
+    "code": "badges.publish",
+    "name": "Publish Badges",
+    "description": "Publish badges to make them active",
+    "module": "Badges",
+    "isSystem": true,
+    "displayOrder": 5,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "600000000000000000000028"},
+    "code": "badges.manage_series",
+    "name": "Manage Badge Series",
+    "description": "Create, edit, and delete badge series/collections",
+    "module": "Badges",
+    "isSystem": true,
+    "displayOrder": 6,
+    "createdAt": {"$date": "2025-01-15T00:00:00.000Z"},
+    "updatedAt": {"$date": "2025-01-15T00:00:00.000Z"}
   }
 ]

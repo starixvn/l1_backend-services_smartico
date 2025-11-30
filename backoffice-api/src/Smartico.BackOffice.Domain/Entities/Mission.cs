@@ -49,11 +49,12 @@ public class Mission : IOperatorScoped
     public MissionStatus Status { get; set; } = MissionStatus.Draft;
 
     /// <summary>
-    /// Points awarded to player when ALL tasks in this mission are completed.
-    /// This is the primary mission reward - bonus templates on tasks are optional additional rewards.
+    /// XP awarded to player when ALL tasks in this mission are completed.
+    /// This XP contributes directly to the player's level progression.
+    /// Bonus templates on tasks are optional additional rewards.
     /// </summary>
-    [BsonElement("completionPoints")]
-    public int CompletionPoints { get; set; }
+    [BsonElement("completionXp")]
+    public int CompletionXp { get; set; }
 
     /// <summary>
     /// List of tasks that must be completed to finish this mission.

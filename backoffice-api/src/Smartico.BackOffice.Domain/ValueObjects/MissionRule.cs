@@ -324,10 +324,11 @@ public record TriggerCondition
     public decimal? MinAmount { get; init; }
 
     /// <summary>
-    /// Specific game ID if trigger is game-specific.
+    /// List of game IDs that qualify for this trigger. Empty/null means all games.
+    /// Example: ["wukong", "candy-land"] means only bets on these games count.
     /// </summary>
-    [BsonElement("gameId")]
-    public string? GameId { get; init; }
+    [BsonElement("eligibleGames")]
+    public List<string>? EligibleGames { get; init; }
 }
 
 /// <summary>

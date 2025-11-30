@@ -40,10 +40,10 @@ public class MissionDto
     public MissionStatus Status { get; set; }
 
     /// <summary>
-    /// Points awarded when ALL tasks are completed (required).
+    /// XP awarded when ALL tasks are completed (contributes to level progression).
     /// </summary>
-    [JsonPropertyName("completionPoints")]
-    public int CompletionPoints { get; set; }
+    [JsonPropertyName("completionXp")]
+    public int CompletionXp { get; set; }
 
     /// <summary>
     /// Gets or sets the list of tasks for this mission.
@@ -132,8 +132,12 @@ public class TaskTriggerDto
     [JsonPropertyName("minAmount")]
     public decimal? MinAmount { get; set; }
 
-    [JsonPropertyName("gameId")]
-    public string? GameId { get; set; }
+    /// <summary>
+    /// List of game IDs that qualify for this trigger. Empty/null means all games.
+    /// Example: ["wukong", "candy-land"] means only bets on these games count.
+    /// </summary>
+    [JsonPropertyName("eligibleGames")]
+    public List<string>? EligibleGames { get; set; }
 }
 
 /// <summary>

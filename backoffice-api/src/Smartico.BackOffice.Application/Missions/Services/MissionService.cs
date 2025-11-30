@@ -52,7 +52,7 @@ public class MissionService : IMissionService
             Name = command.Name,
             Description = command.Description,
             Status = MissionStatus.Draft,
-            CompletionPoints = command.CompletionPoints,
+            CompletionXp = command.CompletionXp,
             Tasks = MapTasksFromDto(command.Tasks),
             Rule = command.Rule,
             TargetSegment = command.TargetSegment,
@@ -109,7 +109,7 @@ public class MissionService : IMissionService
         // Update properties
         existing.Name = command.Name;
         existing.Description = command.Description;
-        existing.CompletionPoints = command.CompletionPoints;
+        existing.CompletionXp = command.CompletionXp;
         existing.Tasks = MapTasksFromDto(command.Tasks);
         existing.Rule = command.Rule;
         existing.TargetSegment = command.TargetSegment;
@@ -142,7 +142,7 @@ public class MissionService : IMissionService
             Name = mission.Name,
             Description = mission.Description,
             Status = mission.Status,
-            CompletionPoints = mission.CompletionPoints,
+            CompletionXp = mission.CompletionXp,
             Tasks = MapTasksToDto(mission.Tasks),
             Rule = mission.Rule,
             TargetSegment = mission.TargetSegment,
@@ -168,7 +168,7 @@ public class MissionService : IMissionService
             {
                 Type = t.Trigger.Type,
                 MinAmount = t.Trigger.MinAmount,
-                GameId = t.Trigger.GameId
+                EligibleGames = t.Trigger.EligibleGames
             },
             Goal = new TaskGoal
             {
@@ -203,7 +203,7 @@ public class MissionService : IMissionService
             {
                 Type = t.Trigger.Type,
                 MinAmount = t.Trigger.MinAmount,
-                GameId = t.Trigger.GameId
+                EligibleGames = t.Trigger.EffectiveEligibleGames
             },
             Goal = new TaskGoalDto
             {

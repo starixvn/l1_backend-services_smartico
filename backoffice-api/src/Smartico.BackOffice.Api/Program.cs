@@ -10,6 +10,12 @@ using Smartico.BackOffice.Application.Auth.Services;
 using Smartico.BackOffice.Application.Bonuses.Commands;
 using Smartico.BackOffice.Application.Bonuses.Interfaces;
 using Smartico.BackOffice.Application.Bonuses.Services;
+using Smartico.BackOffice.Application.LevelSystems.Interfaces;
+using Smartico.BackOffice.Application.LevelSystems.Services;
+using Smartico.BackOffice.Application.Badges.Interfaces;
+using Smartico.BackOffice.Application.Badges.Services;
+using Smartico.BackOffice.Application.BadgeSeries.Interfaces;
+using Smartico.BackOffice.Application.BadgeSeries.Services;
 using Smartico.BackOffice.Domain.Services;
 using Smartico.BackOffice.Application.Leaderboard.Interfaces;
 using Smartico.BackOffice.Application.Leaderboard.Services;
@@ -150,6 +156,39 @@ builder.Services.AddScoped<IOperatorBonusLimitsRepository>(sp =>
     return new OperatorBonusLimitsRepository(database, operatorId);
 });
 
+builder.Services.AddScoped<ILevelSystemRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new LevelSystemRepository(database, operatorId);
+});
+
+builder.Services.AddScoped<IBadgeRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new BadgeRepository(database, operatorId);
+});
+
+builder.Services.AddScoped<IBadgeSeriesRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
+    var operatorId = httpContextAccessor.HttpContext?.Items["OperatorId"] as ObjectId?
+        ?? ObjectId.Parse("000000000000000000000001"); // Default for development
+
+    return new BadgeSeriesRepository(database, operatorId);
+});
+
 // Register validators
 builder.Services.AddValidatorsFromAssemblyContaining<TournamentValidator>();
 
@@ -160,6 +199,9 @@ builder.Services.AddScoped<IMissionService, MissionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBonusService, BonusService>();
 builder.Services.AddScoped<IBonusLimitService, BonusLimitService>();
+builder.Services.AddScoped<ILevelSystemService, LevelSystemService>();
+builder.Services.AddScoped<IBadgeService, BadgeService>();
+builder.Services.AddScoped<IBadgeSeriesService, BadgeSeriesService>();
 
 // Register command handlers
 builder.Services.AddScoped<PublishMissionCommandHandler>();

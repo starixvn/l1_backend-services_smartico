@@ -92,6 +92,34 @@ export const Layout: React.FC = () => {
                 >
                   Bonuses
                 </Link>
+
+                <Link
+                  to="/levels"
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${
+                      isActive('/levels')
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-secondary-700 hover:bg-secondary-100'
+                    }
+                  `}
+                >
+                  Levels
+                </Link>
+
+                <Link
+                  to="/badges"
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    ${
+                      isActive('/badges')
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-secondary-700 hover:bg-secondary-100'
+                    }
+                  `}
+                >
+                  Badges
+                </Link>
               </nav>
 
               {/* User Info & Logout */}

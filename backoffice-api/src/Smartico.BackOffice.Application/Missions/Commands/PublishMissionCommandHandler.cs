@@ -109,10 +109,10 @@ public class PublishMissionCommandHandler
 
     private static void ValidateTaskBasedMission(Mission mission, List<string> errors)
     {
-        // Validate completion points
-        if (mission.CompletionPoints <= 0)
+        // Validate completion XP (0 is allowed, negative is not)
+        if (mission.CompletionXp < 0)
         {
-            errors.Add("Mission must have positive completion points");
+            errors.Add("Mission completion XP cannot be negative");
         }
 
         // Validate each task

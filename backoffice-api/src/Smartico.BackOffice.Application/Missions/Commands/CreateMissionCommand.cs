@@ -22,10 +22,10 @@ public class CreateMissionCommand
     public string? Description { get; set; }
 
     /// <summary>
-    /// Points awarded when ALL tasks are completed (required).
+    /// XP awarded when ALL tasks are completed (contributes to level progression).
     /// </summary>
-    [JsonPropertyName("completionPoints")]
-    public int CompletionPoints { get; set; }
+    [JsonPropertyName("completionXp")]
+    public int CompletionXp { get; set; }
 
     /// <summary>
     /// Gets or sets the list of tasks for this mission.

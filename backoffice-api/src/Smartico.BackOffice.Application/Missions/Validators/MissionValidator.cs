@@ -35,11 +35,12 @@ public class MissionValidator : AbstractValidator<CreateMissionCommand>
             .GreaterThan(x => x.StartDate)
             .WithMessage("End date must be after start date.");
 
-        // CompletionPoints is required for task-based missions
-        RuleFor(x => x.CompletionPoints)
-            .GreaterThan(0)
-            .When(x => x.Tasks != null && x.Tasks.Count > 0)
-            .WithMessage("Completion points must be greater than 0 for task-based missions.");
+        // CompletionXp is required for task-based missions
+        RuleFor(x => x.CompletionXp)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("Completion XP must be 0 or greater.")
+            .LessThanOrEqualTo(100000)
+            .WithMessage("Completion XP cannot exceed 100,000.");
 
         // Note: Either Tasks OR Rule should be provided, but this is validated at publish time.
         // For drafts, we allow saving with incomplete configuration.

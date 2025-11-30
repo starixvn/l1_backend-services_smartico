@@ -30,7 +30,7 @@ public class MissionRuleTransformer
         {
             Type = firstTask.Trigger.Type,
             MinAmount = firstTask.Trigger.MinAmount,
-            GameId = firstTask.Trigger.GameId
+            EligibleGames = firstTask.Trigger.EligibleGames
         };
 
         // Build goals from all tasks
@@ -130,11 +130,16 @@ public class MissionRuleTransformer
             throw new InvalidOperationException($"Trigger node '{triggerNode.Id}' must have a trigger type");
         }
 
+        // Legacy visual rules may have a single gameId - convert to list
+        var eligibleGames = !string.IsNullOrEmpty(triggerNode.Data.GameId)
+            ? new List<string> { triggerNode.Data.GameId }
+            : null;
+
         return new TriggerCondition
         {
             Type = triggerNode.Data.TriggerType.Value,
             MinAmount = triggerNode.Data.TriggerThreshold,
-            GameId = triggerNode.Data.GameId
+            EligibleGames = eligibleGames
         };
     }
 

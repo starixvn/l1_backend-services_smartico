@@ -76,10 +76,36 @@ public record TaskTrigger
     public decimal? MinAmount { get; init; }
 
     /// <summary>
-    /// Specific game ID if trigger is game-specific.
+    /// List of game IDs that qualify for this trigger. Empty/null means all games.
+    /// Example: ["wukong", "candy-land"] means only bets on these games count.
+    /// </summary>
+    [BsonElement("eligibleGames")]
+    public List<string>? EligibleGames { get; init; }
+
+    /// <summary>
+    /// Legacy single game ID field. Use EligibleGames for new missions.
+    /// Kept for backward compatibility with existing data.
     /// </summary>
     [BsonElement("gameId")]
+    [BsonIgnoreIfNull]
     public string? GameId { get; init; }
+
+    /// <summary>
+    /// Gets all eligible games, merging EligibleGames and legacy GameId.
+    /// Returns null if no games are specified (meaning all games qualify).
+    /// </summary>
+    [BsonIgnore]
+    public List<string>? EffectiveEligibleGames
+    {
+        get
+        {
+            if (EligibleGames != null && EligibleGames.Count > 0)
+                return EligibleGames;
+            if (!string.IsNullOrEmpty(GameId))
+                return new List<string> { GameId };
+            return null;
+        }
+    }
 }
 
 /// <summary>

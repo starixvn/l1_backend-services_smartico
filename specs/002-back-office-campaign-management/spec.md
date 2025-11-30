@@ -63,7 +63,7 @@ The Back Office Campaign Management system will be considered successful when:
 
 ### Scenario 1: Marketing Manager Creates Weekend Mission Campaign
 
-**User Story**: As a marketing manager, I want to create a "Weekend Warrior" mission that rewards VIP players who bet $100 on slots 5 times during Saturday-Sunday, so that I can increase weekend engagement.
+**User Story**: As a marketing manager, I want to create a "Weekend Warrior" mission that rewards VIP players who bet $100 on slots 5 times during Saturday-Sunday, so that I can increase weekend engagement and contribute to their level progression.
 
 **Steps:**
 1. User logs into Back Office and navigates to Missions
@@ -71,7 +71,7 @@ The Back Office Campaign Management system will be considered successful when:
 3. User configures mission details:
    - Name: "Weekend Warrior"
    - Description: "Complete betting tasks this weekend for rewards!"
-   - Completion Points: 100 (awarded when all tasks complete)
+   - Completion XP: 500 (XP awarded when all tasks complete, contributes to level progression)
    - Target Segment: VIP Only
    - Schedule: Saturday 00:00 - Sunday 23:59
 4. User adds Task 1:
@@ -89,7 +89,8 @@ The Back Office Campaign Management system will be considered successful when:
 **Acceptance Criteria:**
 - Mission builder loads in under 3 seconds
 - Task-based form is intuitive with clear sections for Trigger, Goal, and Reward
-- Mission card in list shows: task count, completion points, bonus count
+- Completion XP field shows info tooltip: "This XP contributes to player's level progression"
+- Mission card in list shows: task count, XP reward, bonus count
 - Draft saves without requiring complete task configuration
 - Publish validates all tasks have triggers and goals configured
 - Publish action takes effect within 60 seconds
@@ -100,6 +101,7 @@ The Back Office Campaign Management system will be considered successful when:
 - User tries to publish without any tasks - system shows validation error
 - User tries to publish with incomplete task (no goal) - system highlights missing fields
 - User accidentally closes browser - draft can be recovered via edit
+- User sets 0 XP - allowed (mission grants only bonus rewards, no XP)
 
 ### Scenario 2: Operator Monitors Active Campaign Performance
 
@@ -173,7 +175,69 @@ The Back Office Campaign Management system will be considered successful when:
 - Variants perform equally - system recommends "no clear winner" and suggests extended test
 - User tries to edit variant during active test - system blocks edit and shows warning
 
-### Scenario 4: Administrator Manages Team Permissions
+### Scenario 4: Retention Manager Configures Player Level System
+
+**User Story**: As a retention manager, I want to create a VIP progression system where players earn XP from bets, deposits, and mission completions, advance through Bronze/Silver/Gold/Platinum/Diamond tiers, and receive rewards at milestone levels, so that I can drive long-term player engagement and loyalty.
+
+**Steps:**
+1. User navigates to Level Systems section in Back Office
+2. User clicks "Create Level System"
+3. User configures basic settings:
+   - Name: "VIP Progression 2025"
+   - Max Level: 100
+   - Progression Curve: Exponential (each level requires 1.5x more XP)
+   - Base XP Required: 100 (level 1→2)
+4. User defines tier structure:
+   - Bronze: Levels 1-10 (color: #CD7F32)
+   - Silver: Levels 11-25 (color: #C0C0C0)
+   - Gold: Levels 26-50 (color: #FFD700)
+   - Platinum: Levels 51-75 (color: #E5E4E2)
+   - Diamond: Levels 76-100 (color: #B9F2FF)
+5. User adds XP earning rules:
+   - Bet: 1 XP per $10 wagered (daily cap: 1000 XP)
+   - Deposit: 5 XP per $10 deposited (no cap)
+   - Tournament Participation: 50 XP per tournament
+   - Tournament Win: 200 XP per win
+   - Daily Login: 10 XP per day
+6. User configures level-up rewards:
+   - Level 10 (Bronze max): 50 Free Spins
+   - Level 25 (Silver max): $25 Cash Bonus
+   - Level 50 (Gold max): "Gold Celebration" Bonus Template
+   - Level 75 (Platinum max): "Platinum Exclusive" Bonus Template
+   - Level 100 (Diamond): "Diamond VIP Package" Bonus Template
+7. User configures tier benefits:
+   - Silver: 2% Cashback Boost
+   - Gold: 5% Cashback Boost, VIP Support access
+   - Platinum: 8% Cashback Boost, VIP Support, Exclusive Tournaments
+   - Diamond: 15% Cashback Boost, VIP Support, Exclusive Tournaments, Higher Withdrawal Limits
+8. User optionally enables demotion rules:
+   - Inactive for 90 days: Drop one tier
+   - Warning notification: 7 days before demotion
+   - Preserve XP within demoted tier
+9. User clicks "Save" to save as Draft
+10. User clicks "Activate" to make level system live
+11. System warns: "Activating this will pause any currently active level system"
+12. User confirms - new level system becomes active
+
+**Acceptance Criteria:**
+- Level system builder loads in under 3 seconds
+- XP calculation preview shows sample level progression (levels 1-20 with XP thresholds)
+- Tier level ranges must be contiguous (no gaps or overlaps)
+- Only one level system can be active per operator at a time
+- Activating a new system automatically pauses the previous one
+- Level-up rewards can reference existing Bonus Templates
+- XP earning rules support caps to prevent abuse
+- Draft saves without requiring complete configuration
+- Activate validates all tiers cover level 1 to max level
+
+**Edge Cases:**
+- User sets tier ranges with gaps (e.g., Bronze 1-10, Gold 15-50) - system shows validation error
+- User sets overlapping tier ranges (e.g., Bronze 1-15, Silver 10-25) - system shows validation error
+- User tries to activate without any tiers defined - system shows validation error
+- Player is mid-level when system changes - player retains XP, mapped to nearest equivalent level
+- XP rule has 0 amount - system allows (disables that XP source)
+
+### Scenario 5: Administrator Manages Team Permissions
 
 **User Story**: As an administrator, I want to grant my marketing team permission to create campaigns but require my approval before publishing, so that I maintain quality control.
 
@@ -211,24 +275,79 @@ The Back Office Campaign Management system will be considered successful when:
 - Multiple approvers approve simultaneously - first approval wins, others notified
 - User tries to access restricted action via URL - system redirects with permission error
 
+### Scenario 6: Marketing Manager Creates Multi-Game Mission
+
+**User Story**: As a marketing manager, I want to create a "Crazy Spins in December" mission where players complete tasks across specific games (Wukong, Candy Land, Olympub), so that I can promote multiple slot games in a single campaign.
+
+**Steps:**
+1. User logs into Back Office and navigates to Missions
+2. User clicks "Create New Mission"
+3. User configures mission details:
+   - Name: "Crazy Spins in December"
+   - Description: "Complete these game challenges to win amazing rewards!"
+   - Completion XP: 1000
+   - Target Segment: All Players
+   - Schedule: December 1-31
+4. User adds Task 1 "Spin Wukong 10 times":
+   - Task Name: "10 spins in Wukong"
+   - Trigger Type: Bet Placed
+   - Eligible Games: wukong
+   - Goal Type: Bet Count
+   - Target Count: 10
+5. User adds Task 2 "Spin Candy Land 20 times":
+   - Task Name: "20 spins in Candy Land"
+   - Trigger Type: Bet Placed
+   - Eligible Games: candy-land
+   - Goal Type: Bet Count
+   - Target Count: 20
+6. User adds Task 3 "Wager $20 in Olympub":
+   - Task Name: "Wager $20 in Olympub"
+   - Trigger Type: Bet Placed
+   - Eligible Games: olympub
+   - Goal Type: Wagered Amount
+   - Target Amount: $20
+7. User clicks "Save & Publish"
+8. System validates all tasks and publishes mission
+
+**Acceptance Criteria:**
+- Eligible Games field appears when trigger type is "Bet Placed" or "Game Played"
+- User can enter multiple game IDs as comma-separated values (e.g., "wukong, candy-land")
+- Empty Eligible Games means "all games" qualify for the trigger
+- Mission card shows game-specific tasks in preview
+- Mission details page displays eligible games for each task
+- Task summary shows: "Bet Placed (wukong) → Bet Count: 10"
+
+**Edge Cases:**
+- User enters invalid game ID - mission still saves (game validation happens at runtime)
+- User wants multiple games for one task - can enter comma-separated IDs (e.g., "wukong, candy-land")
+- User leaves Eligible Games empty - all games count toward the trigger
+- User copies/duplicates mission - eligible games configuration is preserved
+
 ## Functional Requirements
 
 ### FR-1: Campaign Builder - Mission Configuration (Task-Based)
 **Priority:** Critical
 
-**Description:** Users must be able to create and configure mission campaigns through a task-based builder. Each mission consists of one or more tasks, where each task defines a trigger (what starts tracking), a goal (what to achieve), and an optional bonus template reward. Mission-level completion points are awarded when all tasks are completed.
+**Description:** Users must be able to create and configure mission campaigns through a task-based builder. Each mission consists of one or more tasks, where each task defines a trigger (what starts tracking), a goal (what to achieve), and an optional bonus template reward. **Mission-level completion XP** is awarded when all tasks are completed, contributing directly to the player's level progression (see FR-5).
 
 **Architecture:**
-- **Mission**: Container with name, description, completion points, schedule, and player targeting
+- **Mission**: Container with name, description, completion XP, schedule, and player targeting
 - **Tasks**: List of 1+ tasks that must be completed
 - **Task**: Trigger + Goal + Optional Bonus Template reward
-- **Completion Points**: Required mission-level reward (points awarded when ALL tasks complete)
+- **Completion XP**: XP awarded when ALL tasks complete (contributes to player level progression)
 - **Per-Task Bonus**: Optional bonus template reference per task (granted when specific task completes)
+
+**XP Integration:**
+- Missions use `completionXp` field (0-100,000 XP range)
+- XP is added to player's total XP when mission completes
+- Player level advancement is handled by the active Level System (FR-5)
+- 0 XP is valid for missions that only grant bonus rewards
 
 **Acceptance Criteria:**
 - [ ] Mission builder uses task-based form UI (not drag-and-drop visual builder)
 - [ ] Each mission requires at least one task to be published
-- [ ] Mission-level completion points are required (awarded when all tasks complete)
+- [ ] Mission-level completion XP field with range 0-100,000
+- [ ] Completion XP info tooltip explains: "This XP contributes to player's level progression"
 - [ ] Task trigger types: Bet Placed, Deposit Made, Game Played, Daily Login
 - [ ] Task goal types: Bet Count, Deposit Amount, Wagered Amount, Turnover Amount, Login Count
 - [ ] Users can set numeric thresholds for triggers (minimum bet amount, etc.)
@@ -237,7 +356,7 @@ The Back Office Campaign Management system will be considered successful when:
 - [ ] Tasks can be reordered via up/down controls
 - [ ] Schedule supports one-time and date range campaigns (start date, end date)
 - [ ] Player segment targeting supports tier-based (All Players, VIP Only)
-- [ ] Mission card preview shows task count, completion points, and bonus count
+- [ ] Mission card preview shows task count, XP reward, and bonus count
 - [ ] Draft saves without full validation (allows incomplete configuration)
 - [ ] Publish action validates all tasks have valid triggers and goals
 - [ ] Published missions activate within 60 seconds and appear to eligible players immediately
@@ -322,36 +441,109 @@ The Back Office Campaign Management system will be considered successful when:
 ### FR-5: Player Level and Progression System
 **Priority:** Critical
 
-**Description:** Users must be able to configure player level systems with experience point (XP) mechanics, tier advancement rules, and level-based rewards to drive long-term player retention and engagement.
+**Description:** Users must be able to configure player level systems with experience point (XP) mechanics, tier advancement rules, and level-based rewards to drive long-term player retention and engagement. **XP is the unified currency** - missions directly award XP (via completionXp field) that contributes to level progression.
+
+**XP Architecture:**
+- **Unified XP System**: All XP from any source (bets, deposits, missions, tournaments) contributes to the same player level
+- **Mission XP**: Each mission has a `completionXp` field - XP awarded when ALL tasks are completed
+- **Activity XP**: Level system defines XP rules for other activities (bets, deposits, tournaments, daily login)
+- **No separate "Mission Points"**: The legacy "points" concept is replaced by XP for simplicity
 
 **Acceptance Criteria:**
 - [ ] Level system builder supports creating custom level structures (e.g., 1-100 levels with tier groupings)
-- [ ] XP earning rules configurable per action (bet $10 = 1 XP, deposit $100 = 50 XP, mission complete = 100 XP)
-- [ ] Level thresholds define XP required to advance (level 1→2 = 100 XP, level 2→3 = 250 XP, exponential/linear curves)
+- [ ] XP earning rules configurable per action type:
+  - Bet: XP per wager amount (e.g., 1 XP per $10 wagered)
+  - Deposit: XP per deposit amount (e.g., 5 XP per $10 deposited)
+  - Tournament Participation: Fixed XP per tournament entered
+  - Tournament Win: Fixed XP per tournament won
+  - Daily Login: Fixed XP per login day
+  - Referral: Fixed XP per successful referral
+  - Badge Unlock: Fixed XP per badge earned
+  - Custom: Operator-defined XP rules
+- [ ] Mission XP is configured directly on missions (completionXp field), not in level system
+- [ ] XP rules support daily caps to prevent abuse
+- [ ] XP rules can optionally filter by eligible games
+- [ ] Level thresholds define XP required to advance:
+  - Linear curve: Each level requires baseXp × level (e.g., 100, 200, 300...)
+  - Exponential curve: Each level requires baseXp × multiplier^(level-1) (e.g., 100, 150, 225...)
+  - Custom curve: Manual XP thresholds per level (future)
 - [ ] Tier configuration groups levels into tiers (Bronze: 1-10, Silver: 11-25, Gold: 26-50, Platinum: 51-75, Diamond: 76-100)
-- [ ] Level-up rewards configurable (free spins, cash bonus, exclusive mission access, higher cashback %)
-- [ ] Tier benefits define ongoing perks (VIP support, higher withdrawal limits, exclusive tournaments)
-- [ ] Demotion rules configurable (e.g., drop tier if inactive for 90 days, or no demotion ever)
-- [ ] XP boost multipliers for special events (double XP weekends, 3x XP for new games)
-- [ ] Level progression preview shows player journey and rewards at each milestone
+- [ ] Tier level ranges must be contiguous (no gaps) and non-overlapping
+- [ ] Tier benefits define ongoing perks (cashback boost %, VIP support, withdrawal limit boost, exclusive tournaments, XP multiplier)
+- [ ] Level-up rewards configurable per level (free spins, cash, bonus template, exclusive mission access, XP boost, badge)
+- [ ] Level-up rewards can reference existing Bonus Templates from Bonus system
+- [ ] Demotion rules configurable:
+  - Inactive days threshold (e.g., 90 days without activity)
+  - Demotion type: One tier, one level, or reset to bottom
+  - Warning period before demotion (e.g., 7 days notice)
+  - XP preservation option (keep XP within demoted tier vs reset)
+- [ ] Only one level system can be active per operator at a time
+- [ ] Activating a new system automatically pauses any currently active system
+- [ ] Level progression preview shows XP thresholds, tier assignments, and rewards for levels 1-20
 - [ ] Level system analytics show player distribution across levels and tier advancement rates
 
 ### FR-6: Badge and Achievement System
 **Priority:** High
 
-**Description:** Users must be able to create badges and achievements with unlock criteria, visual designs, and rewards to gamify player actions and encourage specific behaviors.
+**Description:** Users must be able to create badges and achievements with unlock criteria, visual designs, and rewards to gamify player actions and encourage specific behaviors. Badges integrate with the Level System (FR-5) - unlocking badges can earn XP, and level-up rewards can grant badges.
+
+**Badge Unlock Criteria Types:**
+Badges are unlocked when players meet specific criteria. The following unlock criteria types are supported:
+
+| Criteria Type | Description | Example | Threshold Type |
+|---------------|-------------|---------|----------------|
+| `MissionCompleted` | Complete a number of missions | "Complete 100 missions" | Count |
+| `WagerAmount` | Cumulative wagering amount | "Wager $10,000 total" | Amount |
+| `DepositAmount` | Cumulative deposit amount | "Deposit $5,000 total" | Amount |
+| `BetCount` | Number of bets placed | "Place 1,000 bets" | Count |
+| `TournamentWins` | Number of tournament victories | "Win 50 tournaments" | Count |
+| `TournamentParticipations` | Number of tournaments entered | "Enter 100 tournaments" | Count |
+| `LoginStreak` | Consecutive daily logins | "Login 30 days in a row" | Count (consecutive) |
+| `TotalLogins` | Total login days (non-consecutive) | "Login 365 days total" | Count |
+| `LevelReached` | Reach a specific level | "Reach level 50" | Level number |
+| `TierReached` | Reach a specific tier | "Reach Gold tier" | Tier name |
+| `GamePlayed` | Play specific game(s) N times | "Play Wukong 100 times" | Count + Game IDs |
+| `FirstDeposit` | Make first deposit | "Welcome Deposit" | Boolean (one-time) |
+| `FirstBet` | Place first bet | "First Spin" | Boolean (one-time) |
+| `Custom` | Operator-defined criteria | Custom event trigger | Flexible |
+
+**Badge Reward Types:**
+When a badge is unlocked, optional rewards can be granted:
+
+| Reward Type | Description | Configuration |
+|-------------|-------------|---------------|
+| `None` | Badge only (prestige) | No additional reward |
+| `XpBoost` | XP earning multiplier | Multiplier (e.g., 1.5x) + Duration (hours) |
+| `FreeSpins` | Free spin credits | Count + Game ID (optional) |
+| `Cash` | Cash/credit bonus | Amount |
+| `BonusTemplate` | Reference existing bonus | Bonus Template ID |
+
+**Level System Integration:**
+- **Badge → Level**: When a badge is unlocked, the Level System's `XpActionType.BadgeUnlock` rule triggers, awarding XP to the player
+- **Level → Badge**: Level-up rewards can use `LevelRewardType.Badge` to automatically grant a badge when reaching a specific level
 
 **Acceptance Criteria:**
 - [ ] Badge builder supports creating custom badges with name, description, and icon upload
-- [ ] Unlock criteria support multiple trigger types (complete 100 missions, wager $10,000, win 50 tournaments, login 30 days in a row)
-- [ ] Badge rarity levels configurable (common, rare, epic, legendary) affecting prestige and rewards
-- [ ] Badge rewards optional (unlock badge only, or unlock + cash bonus, free spins, XP boost)
+- [ ] Unlock criteria configuration supports all criteria types listed above
+- [ ] Unlock criteria can specify threshold value (count or amount) and optional filters (game IDs, tier names)
+- [ ] Badge rarity levels configurable (common, rare, epic, legendary) affecting prestige and display
+- [ ] Badge rewards optional - select from None, XpBoost, FreeSpins, Cash, or BonusTemplate
+- [ ] XpBoost rewards require multiplier (1.1x - 3.0x) and duration (1-168 hours)
 - [ ] Hidden badges supported (criteria not revealed until unlocked for surprise/discovery)
 - [ ] Badge series/collections for thematic grouping (e.g., "Slots Master" collection: Beginner, Intermediate, Expert, Master)
 - [ ] Progress tracking visible to players (e.g., "Win 50 tournaments: 32/50 complete")
 - [ ] Badge showcase allows players to display favorite badges on profile
 - [ ] Badge analytics show unlock rates, most popular badges, and correlation with retention
 - [ ] Badge preview shows how it appears in player widget and profile
+- [ ] Badge unlock triggers `XpActionType.BadgeUnlock` in active Level System (awards XP per configured rule)
+- [ ] Level-up rewards with `LevelRewardType.Badge` automatically grant specified badge to player
+
+**Edge Cases:**
+- Player already has badge when level-up grants it - no duplicate, no error (idempotent)
+- Badge with criteria referencing deleted game - badge remains but cannot be earned from that game
+- Hidden badge with progress tracking enabled - progress hidden until badge unlocked
+- Badge series partially completed - show completed badges, hide locked ones if hidden flag set
+- Player demoted below tier required for badge - badge retained (badges are permanent)
 
 ### FR-7: Player Segmentation and Targeting
 **Priority:** Critical
@@ -590,7 +782,7 @@ The Back Office Campaign Management system will be considered successful when:
 ### Mission
 Represents a mission campaign with task-based configuration. **Operator-scoped**: Each mission belongs to exactly one operator.
 
-**Architecture:** Missions use a task-based structure where each mission contains one or more tasks. Each task defines a trigger (what starts tracking), a goal (what to achieve), and an optional bonus template reward. Mission-level completion points are awarded when all tasks are completed.
+**Architecture:** Missions use a task-based structure where each mission contains one or more tasks. Each task defines a trigger (what starts tracking), a goal (what to achieve), and an optional bonus template reward. **Mission-level completion XP** is awarded when all tasks are completed, contributing directly to the player's level progression.
 
 **Attributes:**
 - Unique identifier
@@ -598,7 +790,7 @@ Represents a mission campaign with task-based configuration. **Operator-scoped**
 - Mission name
 - Description (optional)
 - Status (Draft, Active, Completed, Cancelled)
-- **Completion Points** (required - points awarded when ALL tasks complete)
+- **Completion XP** (0-100,000 - XP awarded when ALL tasks complete, contributes to level progression)
 - **Tasks** (list of MissionTask objects - at least 1 required for publishing)
 - Player segment targeting (All Players, VIP Only)
 - Start date
@@ -617,7 +809,7 @@ Represents a single task within a mission. Each task defines what the player nee
 - **Trigger** (what starts tracking progress):
   - Type: Bet Placed, Deposit Made, Game Played, Daily Login
   - Min Amount (optional - minimum threshold)
-  - Game ID (optional - specific game filter)
+  - Eligible Games (optional - list of game IDs that qualify for trigger, e.g., ["wukong", "candy-land"])
 - **Goal** (what to achieve):
   - Type: Bet Count, Deposit Amount, Wagered Amount, Turnover Amount, Login Count
   - Target Count (for count-based goals)
@@ -729,14 +921,40 @@ Represents an achievement badge with unlock criteria and rewards. **Operator-sco
 - Description
 - Icon/image URL
 - Rarity level (common, rare, epic, legendary)
-- Unlock criteria (trigger type and threshold)
-- Reward (optional: cash, free spins, XP boost)
-- Hidden status (criteria revealed or hidden)
-- Badge series/collection (grouping for related badges within operator)
-- Progress tracking enabled (yes/no)
-- Unlock count (how many players from this operator unlocked)
-- Status (active, draft, archived)
+- **Unlock Criteria**:
+  - Criteria Type (MissionCompleted, WagerAmount, DepositAmount, BetCount, TournamentWins, TournamentParticipations, LoginStreak, TotalLogins, LevelReached, TierReached, GamePlayed, FirstDeposit, FirstBet, Custom)
+  - Threshold Value (count or amount depending on criteria type)
+  - Eligible Games (optional - list of game IDs for GamePlayed criteria)
+  - Target Tier (optional - tier name for TierReached criteria)
+  - Target Level (optional - level number for LevelReached criteria)
+- **Reward** (optional):
+  - Reward Type (None, XpBoost, FreeSpins, Cash, BonusTemplate)
+  - Value (amount for Cash, count for FreeSpins, multiplier for XpBoost)
+  - Duration Hours (for XpBoost - how long the boost lasts)
+  - Game ID (optional - for FreeSpins on specific game)
+  - Bonus Template ID (for BonusTemplate reward type)
+- Hidden status (criteria revealed or hidden until unlocked)
+- Badge series/collection ID (grouping for related badges within operator)
+- Order within series (display order in collection)
+- Progress tracking enabled (yes/no - show progress to players)
+- Unlock count (how many players from this operator unlocked - analytics)
+- Status (Draft, Active, Archived)
 - Created by (user ID + operator ID)
+- Created date
+- Last modified date
+
+### Badge Series
+Represents a thematic grouping of related badges. **Operator-scoped**.
+
+**Attributes:**
+- Unique identifier
+- **Operator ID** (foreign key - determines data isolation boundary)
+- Series name (e.g., "Slots Master", "High Roller", "Tournament Champion")
+- Description
+- Icon/image URL
+- Badges (list of badge IDs in this series)
+- Display order (for ordering series in UI)
+- Status (Draft, Active, Archived)
 - Created date
 
 ## Assumptions
@@ -840,6 +1058,8 @@ Represents an achievement badge with unlock criteria and rewards. **Operator-sco
 | 1.2.0   | 2025-01-24 | AI Assistant | Added FR-5 (Player Levels), FR-6 (Badges), updated scope, entities, dependencies, target users            |
 | 1.3.0   | 2025-01-24 | AI Assistant | **CRITICAL**: Clarified multi-tenant operator isolation - all data scoped by operatorId, zero cross-access |
 | 1.4.0   | 2025-01-27 | AI Assistant | **ARCHITECTURE CHANGE**: Missions now use task-based builder instead of visual drag-and-drop. Updated FR-1, Scenario 1, added Mission and Mission Task entities. Tasks have Trigger + Goal + Optional Bonus Template reward. Mission-level completion points replace node-based rewards. |
+| 1.5.0   | 2025-01-28 | AI Assistant | **UNIFIED XP SYSTEM**: Replaced "Completion Points" with "Completion XP" across missions. XP directly contributes to player level progression (FR-5). Added Scenario 4 for Level System configuration. Updated FR-1, FR-5, and Mission entity. Removed MissionComplete XP action type (missions now award XP directly). |
+| 1.6.0   | 2025-11-30 | AI Assistant | **BADGE SYSTEM DETAIL**: Added concrete Badge Unlock Criteria Types (14 types including MissionCompleted, WagerAmount, LoginStreak, etc.), Badge Reward Types (None, XpBoost, FreeSpins, Cash, BonusTemplate), Level System integration notes, edge cases, and expanded Badge entity attributes. Added Badge Series entity. |
 
 ## Approval
 

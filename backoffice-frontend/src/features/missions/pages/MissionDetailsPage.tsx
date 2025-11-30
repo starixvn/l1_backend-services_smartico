@@ -201,9 +201,9 @@ export const MissionDetailsPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <div className="text-sm text-secondary-500">Completion Points</div>
+              <div className="text-sm text-secondary-500">Completion XP</div>
               <div className="text-secondary-900 font-medium">
-                {mission.completionPoints || 0} points
+                {mission.completionXp || 0} XP
               </div>
             </div>
             <div>
@@ -277,6 +277,11 @@ export const MissionDetailsPage: React.FC = () => {
                         <div className="text-blue-800">
                           {getTriggerLabel(task.trigger.type)}
                           {task.trigger.minAmount && ` (min: $${task.trigger.minAmount})`}
+                          {task.trigger.eligibleGames && task.trigger.eligibleGames.length > 0 && (
+                            <div className="text-xs text-blue-600 mt-1">
+                              Games: {task.trigger.eligibleGames.join(', ')}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="bg-amber-50 rounded p-2">

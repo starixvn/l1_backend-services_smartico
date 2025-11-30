@@ -136,7 +136,7 @@ export type GoalType = typeof GoalType[keyof typeof GoalType];
 
 // RewardType simplified - only BonusTemplate is supported
 // FreeSpins/CashBonus should be configured via Bonus Templates
-// Points are now at mission level (completionPoints)
+// XP is now at mission level (completionXp) and contributes to level progression
 export const RewardType = {
   BONUS_TEMPLATE: 'BonusTemplate'
 } as const;
@@ -193,7 +193,8 @@ export interface MissionRule {
 export interface TaskTrigger {
   type: TriggerType;
   minAmount?: number;
-  gameId?: string;
+  /** List of game IDs that qualify for this trigger. Empty/null means all games. */
+  eligibleGames?: string[];
 }
 
 /** Goal definition for a mission task */
@@ -224,8 +225,8 @@ export interface Mission {
   name: string;
   description?: string;
   status: MissionStatus;
-  /** Points awarded when ALL tasks are completed (required) */
-  completionPoints: number;
+  /** XP awarded when ALL tasks are completed (contributes to level progression) */
+  completionXp: number;
   /** List of tasks that must be completed for this mission */
   tasks: MissionTask[];
   /** @deprecated - use tasks instead */
@@ -240,8 +241,8 @@ export interface Mission {
 export interface CreateMissionCommand {
   name: string;
   description?: string;
-  /** Points awarded when ALL tasks are completed (required) */
-  completionPoints: number;
+  /** XP awarded when ALL tasks are completed (contributes to level progression) */
+  completionXp: number;
   /** List of tasks for this mission */
   tasks: MissionTask[];
   /** @deprecated - use tasks instead */
@@ -416,4 +417,294 @@ export interface CreateBonusCommand {
   // Schedule
   startDate: string;
   endDate: string;
+}
+
+// ============================================
+// LEVEL SYSTEM TYPES
+// ============================================
+
+export const LevelSystemStatus = {
+  DRAFT: 'Draft',
+  ACTIVE: 'Active',
+  PAUSED: 'Paused',
+  ARCHIVED: 'Archived'
+} as const;
+export type LevelSystemStatus = typeof LevelSystemStatus[keyof typeof LevelSystemStatus];
+
+export const ProgressionCurveType = {
+  LINEAR: 'Linear',
+  EXPONENTIAL: 'Exponential',
+  CUSTOM: 'Custom'
+} as const;
+export type ProgressionCurveType = typeof ProgressionCurveType[keyof typeof ProgressionCurveType];
+
+export const TierBenefitType = {
+  CASHBACK_BOOST: 'CashbackBoost',
+  VIP_SUPPORT: 'VipSupport',
+  WITHDRAWAL_LIMIT_BOOST: 'WithdrawalLimitBoost',
+  EXCLUSIVE_TOURNAMENTS: 'ExclusiveTournaments',
+  XP_MULTIPLIER: 'XpMultiplier',
+  CUSTOM: 'Custom'
+} as const;
+export type TierBenefitType = typeof TierBenefitType[keyof typeof TierBenefitType];
+
+export const XpActionType = {
+  BET: 'Bet',
+  DEPOSIT: 'Deposit',
+  TOURNAMENT_PARTICIPATION: 'TournamentParticipation',
+  TOURNAMENT_WIN: 'TournamentWin',
+  DAILY_LOGIN: 'DailyLogin',
+  REFERRAL: 'Referral',
+  BADGE_UNLOCK: 'BadgeUnlock',
+  CUSTOM: 'Custom'
+} as const;
+export type XpActionType = typeof XpActionType[keyof typeof XpActionType];
+
+export const LevelRewardType = {
+  FREE_SPINS: 'FreeSpins',
+  CASH: 'Cash',
+  BONUS_TEMPLATE: 'BonusTemplate',
+  EXCLUSIVE_MISSION: 'ExclusiveMission',
+  XP_BOOST: 'XpBoost',
+  BADGE: 'Badge'
+} as const;
+export type LevelRewardType = typeof LevelRewardType[keyof typeof LevelRewardType];
+
+export const DemotionType = {
+  ONE_TIER: 'OneTier',
+  RESET_TO_BOTTOM: 'ResetToBottom',
+  ONE_LEVEL: 'OneLevel'
+} as const;
+export type DemotionType = typeof DemotionType[keyof typeof DemotionType];
+
+export interface TierBenefit {
+  type: TierBenefitType;
+  description?: string;
+  value?: number;
+}
+
+export interface LevelTier {
+  id: string;
+  name: string;
+  fromLevel: number;
+  toLevel: number;
+  color?: string;
+  icon?: string;
+  order: number;
+  benefits: TierBenefit[];
+}
+
+export interface XpRule {
+  id: string;
+  actionType: XpActionType;
+  xpAmount: number;
+  perUnitAmount?: number;
+  dailyCap?: number;
+  eligibleGames?: string[];
+  isActive: boolean;
+  description?: string;
+}
+
+export interface LevelReward {
+  id: string;
+  level: number;
+  rewardType: LevelRewardType;
+  value?: number;
+  bonusTemplateId?: string;
+  bonusTemplateName?: string;
+  badgeId?: string;
+  badgeName?: string;
+  description?: string;
+}
+
+export interface DemotionRules {
+  inactiveDays: number;
+  demotionType: DemotionType;
+  warningDays: number;
+  preserveXp: boolean;
+}
+
+export interface LevelSystem {
+  id: string;
+  operatorId: string;
+  name: string;
+  description?: string;
+  status: LevelSystemStatus;
+  maxLevel: number;
+  progressionCurve: ProgressionCurveType;
+  baseXpRequired: number;
+  xpMultiplier: number;
+  tiers: LevelTier[];
+  xpRules: XpRule[];
+  levelRewards: LevelReward[];
+  demotionEnabled: boolean;
+  demotionRules?: DemotionRules;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLevelSystemCommand {
+  name: string;
+  description?: string;
+  maxLevel: number;
+  progressionCurve: ProgressionCurveType;
+  baseXpRequired: number;
+  xpMultiplier: number;
+  tiers: LevelTier[];
+  xpRules: XpRule[];
+  levelRewards: LevelReward[];
+  demotionEnabled: boolean;
+  demotionRules?: DemotionRules;
+}
+
+export interface LevelPreview {
+  level: number;
+  xpRequired: number;
+  totalXpRequired: number;
+  tierName?: string;
+  tierColor?: string;
+  rewards: LevelReward[];
+}
+
+// ============================================
+// BADGE SYSTEM TYPES
+// ============================================
+
+export const BadgeStatus = {
+  DRAFT: 'Draft',
+  ACTIVE: 'Active',
+  ARCHIVED: 'Archived'
+} as const;
+export type BadgeStatus = typeof BadgeStatus[keyof typeof BadgeStatus];
+
+export const BadgeRarity = {
+  COMMON: 'Common',
+  RARE: 'Rare',
+  EPIC: 'Epic',
+  LEGENDARY: 'Legendary'
+} as const;
+export type BadgeRarity = typeof BadgeRarity[keyof typeof BadgeRarity];
+
+export const BadgeUnlockCriteriaType = {
+  MISSION_COMPLETED: 'MissionCompleted',
+  WAGER_AMOUNT: 'WagerAmount',
+  DEPOSIT_AMOUNT: 'DepositAmount',
+  BET_COUNT: 'BetCount',
+  TOURNAMENT_WINS: 'TournamentWins',
+  TOURNAMENT_PARTICIPATIONS: 'TournamentParticipations',
+  LOGIN_STREAK: 'LoginStreak',
+  TOTAL_LOGINS: 'TotalLogins',
+  LEVEL_REACHED: 'LevelReached',
+  TIER_REACHED: 'TierReached',
+  GAME_PLAYED: 'GamePlayed',
+  FIRST_DEPOSIT: 'FirstDeposit',
+  FIRST_BET: 'FirstBet',
+  CUSTOM: 'Custom'
+} as const;
+export type BadgeUnlockCriteriaType = typeof BadgeUnlockCriteriaType[keyof typeof BadgeUnlockCriteriaType];
+
+export const BadgeRewardType = {
+  NONE: 'None',
+  XP_BOOST: 'XpBoost',
+  FREE_SPINS: 'FreeSpins',
+  CASH: 'Cash',
+  BONUS_TEMPLATE: 'BonusTemplate'
+} as const;
+export type BadgeRewardType = typeof BadgeRewardType[keyof typeof BadgeRewardType];
+
+export const BadgeSeriesStatus = {
+  DRAFT: 'Draft',
+  ACTIVE: 'Active',
+  ARCHIVED: 'Archived'
+} as const;
+export type BadgeSeriesStatus = typeof BadgeSeriesStatus[keyof typeof BadgeSeriesStatus];
+
+export interface BadgeUnlockCriteria {
+  type: BadgeUnlockCriteriaType;
+  thresholdValue?: number;
+  eligibleGames?: string[];
+  targetTier?: string;
+  customEventName?: string;
+  description?: string;
+}
+
+export interface BadgeReward {
+  type: BadgeRewardType;
+  value?: number;
+  durationHours?: number;
+  gameId?: string;
+  bonusTemplateId?: string;
+  description?: string;
+}
+
+export interface Badge {
+  id: string;
+  operatorId: string;
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  rarity: BadgeRarity;
+  status: BadgeStatus;
+  unlockCriteria: BadgeUnlockCriteria;
+  reward?: BadgeReward;
+  isHidden: boolean;
+  progressTrackingEnabled: boolean;
+  seriesId?: string;
+  orderInSeries?: number;
+  unlockCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBadgeCommand {
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  rarity: BadgeRarity;
+  unlockCriteria: BadgeUnlockCriteria;
+  reward?: BadgeReward;
+  isHidden?: boolean;
+  progressTrackingEnabled?: boolean;
+  seriesId?: string;
+  orderInSeries?: number;
+}
+
+export interface UpdateBadgeCommand {
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  rarity: BadgeRarity;
+  unlockCriteria: BadgeUnlockCriteria;
+  reward?: BadgeReward;
+  isHidden?: boolean;
+  progressTrackingEnabled?: boolean;
+  seriesId?: string;
+  orderInSeries?: number;
+}
+
+export interface BadgeSeries {
+  id: string;
+  operatorId: string;
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  displayOrder: number;
+  status: BadgeSeriesStatus;
+  badges?: Badge[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBadgeSeriesCommand {
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  displayOrder?: number;
+}
+
+export interface UpdateBadgeSeriesCommand {
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  displayOrder?: number;
 }
