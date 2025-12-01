@@ -122,13 +122,18 @@ export const mockTournament: Tournament = {
  */
 export const mockJackpot: Jackpot = {
   id: 1,
+  name: 'Mega Jackpot',
+  description: 'Win the grand prize!',
   prizePool: 125450,
+  currency: 'USD',
+  temperature: 'warm',
   lastWinners: [
     { username: 'J***n', amount: 5000 },
     { username: 'S***h', amount: 3200 },
   ],
   userTickets: 12,
   drawDate: new Date(Date.now() + 259200000).toISOString(), // 3 days
+  isOptedIn: false,
 };
 
 /**

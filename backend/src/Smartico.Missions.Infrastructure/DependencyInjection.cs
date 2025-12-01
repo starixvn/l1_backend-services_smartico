@@ -4,6 +4,7 @@ using Polly;
 using Polly.Extensions.Http;
 using Smartico.Missions.Domain.Interfaces;
 using Smartico.Missions.Infrastructure.Caching;
+using Smartico.Missions.Infrastructure.Repositories;
 using Smartico.Missions.Infrastructure.SignalR;
 using Smartico.Missions.Infrastructure.SmarticoApi;
 
@@ -72,6 +73,11 @@ public static class DependencyInjection
 
         // Register Smartico Jackpot API Client (demo implementation, no HTTP needed)
         services.AddSingleton<ISmarticoJackpotApiClient, SmarticoJackpotApiClient>();
+
+        // Register MongoDB Read Repositories (read from backoffice database)
+        services.AddScoped<IJackpotReadRepository, JackpotReadRepository>();
+        services.AddScoped<IMissionReadRepository, MissionReadRepository>();
+        services.AddScoped<IBadgeReadRepository, BadgeReadRepository>();
 
         return services;
     }

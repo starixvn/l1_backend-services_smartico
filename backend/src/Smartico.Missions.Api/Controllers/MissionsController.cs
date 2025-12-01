@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using Smartico.Missions.Api.Models;
+using Smartico.Missions.Application.Features.Missions.Mappers;
+using Smartico.Missions.Domain.Configuration;
 using Smartico.Missions.Domain.Entities;
 using Smartico.Missions.Domain.Interfaces;
 
@@ -8,23 +12,27 @@ namespace Smartico.Missions.Api.Controllers;
 
 /// <summary>
 /// Controller for mission-related operations.
+/// Reads mission data from MongoDB (populated by backoffice-api).
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class MissionsController : ControllerBase
 {
-    private readonly ISmarticoApiClient _smarticoClient;
+    private readonly IMissionReadRepository _missionRepository;
     private readonly ICacheService _cacheService;
+    private readonly DemoSettings _demoSettings;
     private readonly ILogger<MissionsController> _logger;
 
     public MissionsController(
-        ISmarticoApiClient smarticoClient,
+        IMissionReadRepository missionRepository,
         ICacheService cacheService,
+        IOptions<DemoSettings> demoSettings,
         ILogger<MissionsController> logger)
     {
-        _smarticoClient = smarticoClient;
+        _missionRepository = missionRepository;
         _cacheService = cacheService;
+        _demoSettings = demoSettings.Value;
         _logger = logger;
     }
 
@@ -61,14 +69,28 @@ public class MissionsController : ControllerBase
                 return Ok(ApiResponse<IEnumerable<Mission>>.Ok(cachedMissions));
             }
 
-            // Fetch from Smartico API
-            var missions = await _smarticoClient.GetMissionsAsync(userId, cancellationToken);
+            // Resolve operator ID from configuration (demo mode)
+            var operatorId = ObjectId.Parse(_demoSettings.DefaultOperatorId);
+
+            // Fetch from MongoDB (populated by backoffice-api)
+            var missionEntities = await _missionRepository.GetActiveMissionsAsync(operatorId, cancellationToken);
+
+            // Map BackOffice entities to API DTOs
+            // Note: progress and status will be populated from PlayerProgress in Phase 6
+            var missions = missionEntities
+                .Select(m => MissionMapper.ToDto(
+                    mission: m,
+                    progress: 0, // TODO: Get from PlayerProgress in Phase 6
+                    status: Smartico.Missions.Domain.Enums.AchievementStatus.Available,
+                    taskProgress: null // TODO: Get from PlayerProgress in Phase 6
+                ))
+                .ToList();
 
             // Cache the result (30 seconds TTL from config)
             await _cacheService.SetAsync(cacheKey, missions, TimeSpan.FromSeconds(30));
 
             _logger.LogInformation("Successfully fetched {Count} missions for user {UserId}",
-                missions.Count(), userId);
+                missions.Count, userId);
 
             return Ok(ApiResponse<IEnumerable<Mission>>.Ok(missions));
         }
@@ -91,13 +113,18 @@ public class MissionsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetMissionById(
-        int id,
+        string id,
         [FromQuery] string userId,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(userId))
         {
             return BadRequest(ApiResponse<object>.Fail("User ID is required"));
+        }
+
+        if (!ObjectId.TryParse(id, out var missionId))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Invalid mission ID format"));
         }
 
         try
@@ -115,14 +142,25 @@ public class MissionsController : ControllerBase
                 return Ok(ApiResponse<Mission>.Ok(cachedMission));
             }
 
-            // Fetch from Smartico API
-            var mission = await _smarticoClient.GetMissionByIdAsync(userId, id, cancellationToken);
+            // Resolve operator ID from configuration (demo mode)
+            var operatorId = ObjectId.Parse(_demoSettings.DefaultOperatorId);
 
-            if (mission == null)
+            // Fetch from MongoDB
+            var missionEntity = await _missionRepository.GetByIdAsync(operatorId, missionId, cancellationToken);
+
+            if (missionEntity == null)
             {
                 _logger.LogWarning("Mission {MissionId} not found for user {UserId}", id, userId);
                 return NotFound(ApiResponse<object>.Fail($"Mission {id} not found"));
             }
+
+            // Map to DTO
+            var mission = MissionMapper.ToDto(
+                mission: missionEntity,
+                progress: 0, // TODO: Get from PlayerProgress in Phase 6
+                status: Smartico.Missions.Domain.Enums.AchievementStatus.Available,
+                taskProgress: null // TODO: Get from PlayerProgress in Phase 6
+            );
 
             // Cache the result
             await _cacheService.SetAsync(cacheKey, mission, TimeSpan.FromSeconds(30));
@@ -148,7 +186,7 @@ public class MissionsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<MissionOptInResult>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> OptInToMission(
-        int id,
+        string id,
         [FromQuery] string userId,
         CancellationToken cancellationToken)
     {
@@ -157,26 +195,29 @@ public class MissionsController : ControllerBase
             return BadRequest(ApiResponse<object>.Fail("User ID is required"));
         }
 
+        if (!ObjectId.TryParse(id, out var missionId))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Invalid mission ID format"));
+        }
+
         try
         {
             _logger.LogInformation("User {UserId} opting into mission {MissionId}", userId, id);
 
-            var result = await _smarticoClient.OptInToMissionAsync(userId, id, cancellationToken);
-
-            if (result.Success)
+            // TODO: Implement opt-in with PlayerProgressRepository in Phase 6
+            // For now, return a placeholder success result
+            var result = new MissionOptInResult
             {
-                // Invalidate cache for this user's missions
-                await _cacheService.RemoveByPatternAsync($"missions:{userId}*");
-                await _cacheService.RemoveAsync($"mission:{userId}:{id}");
+                Success = true,
+                Message = "Successfully opted into mission"
+            };
 
-                _logger.LogInformation("User {UserId} successfully opted into mission {MissionId}",
-                    userId, id);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to opt user {UserId} into mission {MissionId}: {Message}",
-                    userId, id, result.Message);
-            }
+            // Invalidate cache for this user's missions
+            await _cacheService.RemoveByPatternAsync($"missions:{userId}*");
+            await _cacheService.RemoveAsync($"mission:{userId}:{id}");
+
+            _logger.LogInformation("User {UserId} successfully opted into mission {MissionId}",
+                userId, id);
 
             return Ok(ApiResponse<MissionOptInResult>.Ok(result));
         }
@@ -199,7 +240,7 @@ public class MissionsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<MissionClaimResult>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ClaimReward(
-        int id,
+        string id,
         [FromQuery] string userId,
         CancellationToken cancellationToken)
     {
@@ -208,27 +249,29 @@ public class MissionsController : ControllerBase
             return BadRequest(ApiResponse<object>.Fail("User ID is required"));
         }
 
+        if (!ObjectId.TryParse(id, out var missionId))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Invalid mission ID format"));
+        }
+
         try
         {
             _logger.LogInformation("User {UserId} claiming reward for mission {MissionId}",
                 userId, id);
 
-            var result = await _smarticoClient.ClaimRewardAsync(userId, id, cancellationToken);
-
-            if (result.Success)
+            // TODO: Implement claim with PlayerProgressRepository in Phase 6
+            // For now, return a placeholder result
+            var result = new MissionClaimResult
             {
-                // Invalidate cache for this user's missions
-                await _cacheService.RemoveByPatternAsync($"missions:{userId}*");
-                await _cacheService.RemoveAsync($"mission:{userId}:{id}");
+                Success = false,
+                Message = "Mission not yet completed",
+                RewardAmount = 0,
+                RewardCurrency = "XP"
+            };
 
-                _logger.LogInformation("User {UserId} successfully claimed reward for mission {MissionId}",
-                    userId, id);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to claim reward for mission {MissionId} by user {UserId}: {Message}",
-                    id, userId, result.Message);
-            }
+            // Invalidate cache for this user's missions
+            await _cacheService.RemoveByPatternAsync($"missions:{userId}*");
+            await _cacheService.RemoveAsync($"mission:{userId}:{id}");
 
             return Ok(ApiResponse<MissionClaimResult>.Ok(result));
         }
@@ -240,4 +283,3 @@ public class MissionsController : ControllerBase
         }
     }
 }
-

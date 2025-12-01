@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using Smartico.Missions.Api.Models;
+using Smartico.Missions.Application.Features.Badges.Mappers;
+using Smartico.Missions.Domain.Configuration;
 using Smartico.Missions.Domain.Entities;
 using Smartico.Missions.Domain.Interfaces;
 
@@ -8,23 +12,27 @@ namespace Smartico.Missions.Api.Controllers;
 
 /// <summary>
 /// Controller for badge-related operations.
+/// Reads badge data from MongoDB (populated by backoffice-api).
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class BadgesController : ControllerBase
 {
-    private readonly ISmarticoApiClient _smarticoClient;
+    private readonly IBadgeReadRepository _badgeRepository;
     private readonly ICacheService _cacheService;
+    private readonly DemoSettings _demoSettings;
     private readonly ILogger<BadgesController> _logger;
 
     public BadgesController(
-        ISmarticoApiClient smarticoClient,
+        IBadgeReadRepository badgeRepository,
         ICacheService cacheService,
+        IOptions<DemoSettings> demoSettings,
         ILogger<BadgesController> logger)
     {
-        _smarticoClient = smarticoClient;
+        _badgeRepository = badgeRepository;
         _cacheService = cacheService;
+        _demoSettings = demoSettings.Value;
         _logger = logger;
     }
 
@@ -61,14 +69,29 @@ public class BadgesController : ControllerBase
                 return Ok(ApiResponse<IEnumerable<Badge>>.Ok(cachedBadges));
             }
 
-            // Fetch from Smartico API
-            var badges = await _smarticoClient.GetBadgesAsync(userId, cancellationToken);
+            // Resolve operator ID from configuration (demo mode)
+            var operatorId = ObjectId.Parse(_demoSettings.DefaultOperatorId);
+
+            // Fetch from MongoDB (populated by backoffice-api)
+            var badgeEntities = await _badgeRepository.GetActiveBadgesAsync(operatorId, cancellationToken);
+
+            // Map BackOffice entities to API DTOs
+            // Note: progress, status, and earned info will be populated from PlayerProgress in Phase 6
+            var badges = badgeEntities
+                .Select(b => BadgeMapper.ToDto(
+                    badge: b,
+                    progress: 0, // TODO: Get from PlayerProgress in Phase 6
+                    status: Smartico.Missions.Domain.Enums.AchievementStatus.Available,
+                    isEarned: false, // TODO: Get from PlayerProgress in Phase 6
+                    earnedAt: null // TODO: Get from PlayerProgress in Phase 6
+                ))
+                .ToList();
 
             // Cache the result (60 seconds TTL)
             await _cacheService.SetAsync(cacheKey, badges, TimeSpan.FromSeconds(60));
 
             _logger.LogInformation("Successfully fetched {Count} badges for user {UserId}",
-                badges.Count(), userId);
+                badges.Count, userId);
 
             return Ok(ApiResponse<IEnumerable<Badge>>.Ok(badges));
         }
@@ -91,13 +114,18 @@ public class BadgesController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetBadgeById(
-        int id,
+        string id,
         [FromQuery] string userId,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(userId))
         {
             return BadRequest(ApiResponse<object>.Fail("User ID is required"));
+        }
+
+        if (!ObjectId.TryParse(id, out var badgeId))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Invalid badge ID format"));
         }
 
         try
@@ -115,14 +143,26 @@ public class BadgesController : ControllerBase
                 return Ok(ApiResponse<Badge>.Ok(cachedBadge));
             }
 
-            // Fetch from Smartico API
-            var badge = await _smarticoClient.GetBadgeByIdAsync(userId, id, cancellationToken);
+            // Resolve operator ID from configuration (demo mode)
+            var operatorId = ObjectId.Parse(_demoSettings.DefaultOperatorId);
 
-            if (badge == null)
+            // Fetch from MongoDB
+            var badgeEntity = await _badgeRepository.GetByIdAsync(operatorId, badgeId, cancellationToken);
+
+            if (badgeEntity == null)
             {
                 _logger.LogWarning("Badge {BadgeId} not found for user {UserId}", id, userId);
                 return NotFound(ApiResponse<object>.Fail($"Badge {id} not found"));
             }
+
+            // Map to DTO
+            var badge = BadgeMapper.ToDto(
+                badge: badgeEntity,
+                progress: 0, // TODO: Get from PlayerProgress in Phase 6
+                status: Smartico.Missions.Domain.Enums.AchievementStatus.Available,
+                isEarned: false, // TODO: Get from PlayerProgress in Phase 6
+                earnedAt: null // TODO: Get from PlayerProgress in Phase 6
+            );
 
             // Cache the result (60 seconds TTL)
             await _cacheService.SetAsync(cacheKey, badge, TimeSpan.FromSeconds(60));
@@ -140,4 +180,3 @@ public class BadgesController : ControllerBase
         }
     }
 }
-

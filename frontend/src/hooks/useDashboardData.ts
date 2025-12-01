@@ -4,7 +4,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { DashboardData } from '../types/dashboard/data';
+import type { DashboardData, Mission as DashboardMission, Achievement, Jackpot as DashboardJackpot } from '../types/dashboard/data';
+import { api } from '../services/api';
+import { JackpotService } from '../services/jackpotService';
+import type { Mission, Badge } from '../types';
+import type { JackpotDetails, JackPotTemperature } from '../types/jackpot';
 
 /**
  * Loading state for dashboard data.
@@ -16,22 +20,87 @@ interface UseDashboardDataState {
 }
 
 /**
+ * Map backend Mission to Dashboard Mission format.
+ */
+function mapMissionToDashboard(mission: Mission): DashboardMission {
+  // Get first task for target/current value (or aggregate all tasks)
+  const firstTask = mission.tasks?.[0];
+  const targetValue = firstTask?.targetValue ?? 100;
+  const currentValue = firstTask?.currentValue ?? 0;
+
+  return {
+    id: mission.id,
+    name: mission.name,
+    description: mission.description,
+    progress: mission.progress,
+    targetValue,
+    currentValue,
+    rewardPoints: mission.rewardAmount ?? 0,
+    deadline: mission.expiresAt ?? null,
+    isCompleted: mission.progress >= 100,
+  };
+}
+
+/**
+ * Map backend Badge to Dashboard Achievement format.
+ */
+function mapBadgeToAchievement(badge: Badge): Achievement {
+  const rarityMap: Record<string, 'common' | 'rare' | 'epic' | 'legendary'> = {
+    'Common': 'common',
+    'Rare': 'rare',
+    'Epic': 'epic',
+    'Legendary': 'legendary',
+  };
+
+  return {
+    id: badge.id,
+    name: badge.name,
+    description: badge.description,
+    iconUrl: badge.imageUrl ?? '',
+    earnedAt: badge.earnedAt ?? new Date().toISOString(),
+    isNew: badge.isEarned && badge.earnedAt
+      ? (Date.now() - new Date(badge.earnedAt).getTime()) < 24 * 60 * 60 * 1000
+      : false,
+    rarity: rarityMap[badge.category ?? 'Common'] ?? 'common',
+  };
+}
+
+/**
+ * Map JackPotTemperature enum to dashboard temperature string.
+ */
+function mapTemperature(temp: JackPotTemperature): 'cold' | 'warm' | 'hot' | 'burning' {
+  switch (temp) {
+    case 0: return 'cold';
+    case 1: return 'warm';
+    case 2: return 'hot';
+    case 3: return 'burning';
+    default: return 'cold';
+  }
+}
+
+/**
+ * Map backend Jackpot to Dashboard Jackpot format.
+ */
+function mapJackpotToDashboard(jackpot: JackpotDetails): DashboardJackpot {
+  return {
+    id: jackpot.jpTemplateId,
+    name: jackpot.jpPublicMeta?.name ?? 'Jackpot',
+    description: jackpot.jpPublicMeta?.description ?? '',
+    prizePool: jackpot.pot?.currentPotAmount ?? 0,
+    currency: jackpot.jpCurrency ?? 'USD',
+    temperature: mapTemperature(jackpot.pot?.currentPotTemperature ?? 0),
+    lastWinners: [],
+    userTickets: jackpot.registrationCount ?? 0,
+    drawDate: jackpot.pot?.exploseDateTs
+      ? new Date(jackpot.pot.exploseDateTs).toISOString()
+      : new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    isOptedIn: jackpot.isOptedIn ?? false,
+  };
+}
+
+/**
  * Custom hook for dashboard data aggregation.
  * Fetches data from all gamification services in parallel.
- *
- * TODO: Integrate with existing services:
- * - missionService.getMissions()
- * - bonusService.getBonuses()
- * - miniGameService.getMiniGames()
- * - tournamentService.getTournament()
- * - levelService.getLevel()
- * - jackpotService.getJackpot()
- * - achievementService.getAchievements()
- * - activityService.getActivity()
- * - vipService.getVIPStatus()
- * - streakService.getStreak()
- * - leaderboardService.getLeaderboard()
- * - signalrService for real-time updates
  *
  * @returns Dashboard data, loading state, and error
  */
@@ -44,96 +113,60 @@ export function useDashboardData(): UseDashboardDataState {
 
   useEffect(() => {
     let isMounted = true;
+    const userId = 'demo-user'; // Temporary until JWT authentication
 
     const fetchDashboardData = async () => {
       try {
         setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-        // TODO: Replace with actual service calls
         // Fetch all data in parallel using Promise.all
         const [
-          // missions,
-          // bonuses,
-          // miniGames,
-          // tournament,
-          // level,
-          // jackpot,
-          // achievements,
-          // activityFeed,
-          // vipStatus,
-          // streakData,
-          // leaderboard,
-          // counters,
-        ] = await Promise.all([
-          // missionService.getMissions(),
-          // bonusService.getBonuses(),
-          // miniGameService.getMiniGames(),
-          // tournamentService.getTournament(),
-          // levelService.getLevel(),
-          // jackpotService.getJackpot(),
-          // achievementService.getAchievements(),
-          // activityService.getActivityFeed(),
-          // vipService.getVIPStatus(),
-          // streakService.getStreak(),
-          // leaderboardService.getLeaderboard(),
-          // userService.getCounters(),
+          missionsResult,
+          badgesResult,
+          jackpotsResult,
+        ] = await Promise.allSettled([
+          api.getMissions(userId),
+          api.getBadges(userId),
+          JackpotService.getJackpots(userId),
         ]);
 
-        // Mock data for now (replace with actual data)
-        const today = new Date().toISOString().split('T')[0];
-        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        // Extract results with fallbacks
+        console.log('📊 Raw results:', { missionsResult, badgesResult, jackpotsResult });
 
-        const mockData: DashboardData = {
+        const missions = missionsResult.status === 'fulfilled' ? missionsResult.value : [];
+        const badges = badgesResult.status === 'fulfilled' ? badgesResult.value : [];
+        const jackpots = jackpotsResult.status === 'fulfilled' ? jackpotsResult.value : [];
+
+        if (jackpotsResult.status === 'rejected') {
+          console.error('❌ Jackpots fetch failed:', jackpotsResult.reason);
+        }
+
+        console.log('📊 Dashboard data fetched:', {
+          missions: missions.length,
+          badges: badges.length,
+          jackpots: jackpots.length,
+          jackpotsData: jackpots
+        });
+
+        // Map to dashboard format
+        const dashboardMissions = missions.map(mapMissionToDashboard);
+        const dashboardAchievements = badges.map(mapBadgeToAchievement);
+        const dashboardJackpots = jackpots.map(mapJackpotToDashboard);
+
+        console.log('🎰 Mapped jackpots:', dashboardJackpots);
+
+        // Build dashboard data with real data + mock data for missing services
+        const today = new Date().toISOString().split('T')[0];
+
+        const dashboardData: DashboardData = {
           level: {
             currentLevel: 42,
             currentXP: 8450,
             xpToNextLevel: 10000,
             xpProgress: 84.5,
           },
-          missions: [
-            {
-              id: 1,
-              name: 'Win 10 Games',
-              description: 'Play and win 10 games today',
-              progress: 70,
-              targetValue: 10,
-              currentValue: 7,
-              rewardPoints: 500,
-              deadline: tomorrow,
-              isCompleted: false,
-            },
-            {
-              id: 2,
-              name: 'Complete 5 Missions',
-              description: 'Finish any 5 missions',
-              progress: 100,
-              targetValue: 5,
-              currentValue: 5,
-              rewardPoints: 300,
-              deadline: null,
-              isCompleted: true,
-            },
-          ],
-          achievements: [
-            {
-              id: 1,
-              name: 'First Win',
-              description: 'Win your first game',
-              iconUrl: '',
-              earnedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-              isNew: true,
-              rarity: 'rare',
-            },
-            {
-              id: 2,
-              name: 'Level Master',
-              description: 'Reach level 40',
-              iconUrl: '',
-              earnedAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-              isNew: false,
-              rarity: 'epic',
-            },
-          ],
+          missions: dashboardMissions,
+          achievements: dashboardAchievements,
           bonuses: [
             {
               id: 1,
@@ -141,14 +174,6 @@ export function useDashboardData(): UseDashboardDataState {
               description: 'Get 100% match on your first deposit',
               type: 'deposit',
               expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-              claimed: false,
-            },
-            {
-              id: 2,
-              name: 'Free Spins',
-              description: '50 free spins on selected games',
-              type: 'free-spins',
-              expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
               claimed: false,
             },
           ],
@@ -163,16 +188,6 @@ export function useDashboardData(): UseDashboardDataState {
               jackpotAmount: 10000,
               nextAvailableAt: null,
             },
-            {
-              id: 2,
-              name: 'Mystery Box',
-              description: 'Open a box to reveal your reward',
-              thumbnailUrl: '',
-              gameType: 'gift-box',
-              buyInCost: 100,
-              jackpotAmount: null,
-              nextAvailableAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-            },
           ],
           tournament: {
             id: 1,
@@ -182,35 +197,14 @@ export function useDashboardData(): UseDashboardDataState {
             totalParticipants: 500,
             prizePool: 50000,
           },
-          jackpot: {
-            id: 1,
-            prizePool: 125000,
-            lastWinners: [
-              { username: 'Player_1234', amount: 50000 },
-              { username: 'WinnerPro', amount: 30000 },
-              { username: 'LuckyOne', amount: 25000 },
-            ],
-            userTickets: 5,
-            drawDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-          },
+          jackpots: dashboardJackpots,
+          jackpot: dashboardJackpots[0] ?? null,
           activityFeed: [
             {
               id: '1',
               type: 'level-up',
               message: 'You reached Level 42!',
               timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-            },
-            {
-              id: '2',
-              type: 'achievement',
-              message: 'Achievement unlocked: First Win',
-              timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            },
-            {
-              id: '3',
-              type: 'mission-complete',
-              message: 'Mission completed: Complete 5 Missions',
-              timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
             },
           ],
           personalGoals: [
@@ -221,14 +215,6 @@ export function useDashboardData(): UseDashboardDataState {
               currentValue: 42,
               progress: 84,
               deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            },
-            {
-              id: '2',
-              name: 'Earn 10,000 Points',
-              targetValue: 10000,
-              currentValue: 7500,
-              progress: 75,
-              deadline: null,
             },
           ],
           rewardCalendar: Array.from({ length: 30 }, (_, i) => {
@@ -274,12 +260,13 @@ export function useDashboardData(): UseDashboardDataState {
 
         if (isMounted) {
           setState({
-            data: mockData,
+            data: dashboardData,
             isLoading: false,
             error: null,
           });
         }
       } catch (error) {
+        console.error('❌ Failed to fetch dashboard data:', error);
         if (isMounted) {
           setState({
             data: null,
@@ -301,8 +288,6 @@ export function useDashboardData(): UseDashboardDataState {
     return () => {
       isMounted = false;
       // TODO: Clean up SignalR listeners
-      // signalrService.off('mission-progress', handleMissionProgress);
-      // etc.
     };
   }, []);
 

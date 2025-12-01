@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Bson" Version="3.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\backoffice-api\src\Smartico.BackOffice.Domain\Smartico.BackOffice.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

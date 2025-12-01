@@ -1,6 +1,6 @@
 /**
  * JackpotWidget Component
- * Displays jackpot prize pool with countdown and recent winners.
+ * Displays list of jackpots with opt-in functionality.
  */
 
 import { useState, useEffect } from 'react';
@@ -8,101 +8,168 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useDashboardData } from '../../../hooks/useDashboardData';
 import { useReducedMotion } from '../../../hooks/useReducedMotion';
 import { AnimatedCard, SkeletonLoader, EmptyState } from '../shared';
+import type { Jackpot } from '../../../types/dashboard/data';
+
+/**
+ * Get temperature color based on jackpot temperature.
+ */
+function getTemperatureColor(temp: Jackpot['temperature']): string {
+  switch (temp) {
+    case 'cold': return 'from-blue-400 to-blue-600';
+    case 'warm': return 'from-yellow-400 to-orange-500';
+    case 'hot': return 'from-orange-500 to-red-500';
+    case 'burning': return 'from-red-500 to-pink-600';
+    default: return 'from-blue-400 to-blue-600';
+  }
+}
+
+/**
+ * Get temperature emoji based on jackpot temperature.
+ */
+function getTemperatureEmoji(temp: Jackpot['temperature']): string {
+  switch (temp) {
+    case 'cold': return '❄️';
+    case 'warm': return '🔥';
+    case 'hot': return '🔥🔥';
+    case 'burning': return '💥';
+    default: return '❄️';
+  }
+}
 
 /**
  * Get time remaining until jackpot draw.
  */
-function getTimeRemaining(drawDate: string): { days: number; hours: number; minutes: number; seconds: number } {
+function getTimeRemaining(drawDate: string): string {
   const now = new Date().getTime();
   const draw = new Date(drawDate).getTime();
   const diff = Math.max(0, draw - now);
 
-  return {
-    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-    minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-    seconds: Math.floor((diff % (1000 * 60)) / 1000),
-  };
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }
 
 /**
- * Animated counter component for prize pool.
+ * Single Jackpot Card component.
  */
-function AnimatedPrizeCounter({ amount }: { amount: number }) {
-  const [displayAmount, setDisplayAmount] = useState(amount);
-
-  useEffect(() => {
-    // Animate to new amount
-    const duration = 1000;
-    const steps = 30;
-    const increment = (amount - displayAmount) / steps;
-    let currentStep = 0;
-
-    const interval = setInterval(() => {
-      currentStep++;
-      if (currentStep >= steps) {
-        setDisplayAmount(amount);
-        clearInterval(interval);
-      } else {
-        setDisplayAmount((prev) => prev + increment);
-      }
-    }, duration / steps);
-
-    return () => clearInterval(interval);
-  }, [amount]);
+function JackpotCard({
+  jackpot,
+  isSelected,
+  onSelect,
+  prefersReducedMotion
+}: {
+  jackpot: Jackpot;
+  isSelected: boolean;
+  onSelect: () => void;
+  prefersReducedMotion: boolean;
+}) {
+  const tempColor = getTemperatureColor(jackpot.temperature);
+  const tempEmoji = getTemperatureEmoji(jackpot.temperature);
 
   return (
-    <span className="font-mono">
-      {Math.round(displayAmount).toLocaleString()}
-    </span>
+    <motion.div
+      whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+      onClick={onSelect}
+      className={`
+        relative p-4 rounded-xl cursor-pointer transition-all border-2
+        ${isSelected
+          ? 'border-yellow-500 bg-yellow-500/10'
+          : 'border-transparent bg-slate-800/50 hover:bg-slate-700/50'
+        }
+      `}
+    >
+      {/* Temperature indicator */}
+      <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${tempColor} text-white`}>
+        {tempEmoji} {jackpot.temperature.toUpperCase()}
+      </div>
+
+      {/* Jackpot Name */}
+      <h4 className="text-lg font-bold text-white mb-1 pr-20">
+        {jackpot.name}
+      </h4>
+
+      {/* Description */}
+      <p className="text-xs text-gray-400 mb-3 line-clamp-2">
+        {jackpot.description || 'Win big with this jackpot!'}
+      </p>
+
+      {/* Prize Pool */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-xs text-gray-500">Prize Pool</div>
+          <div className={`text-2xl font-bold bg-gradient-to-r ${tempColor} bg-clip-text text-transparent`}>
+            {jackpot.currency} {jackpot.prizePool.toLocaleString()}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-gray-500">Draw in</div>
+          <div className="text-sm font-medium text-white">
+            {getTimeRemaining(jackpot.drawDate)}
+          </div>
+        </div>
+      </div>
+
+      {/* Opt-in Status */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">👥 {jackpot.userTickets} players</span>
+        </div>
+        <div className={`
+          px-3 py-1 rounded-full text-xs font-medium
+          ${jackpot.isOptedIn
+            ? 'bg-green-500/20 text-green-400'
+            : 'bg-gray-600/30 text-gray-400'
+          }
+        `}>
+          {jackpot.isOptedIn ? '✓ Opted In' : 'Not Opted In'}
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
 /**
  * JackpotWidget component.
- * Displays jackpot with prize pool, tickets, and countdown.
+ * Displays list of jackpots with selection and opt-in.
  */
 export function JackpotWidget() {
   const { data, isLoading } = useDashboardData();
-  const jackpot = data?.jackpot;
+  const jackpots = data?.jackpots ?? [];
   const prefersReducedMotion = useReducedMotion();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const [timeRemaining, setTimeRemaining] = useState(
-    jackpot ? getTimeRemaining(jackpot.drawDate) : { days: 0, hours: 0, minutes: 0, seconds: 0 }
-  );
-
-  // Update countdown timer (every second for jackpot)
+  // Select first jackpot by default
   useEffect(() => {
-    if (!jackpot?.drawDate) return;
+    if (jackpots.length > 0 && selectedId === null) {
+      setSelectedId(jackpots[0].id);
+    }
+  }, [jackpots, selectedId]);
 
-    const updateTimer = () => {
-      setTimeRemaining(getTimeRemaining(jackpot.drawDate));
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-
-    return () => clearInterval(interval);
-  }, [jackpot?.drawDate]);
+  const selectedJackpot = jackpots.find(j => j.id === selectedId);
 
   // Loading state
   if (isLoading) {
     return (
       <AnimatedCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <span>💎</span> Jackpot
+          <span>💎</span> Jackpots
         </h3>
-        <SkeletonLoader variant="card" height={400} />
+        <SkeletonLoader variant="card" height={200} />
       </AnimatedCard>
     );
   }
 
-  // No jackpot active
-  if (!jackpot) {
+  // No jackpots active
+  if (jackpots.length === 0) {
     return (
       <AnimatedCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <span>💎</span> Jackpot
+          <span>💎</span> Jackpots
         </h3>
         <EmptyState
           icon={
@@ -115,8 +182,8 @@ export function JackpotWidget() {
               />
             </svg>
           }
-          title="No Active Jackpot"
-          description="A new jackpot will be available soon! Stay tuned for big prizes."
+          title="No Active Jackpots"
+          description="New jackpots will be available soon! Stay tuned for big prizes."
         />
       </AnimatedCard>
     );
@@ -125,143 +192,48 @@ export function JackpotWidget() {
   return (
     <AnimatedCard className="p-6 relative overflow-hidden">
       {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-pink-500/10 pointer-events-none" />
-      {!prefersReducedMotion && (
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none"
-        />
-      )}
+      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-orange-500/5 to-pink-500/5 pointer-events-none" />
 
       <div className="relative">
         {/* Header */}
-        <div className="text-center mb-6">
-          <motion.div
-            animate={prefersReducedMotion ? {} : { rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="text-5xl mb-2"
-          >
-            💎
-          </motion.div>
-          <h3 className="text-xl font-bold text-white mb-1">Mega Jackpot</h3>
-          <p className="text-sm text-gray-400">Grand Prize Draw</p>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <span>💎</span> Jackpots
+          </h3>
+          <span className="text-sm text-gray-400">{jackpots.length} available</span>
         </div>
 
-        {/* Prize Pool */}
-        <div className="text-center mb-6">
-          <div className="text-xs text-gray-400 mb-2">Current Prize Pool</div>
-          <motion.div
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-4xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 bg-clip-text text-transparent"
-          >
-            <AnimatedPrizeCounter amount={jackpot.prizePool} /> 💰
-          </motion.div>
-        </div>
-
-        {/* Countdown Timer */}
-        <div className="glass-dark-strong rounded-lg p-4 mb-4">
-          <div className="text-xs text-gray-400 text-center mb-3">Draw in</div>
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { label: 'Days', value: timeRemaining.days },
-              { label: 'Hours', value: timeRemaining.hours },
-              { label: 'Min', value: timeRemaining.minutes },
-              { label: 'Sec', value: timeRemaining.seconds },
-            ].map((unit) => (
-              <div key={unit.label} className="text-center">
-                <motion.div
-                  key={unit.value}
-                  initial={{ scale: 1.2, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-2xl font-bold text-white bg-slate-700/50 rounded-lg py-2 mb-1"
-                >
-                  {unit.value.toString().padStart(2, '0')}
-                </motion.div>
-                <div className="text-xs text-gray-400">{unit.label}</div>
-              </div>
+        {/* Jackpot List */}
+        <div className="space-y-3 mb-4">
+          <AnimatePresence>
+            {jackpots.map((jackpot) => (
+              <JackpotCard
+                key={jackpot.id}
+                jackpot={jackpot}
+                isSelected={selectedId === jackpot.id}
+                onSelect={() => setSelectedId(jackpot.id)}
+                prefersReducedMotion={prefersReducedMotion}
+              />
             ))}
-          </div>
+          </AnimatePresence>
         </div>
 
-        {/* User Tickets */}
-        <div className="glass-dark-subtle rounded-lg p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Your Tickets</div>
-              <div className="text-xl font-bold text-white">
-                🎫 {jackpot.userTickets}
-              </div>
-            </div>
-            <motion.button
-              whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-              className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900"
-              style={{
-                background: 'linear-gradient(to right, #d97706, #ea580c)',
-                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.filter = 'brightness(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.filter = 'brightness(1)';
-              }}
-            >
-              Buy Tickets
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Recent Winners */}
-        {jackpot.lastWinners.length > 0 && (
-          <div>
-            <div className="text-xs text-gray-400 mb-2 flex items-center gap-2">
-              <span>🏆</span> Recent Winners
-            </div>
-            <div className="space-y-2">
-              <AnimatePresence>
-                {jackpot.lastWinners.slice(0, 3).map((winner, index) => (
-                  <motion.div
-                    key={`${winner.username}-${index}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="glass-dark-subtle rounded-lg p-3 flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                        style={{
-                          background: 'linear-gradient(to bottom right, #eab308, #f97316)',
-                        }}
-                      >
-                        {winner.username.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm text-gray-300">{winner.username}</span>
-                    </div>
-                    <span className="text-sm font-semibold text-yellow-400">
-                      {winner.amount.toLocaleString()} 💰
-                    </span>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
+        {/* Action Button for Selected Jackpot */}
+        {selectedJackpot && (
+          <motion.button
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+            className={`
+              w-full py-3 rounded-lg font-medium text-white transition-all
+              ${selectedJackpot.isOptedIn
+                ? 'bg-red-600 hover:bg-red-700'
+                : 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'
+              }
+            `}
+          >
+            {selectedJackpot.isOptedIn ? 'Opt Out' : `Opt In to ${selectedJackpot.name}`}
+          </motion.button>
         )}
-
-        {/* TODO: SignalR listener for jackpot-update event */}
-        {/* TODO: SignalR listener for jackpot-won event */}
       </div>
     </AnimatedCard>
   );

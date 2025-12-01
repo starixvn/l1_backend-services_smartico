@@ -1,0 +1,558 @@
+openapi: 3.0.3
+info:
+  title: Smartico Player Dashboard API
+  description: |
+    API endpoints for the player dashboard to retrieve gamification data.
+    These endpoints read from MongoDB populated by the backoffice-api.
+  version: 1.0.0
+  contact:
+    name: Development Team
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+
+paths:
+  /api/jackpots:
+    get:
+      summary: Get all active jackpots
+      description: |
+        Returns all active jackpots for the operator with user opt-in status.
+        Data is read from MongoDB `jackpots` collection.
+      operationId: getJackpots
+      tags:
+        - Jackpots
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          description: User identifier (default: user123 for demo)
+          schema:
+            type: string
+            default: user123
+      responses:
+        '200':
+          description: Successfully retrieved jackpots
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetJackpotsResponse'
+        '400':
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/jackpots/winners:
+    get:
+      summary: Get recent jackpot winners
+      description: Returns winners from the last 30 days with optional type filtering.
+      operationId: getJackpotWinners
+      tags:
+        - Jackpots
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+            default: user123
+        - name: type
+          in: query
+          required: false
+          description: Filter by jackpot type
+          schema:
+            type: integer
+            enum: [1, 2]
+            description: "1=MultiUser, 2=Personal"
+      responses:
+        '200':
+          description: Successfully retrieved winners
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetJackpotWinnersResponse'
+
+  /api/jackpots/{templateId}/opt-in:
+    post:
+      summary: Opt into a jackpot
+      description: User becomes eligible for jackpot prizes.
+      operationId: optInJackpot
+      tags:
+        - Jackpots
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OptInRequest'
+      responses:
+        '200':
+          description: Successfully opted in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptInJackpotResponse'
+        '404':
+          description: Jackpot not found
+        '409':
+          description: User already opted in
+
+  /api/jackpots/{templateId}/opt-out:
+    post:
+      summary: Opt out of a jackpot
+      description: User stops contributing and is no longer eligible for prizes.
+      operationId: optOutJackpot
+      tags:
+        - Jackpots
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OptOutRequest'
+      responses:
+        '200':
+          description: Successfully opted out
+        '404':
+          description: Jackpot not found
+        '409':
+          description: User not opted in
+
+  /api/missions:
+    get:
+      summary: Get all missions for user
+      description: |
+        Returns all active missions with user progress.
+        Data is read from MongoDB `missions` collection.
+      operationId: getMissions
+      tags:
+        - Missions
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved missions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseMissions'
+        '400':
+          description: User ID is required
+        '500':
+          description: Failed to fetch missions
+
+  /api/missions/{id}:
+    get:
+      summary: Get mission by ID
+      operationId: getMissionById
+      tags:
+        - Missions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved mission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseMission'
+        '404':
+          description: Mission not found
+
+  /api/missions/{id}/opt-in:
+    post:
+      summary: Opt into a mission
+      operationId: optInMission
+      tags:
+        - Missions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully opted in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseMissionOptIn'
+
+  /api/missions/{id}/claim:
+    post:
+      summary: Claim mission reward
+      operationId: claimMissionReward
+      tags:
+        - Missions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully claimed reward
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseMissionClaim'
+
+  /api/badges:
+    get:
+      summary: Get all badges for user
+      description: |
+        Returns all active badges with earned status.
+        Data is read from MongoDB `badges` collection.
+      operationId: getBadges
+      tags:
+        - Badges
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved badges
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseBadges'
+        '400':
+          description: User ID is required
+        '500':
+          description: Failed to fetch badges
+
+  /api/badges/{id}:
+    get:
+      summary: Get badge by ID
+      operationId: getBadgeById
+      tags:
+        - Badges
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved badge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseBadge'
+        '404':
+          description: Badge not found
+
+components:
+  schemas:
+    # Jackpot Schemas
+    GetJackpotsResponse:
+      type: object
+      properties:
+        jackpots:
+          type: array
+          items:
+            $ref: '#/components/schemas/JackpotDto'
+
+    JackpotDto:
+      type: object
+      properties:
+        templateId:
+          type: integer
+          description: Jackpot identifier
+        publicMeta:
+          $ref: '#/components/schemas/JackpotPublicMeta'
+        pots:
+          type: array
+          items:
+            $ref: '#/components/schemas/JackpotPot'
+        isOptedIn:
+          type: boolean
+          description: Whether user has opted into this jackpot
+        temperature:
+          type: string
+          enum: [Hot, Warm, Cold]
+          description: Likelihood indicator based on current value
+
+    JackpotPublicMeta:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+
+    JackpotPot:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Tier name (Grand, Major, Minor, Mini)
+        currentValue:
+          type: number
+          format: decimal
+
+    GetJackpotWinnersResponse:
+      type: object
+      properties:
+        winners:
+          type: array
+          items:
+            $ref: '#/components/schemas/JackpotWinner'
+
+    JackpotWinner:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Masked username
+        amount:
+          type: number
+          format: decimal
+        wonAt:
+          type: string
+          format: date-time
+
+    OptInRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+
+    OptOutRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+
+    OptInJackpotResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        jackpot:
+          $ref: '#/components/schemas/JackpotDto'
+
+    # Mission Schemas
+    ApiResponseMissions:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mission'
+        message:
+          type: string
+          nullable: true
+
+    ApiResponseMission:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Mission'
+        message:
+          type: string
+          nullable: true
+
+    Mission:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Progress percentage
+        targetValue:
+          type: integer
+          description: Goal target count
+        currentValue:
+          type: integer
+          description: Current progress count
+        rewardAmount:
+          type: integer
+          description: XP or points reward
+        rewardCurrency:
+          type: string
+          default: XP
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        isCompleted:
+          type: boolean
+
+    ApiResponseMissionOptIn:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/MissionOptInResult'
+
+    MissionOptInResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ApiResponseMissionClaim:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/MissionClaimResult'
+
+    MissionClaimResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        rewardAmount:
+          type: integer
+        rewardCurrency:
+          type: string
+
+    # Badge Schemas
+    ApiResponseBadges:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Badge'
+        message:
+          type: string
+          nullable: true
+
+    ApiResponseBadge:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Badge'
+        message:
+          type: string
+          nullable: true
+
+    Badge:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        category:
+          type: string
+          enum: [Common, Rare, Epic, Legendary]
+          description: Badge rarity
+        isEarned:
+          type: boolean
+        earnedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # Common Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+
+tags:
+  - name: Jackpots
+    description: Jackpot operations
+  - name: Missions
+    description: Mission operations
+  - name: Badges
+    description: Badge operations

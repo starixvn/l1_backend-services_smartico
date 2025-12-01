@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using Serilog;
 using Smartico.Missions.Api.Filters;
 using Smartico.Missions.Api.Middleware;
 using Smartico.Missions.Application;
 using Smartico.Missions.Domain.Interfaces;
 using Smartico.Missions.Infrastructure;
+using Smartico.Missions.Infrastructure.Configuration;
 using Smartico.Missions.Infrastructure.SignalR;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -147,6 +150,27 @@ try
 
     // Memory Cache
     builder.Services.AddMemoryCache();
+
+    // MongoDB Configuration (shared database with backoffice-api)
+    builder.Services.Configure<MongoDbSettings>(
+        builder.Configuration.GetSection("MongoDb"));
+
+    // Demo Settings (default operator ID for player dashboard)
+    builder.Services.Configure<Smartico.Missions.Domain.Configuration.DemoSettings>(
+        builder.Configuration.GetSection("Demo"));
+
+    builder.Services.AddSingleton<IMongoClient>(sp =>
+    {
+        var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+        return new MongoClient(settings.ConnectionString);
+    });
+
+    builder.Services.AddScoped(sp =>
+    {
+        var client = sp.GetRequiredService<IMongoClient>();
+        var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+        return client.GetDatabase(settings.DatabaseName);
+    });
 
     // Application services (MediatR, CQRS handlers)
     builder.Services.AddApplication();

@@ -84,10 +84,15 @@ export interface Tournament {
  */
 export interface Jackpot {
   id: number;
+  name: string;
+  description: string;
   prizePool: number;
+  currency: string;
+  temperature: 'cold' | 'warm' | 'hot' | 'burning';
   lastWinners: { username: string; amount: number }[];
   userTickets: number;
   drawDate: string; // ISO 8601 date
+  isOptedIn: boolean;
 }
 
 /**
@@ -184,7 +189,10 @@ export interface DashboardData {
   /** Active tournament with user's rank */
   tournament: Tournament | null;
 
-  /** Jackpot prize pool and user's status */
+  /** All available jackpots */
+  jackpots: Jackpot[];
+
+  /** Primary jackpot for widget display (first jackpot) */
   jackpot: Jackpot | null;
 
   /** Recent activity feed events (last 10) */
