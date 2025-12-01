@@ -18,6 +18,8 @@ using Smartico.BackOffice.Application.BadgeSeries.Interfaces;
 using Smartico.BackOffice.Application.BadgeSeries.Services;
 using Smartico.BackOffice.Application.Jackpots.Interfaces;
 using Smartico.BackOffice.Application.Jackpots.Services;
+using Smartico.BackOffice.Application.Demo.Interfaces;
+using Smartico.BackOffice.Application.Demo.Services;
 using Smartico.BackOffice.Domain.Services;
 using Smartico.BackOffice.Application.Leaderboard.Interfaces;
 using Smartico.BackOffice.Application.Leaderboard.Services;
@@ -216,6 +218,7 @@ builder.Services.AddScoped<ILevelSystemService, LevelSystemService>();
 builder.Services.AddScoped<IBadgeService, BadgeService>();
 builder.Services.AddScoped<IBadgeSeriesService, BadgeSeriesService>();
 builder.Services.AddScoped<IJackpotService, JackpotService>();
+builder.Services.AddScoped<IDemoScenarioService, DemoScenarioService>();
 
 // Register command handlers
 builder.Services.AddScoped<PublishMissionCommandHandler>();

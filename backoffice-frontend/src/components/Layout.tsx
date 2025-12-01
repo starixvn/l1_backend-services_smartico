@@ -170,7 +170,7 @@ export const Layout: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main>
+      <main className="max-w-7xl mx-auto px-4 py-6">
         <Outlet />
       </main>
 

@@ -128,27 +128,27 @@ Jackpots are prize pools that can be won by players meeting specific trigger con
 
 ### Jackpot Types
 
-| Type | How It Works | Best For |
-|------|--------------|----------|
-| **Progressive** | Grows with each qualifying bet (contribution rate) | Building excitement over time |
-| **Fixed** | Static amount that doesn't change | Predictable costs, frequent wins |
+| Type | Description |
+|------|-------------|
+| **Progressive** | Grows with each qualifying bet |
+| **Fixed** | Static amount, doesn't change |
 
 ### Trigger Types
 
-| Trigger | Description | Use Case |
-|---------|-------------|----------|
-| **Random** | Probability-based (e.g., 0.01% chance per bet) | Classic jackpot experience |
-| **Value-Based** | Triggers when bet meets threshold (e.g., $50+ bet) | Reward high-stakes players |
-| **Time-Based** | Must-drop at scheduled time (hourly/daily/weekly) | Create appointment viewing |
-| **Amount-Based** | Must-drop when jackpot reaches target value (e.g., $2,000) | Guaranteed excitement threshold |
+| Trigger | Description |
+|---------|-------------|
+| **Random** | Probability-based per bet |
+| **Value-Based** | Triggers on bet threshold |
+| **Time-Based** | Must-drop at scheduled time |
+| **Amount-Based** | Must-drop at target value |
 
-### Prize Distribution Options
+### Prize Distribution
 
-| Distribution | Description | Use Case |
-|--------------|-------------|----------|
-| **Winner Takes All** | Single winner gets entire jackpot | Maximum excitement |
-| **Split Among Winners** | Top N players share the prize | More winners, more engagement |
-| **Proportional to Wager** | Prize based on player's bet contribution | Fair reward for activity |
+| Type | Description |
+|------|-------------|
+| **Winner Takes All** | Single winner gets all |
+| **Split Among Winners** | Top N players share |
+| **Proportional** | Based on wager contribution |
 
 ### Example Scenarios
 
@@ -158,18 +158,18 @@ Jackpots are prize pools that can be won by players meeting specific trigger con
 
 **Solution**: Create "Mega Fortune Jackpot" with 4 tiers:
 
-| Tier | Seed Amount | Contribution Rate | Trigger |
-|------|-------------|-------------------|---------|
-| **Grand** | $10,000 | 0.1% of each bet | Random (0.0001% chance) |
-| **Major** | $1,000 | 0.05% of each bet | Random (0.001% chance) |
-| **Minor** | $100 | 0.03% of each bet | Random (0.01% chance) |
-| **Mini** | $10 | 0.02% of each bet | Random (0.1% chance) |
+| Tier | Seed | Rate | Trigger |
+|------|------|------|---------|
+| Grand | $10,000 | 0.1% | Random 0.0001% |
+| Major | $1,000 | 0.05% | Random 0.001% |
+| Minor | $100 | 0.03% | Random 0.01% |
+| Mini | $10 | 0.02% | Random 0.1% |
 
-**Prize Distribution**: Winner Takes All
-**Reset Behavior**: Reset to Seed
-**Eligible Games**: All Slots
+- **Distribution**: Winner Takes All
+- **Reset**: To Seed
+- **Games**: All Slots
 
-**Expected Outcome**: Players stay longer chasing the growing jackpot.
+**Expected**: Players stay longer chasing the growing jackpot.
 
 ---
 
@@ -179,16 +179,16 @@ Jackpots are prize pools that can be won by players meeting specific trigger con
 
 **Solution**: Create "Daily Drop" jackpot:
 
-| Tier | Seed Amount | Contribution Rate | Trigger |
-|------|-------------|-------------------|---------|
-| **Daily Grand** | $500 | 0.2% of each bet | Time-Based (Daily at 21:00 UTC) |
-| **Hourly Mini** | $25 | 0.1% of each bet | Time-Based (Hourly) |
+| Tier | Seed | Rate | Trigger |
+|------|------|------|---------|
+| Daily Grand | $500 | 0.2% | Daily 21:00 UTC |
+| Hourly Mini | $25 | 0.1% | Hourly |
 
-**Prize Distribution**: Winner Takes All
-**Reset Behavior**: Reset to Seed
-**Eligible Games**: Featured Slots (wukong, candy-land, olympub)
+- **Distribution**: Winner Takes All
+- **Reset**: To Seed
+- **Games**: wukong, candy-land, olympub
 
-**Expected Outcome**: Players return daily for guaranteed drop times, 30% increase in evening activity.
+**Expected**: 30% increase in evening activity.
 
 ---
 
@@ -198,40 +198,34 @@ Jackpots are prize pools that can be won by players meeting specific trigger con
 
 **Solution**: Create "Guaranteed $2K Drop" jackpot:
 
-| Tier | Seed Amount | Contribution Rate | Trigger |
-|------|-------------|-------------------|---------|
-| **Mega Drop** | $500 | 0.15% of each bet | Amount-Based ($2,000) |
+| Tier | Seed | Rate | Trigger |
+|------|------|------|---------|
+| Mega Drop | $500 | 0.15% | At $2,000 |
 
-**Prize Distribution**: Proportional to Wager
-**Configuration**:
-- Max Winners: 10
-- Minimum Wager to Qualify: $10
-- Max Percentage Per Player: 50%
+- **Distribution**: Proportional to Wager
+- **Max Winners**: 10
+- **Min Wager**: $10
+- **Max Per Player**: 50%
 
-**Reset Behavior**: Reset to Seed
-**Eligible Games**: All Slots
-
-**Expected Outcome**: When jackpot approaches $2,000, player activity spikes as everyone wants to qualify for the drop.
+**Expected**: Activity spikes as jackpot approaches $2K.
 
 ---
 
 #### Scenario D: Tournament-Style Split Jackpot
 
-**Situation**: You want multiple winners to increase excitement and social proof.
+**Situation**: You want multiple winners for social proof.
 
 **Solution**: Create "Lucky 10 Jackpot":
 
-| Tier | Seed Amount | Contribution Rate | Trigger |
-|------|-------------|-------------------|---------|
-| **Lucky 10** | $1,000 | 0.1% of each bet | Random (0.001% chance) |
+| Tier | Seed | Rate | Trigger |
+|------|------|------|---------|
+| Lucky 10 | $1,000 | 0.1% | Random 0.001% |
 
-**Prize Distribution**: Split Among Winners
-- Max Winners: 10
-- Winner Percentages: [30%, 20%, 15%, 10%, 8%, 6%, 5%, 3%, 2%, 1%]
+- **Distribution**: Split Among Winners
+- **Max Winners**: 10
+- **Split**: 30/20/15/10/8/6/5/3/2/1%
 
-**Reset Behavior**: Reset to Seed
-
-**Expected Outcome**: 10 winners per jackpot creates social buzz and "it could be me" mentality.
+**Expected**: 10 winners creates "it could be me" buzz.
 
 ---
 
@@ -250,25 +244,25 @@ The Level System creates a progression path where players earn XP (experience po
 
 ### XP Sources
 
-| Activity | Example XP Rule | Daily Cap |
-|----------|-----------------|-----------|
-| **Wagering** | 1 XP per $10 wagered | 1,000 XP |
-| **Deposits** | 5 XP per $10 deposited | No cap |
-| **Mission Completion** | Varies per mission (0-100,000 XP) | No cap |
-| **Tournament Win** | 200 XP per win | No cap |
-| **Tournament Participation** | 50 XP per entry | No cap |
-| **Daily Login** | 10 XP per day | 10 XP |
-| **Badge Unlock** | Varies per badge | No cap |
+| Activity | XP Rule | Cap |
+|----------|---------|-----|
+| Wagering | 1 XP / $10 | 1,000/day |
+| Deposits | 5 XP / $10 | None |
+| Mission | Varies | None |
+| Tournament Win | 200 XP | None |
+| Tournament Entry | 50 XP | None |
+| Daily Login | 10 XP | 10/day |
+| Badge Unlock | Varies | None |
 
 ### Tier Structure Example
 
 | Tier | Levels | Benefits |
 |------|--------|----------|
-| **Bronze** | 1-10 | Standard experience |
-| **Silver** | 11-25 | 2% Cashback Boost |
-| **Gold** | 26-50 | 5% Cashback Boost, VIP Support |
-| **Platinum** | 51-75 | 8% Cashback Boost, VIP Support, Exclusive Tournaments |
-| **Diamond** | 76-100 | 15% Cashback Boost, VIP Support, Exclusive Tournaments, Higher Limits |
+| Bronze | 1-10 | Standard |
+| Silver | 11-25 | 2% Cashback |
+| Gold | 26-50 | 5% Cashback, VIP |
+| Platinum | 51-75 | 8% Cashback, VIP, Tournaments |
+| Diamond | 76-100 | 15% Cashback, VIP, All Perks |
 
 ### Example Scenario: Complete VIP Program
 
