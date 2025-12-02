@@ -20,10 +20,14 @@ import { WidgetGrid } from './components/dashboard/WidgetGrid';
 import { LayoutCustomizer } from './components/dashboard/LayoutCustomizer';
 import { ThemeCustomizer } from './components/dashboard/ThemeCustomizer';
 import { useReducedMotion } from './hooks/useReducedMotion';
+import { XSpeedDashboardPage } from './pages/XSpeedDashboardPage';
+
+type ActivePage = 'dashboard' | 'velocity';
 
 export function DashboardApp() {
   const [isLayoutCustomizerOpen, setIsLayoutCustomizerOpen] = useState(false);
   const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
+  const [activePage, setActivePage] = useState<ActivePage>('dashboard');
   const prefersReducedMotion = useReducedMotion();
 
   // Listen for custom event to open layout customizer
@@ -32,6 +36,29 @@ export function DashboardApp() {
     window.addEventListener('open-layout-customizer', handleOpenCustomizer);
     return () => window.removeEventListener('open-layout-customizer', handleOpenCustomizer);
   }, []);
+
+  // Handle hash-based routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash === 'velocity') {
+        setActivePage('velocity');
+      } else {
+        setActivePage('dashboard');
+      }
+    };
+
+    // Set initial page from hash
+    handleHashChange();
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Render the Velocity Dashboard page
+  if (activePage === 'velocity') {
+    return <XSpeedDashboardPage />;
+  }
 
   return (
     <DashboardProvider>

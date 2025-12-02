@@ -47,6 +47,8 @@ export const NavigationItem = forwardRef<HTMLAnchorElement, NavigationItemProps>
   ({ data, isActive, onClick, onKeyDown, role = 'menuitem' }, ref) => {
     const handleClick = (e: React.MouseEvent) => {
       e.preventDefault();
+      // Update the URL hash to trigger hash-based routing
+      window.location.hash = data.href.slice(1); // Remove # from href
       onClick();
     };
 

@@ -1,0 +1,626 @@
+openapi: 3.0.3
+info:
+  title: xSpeed Velocity Program API
+  description: |
+    API endpoints for the xSpeed Velocity Program Level Dashboard.
+    These endpoints extend the existing Level API to support Velocity Tier-specific features.
+  version: 1.0.0
+  contact:
+    name: Smartico Development Team
+
+servers:
+  - url: http://localhost:5227/api
+    description: Local development server
+  - url: https://api.smartico.com/api
+    description: Production server
+
+tags:
+  - name: Velocity
+    description: xSpeed Velocity Program tier and progress endpoints
+  - name: XP Activity
+    description: XP earning activity tracking
+
+paths:
+  /velocity/progress:
+    get:
+      tags:
+        - Velocity
+      summary: Get player's Velocity tier progress
+      description: |
+        Returns the player's current Velocity tier, XP progress, and tier benefits.
+        Maps to existing Level API with Velocity tier context.
+      operationId: getVelocityProgress
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: Player's unique identifier
+          schema:
+            type: string
+            example: "demo-user"
+      responses:
+        '200':
+          description: Velocity progress retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VelocityProgressResponse'
+        '400':
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: No progress data found for user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /velocity/tiers:
+    get:
+      tags:
+        - Velocity
+      summary: Get all Velocity tier definitions
+      description: |
+        Returns the static configuration for all Velocity tiers including
+        XP thresholds, benefits, and visual branding.
+      operationId: getVelocityTiers
+      responses:
+        '200':
+          description: Tier definitions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VelocityTiersResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /velocity/missions:
+    get:
+      tags:
+        - Velocity
+      summary: Get tier-gated mission availability
+      description: |
+        Returns all missions with their tier requirements and availability
+        status for the specified player.
+      operationId: getVelocityMissions
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: Player's unique identifier
+          schema:
+            type: string
+            example: "demo-user"
+      responses:
+        '200':
+          description: Mission availability retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VelocityMissionsResponse'
+        '400':
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /velocity/xp-activity:
+    get:
+      tags:
+        - XP Activity
+      summary: Get recent XP-earning activities
+      description: |
+        Returns a feed of recent XP-earning activities for the player,
+        including game play, mission completions, and bonuses.
+      operationId: getXpActivity
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: Player's unique identifier
+          schema:
+            type: string
+            example: "demo-user"
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of activities to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: type
+          in: query
+          required: false
+          description: Filter by activity type
+          schema:
+            type: string
+            enum:
+              - slot_play
+              - table_play
+              - mission_complete
+              - bonus
+              - promotion
+      responses:
+        '200':
+          description: XP activities retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/XpActivityResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /velocity/level-up-events:
+    get:
+      tags:
+        - Velocity
+      summary: Get unacknowledged level-up events
+      description: |
+        Returns any pending level-up events that haven't been
+        acknowledged by the player (for celebration display).
+      operationId: getLevelUpEvents
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: Player's unique identifier
+          schema:
+            type: string
+            example: "demo-user"
+      responses:
+        '200':
+          description: Level-up events retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelUpEventsResponse'
+        '400':
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /velocity/level-up-events/{eventId}/acknowledge:
+    post:
+      tags:
+        - Velocity
+      summary: Acknowledge a level-up event
+      description: |
+        Marks a level-up event as acknowledged so it won't
+        trigger the celebration again.
+      operationId: acknowledgeLevelUp
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          description: Level-up event identifier
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: true
+          description: Player's unique identifier
+          schema:
+            type: string
+            example: "demo-user"
+      responses:
+        '204':
+          description: Event acknowledged successfully
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  schemas:
+    VelocityProgressResponse:
+      type: object
+      required:
+        - progress
+      properties:
+        progress:
+          $ref: '#/components/schemas/PlayerVelocityProgress'
+
+    PlayerVelocityProgress:
+      type: object
+      required:
+        - userId
+        - currentTier
+        - currentTierName
+        - totalXp
+        - currentTierXpThreshold
+        - progressPercentage
+        - isMaxTier
+        - tierAchievedAt
+        - xpBreakdown
+      properties:
+        userId:
+          type: string
+          description: Player's unique identifier
+        currentTier:
+          type: integer
+          minimum: 1
+          maximum: 4
+          description: Current tier number (1-4)
+        currentTierName:
+          type: string
+          description: Display name of current tier
+          example: "Cruiser"
+        totalXp:
+          type: integer
+          minimum: 0
+          description: Total XP accumulated
+        currentTierXpThreshold:
+          type: integer
+          description: XP required to reach current tier
+        nextTierXpThreshold:
+          type: integer
+          nullable: true
+          description: XP required for next tier (null if max)
+        xpToNextTier:
+          type: integer
+          nullable: true
+          description: XP remaining to reach next tier
+        progressPercentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Progress percentage within current tier
+        isMaxTier:
+          type: boolean
+          description: Whether player is at maximum tier
+        tierAchievedAt:
+          type: string
+          format: date-time
+          description: When current tier was achieved
+        xpBreakdown:
+          $ref: '#/components/schemas/XpBreakdown'
+
+    XpBreakdown:
+      type: object
+      required:
+        - slots
+        - tableGames
+        - missions
+        - other
+      properties:
+        slots:
+          type: integer
+          description: XP from slot games
+        tableGames:
+          type: integer
+          description: XP from table games
+        missions:
+          type: integer
+          description: XP from mission completions
+        other:
+          type: integer
+          description: XP from other sources
+
+    VelocityTiersResponse:
+      type: object
+      required:
+        - tiers
+      properties:
+        tiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/VelocityTier'
+
+    VelocityTier:
+      type: object
+      required:
+        - tierNumber
+        - name
+        - xpRequired
+        - benefit
+        - rarity
+        - iconUrl
+        - themeColor
+        - dailyMissionCount
+        - unlockedMissions
+        - unlockedFeatures
+      properties:
+        tierNumber:
+          type: integer
+          minimum: 1
+          maximum: 4
+        name:
+          type: string
+          example: "Cruiser"
+        xpRequired:
+          type: integer
+          minimum: 0
+        benefit:
+          type: string
+          description: Primary benefit description
+        rarity:
+          type: string
+          enum:
+            - common
+            - rare
+            - epic
+            - legendary
+        iconUrl:
+          type: string
+          format: uri
+        themeColor:
+          type: string
+          description: CSS color value
+        dailyMissionCount:
+          type: integer
+          minimum: 1
+          maximum: 4
+        unlockedMissions:
+          type: array
+          items:
+            type: string
+        unlockedFeatures:
+          type: array
+          items:
+            $ref: '#/components/schemas/TierFeature'
+
+    TierFeature:
+      type: object
+      required:
+        - type
+        - name
+        - description
+      properties:
+        type:
+          type: string
+          enum:
+            - jackpot
+            - tournament
+            - multiplier
+            - mission
+        name:
+          type: string
+        description:
+          type: string
+        value:
+          type: number
+          nullable: true
+          description: Numeric value if applicable
+
+    VelocityMissionsResponse:
+      type: object
+      required:
+        - missions
+        - playerTier
+      properties:
+        missions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TierMission'
+        playerTier:
+          type: integer
+          description: Player's current tier for context
+
+    TierMission:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - requiredTier
+        - isAvailable
+        - isCompleted
+        - xpReward
+        - rewards
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: "The Daily Driver"
+        description:
+          type: string
+        requiredTier:
+          type: integer
+          minimum: 1
+          maximum: 4
+        isAvailable:
+          type: boolean
+        isCompleted:
+          type: boolean
+        xpReward:
+          type: integer
+        rewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/MissionReward'
+
+    MissionReward:
+      type: object
+      required:
+        - type
+        - value
+        - description
+      properties:
+        type:
+          type: string
+          enum:
+            - free_spins
+            - cash
+            - xp_boost
+            - badge
+        value:
+          type: number
+        description:
+          type: string
+
+    XpActivityResponse:
+      type: object
+      required:
+        - activities
+        - totalCount
+      properties:
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/XpActivity'
+        totalCount:
+          type: integer
+          description: Total activities available
+
+    XpActivity:
+      type: object
+      required:
+        - id
+        - type
+        - description
+        - xpEarned
+        - timestamp
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - slot_play
+            - table_play
+            - mission_complete
+            - bonus
+            - promotion
+        description:
+          type: string
+        xpEarned:
+          type: integer
+          minimum: 1
+        timestamp:
+          type: string
+          format: date-time
+        reference:
+          $ref: '#/components/schemas/ActivityReference'
+
+    ActivityReference:
+      type: object
+      required:
+        - type
+        - id
+        - name
+      properties:
+        type:
+          type: string
+          enum:
+            - game
+            - mission
+        id:
+          type: string
+        name:
+          type: string
+
+    LevelUpEventsResponse:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/LevelUpEvent'
+
+    LevelUpEvent:
+      type: object
+      required:
+        - id
+        - previousTier
+        - previousTierName
+        - newTier
+        - newTierName
+        - achievedAt
+        - newBenefits
+        - newMissions
+        - acknowledged
+      properties:
+        id:
+          type: string
+        previousTier:
+          type: integer
+        previousTierName:
+          type: string
+        newTier:
+          type: integer
+        newTierName:
+          type: string
+        achievedAt:
+          type: string
+          format: date-time
+        newBenefits:
+          type: array
+          items:
+            $ref: '#/components/schemas/TierFeature'
+        newMissions:
+          type: array
+          items:
+            type: string
+        acknowledged:
+          type: boolean
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string

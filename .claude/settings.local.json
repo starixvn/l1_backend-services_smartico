@@ -24,7 +24,18 @@
       "Bash(curl:*)",
       "Bash(npm run build:*)",
       "Bash(timeout /t 3)",
-      "Bash(dotnet remove:*)"
+      "Bash(dotnet remove:*)",
+      "Bash(mongosh:*)",
+      "Bash(xargs basename:*)",
+      "SlashCommand(/speckit.analyze)",
+      "SlashCommand(/speckit.tasks)",
+      "Bash(git fetch:*)",
+      "Bash(git -C f:/Projects/smartico branch:*)",
+      "SlashCommand(/speckit.plan)",
+      "Bash(mkdir:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \".speckit/scripts/powershell/setup-plan.ps1\" -Json)",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []
