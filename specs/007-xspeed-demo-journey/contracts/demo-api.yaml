@@ -1,0 +1,405 @@
+openapi: 3.0.3
+info:
+  title: xSpeed Demo Journey API
+  description: |
+    API endpoints for setting up xSpeed "Velocity Program" demo scenarios.
+    Extends existing Demo API with xSpeed-specific scenarios.
+  version: 1.0.0
+  contact:
+    name: Smartico Team
+
+servers:
+  - url: http://localhost:5120/api
+    description: Local development server
+
+tags:
+  - name: Demo Setup
+    description: xSpeed demo scenario setup endpoints
+
+paths:
+  /demo/scenarios:
+    get:
+      tags:
+        - Demo Setup
+      summary: Get all available demo scenarios
+      description: |
+        Returns list of all demo scenarios including xSpeed scenarios.
+        xSpeed scenarios have IDs prefixed with "xspeed-".
+      operationId: getScenarios
+      responses:
+        '200':
+          description: List of available scenarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DemoScenarioDto'
+              example:
+                - id: "xspeed-velocity-program"
+                  name: "xSpeed Velocity Program (Complete)"
+                  description: "Complete xSpeed gamification journey with all tiers, missions, jackpots, and badges"
+                  category: "Complete"
+                  entities:
+                    - "4 Velocity Tier Badges"
+                    - "4 Level-Gated Missions"
+                    - "3 xSpeed Mystery Drop Jackpots"
+                  expectedOutcome: "Full xSpeed gamification system ready for demonstration"
+                - id: "xspeed-phase-1"
+                  name: "xSpeed Phase 1 (Soft Launch)"
+                  description: "Phase 1: Levels 1-2, Daily Driver mission, basic badges"
+                  category: "Complete"
+                  entities:
+                    - "2 Velocity Tier Badges (Ignition, Cruiser)"
+                    - "1 Mission (Daily Driver)"
+                  expectedOutcome: "Soft launch configuration for testing"
+
+  /demo/setup/xspeed-velocity-program:
+    post:
+      tags:
+        - Demo Setup
+      summary: Setup complete xSpeed Velocity Program
+      description: |
+        Creates the complete xSpeed gamification journey including:
+        - 4 Velocity Tier achievement badges
+        - 4 Level-gated missions (Daily Driver, Explorer, Table Tactician, Whale Challenge)
+        - 3 xSpeed Mystery Drop jackpots (Hourly, Daily, Mega)
+
+        Use `activate=true` to immediately activate all entities.
+      operationId: setupXSpeedVelocityProgram
+      parameters:
+        - name: activate
+          in: query
+          description: If true, activate all created entities immediately
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Setup completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoSetupResultDto'
+              example:
+                scenarioId: "xspeed-velocity-program"
+                scenarioName: "xSpeed Velocity Program (Complete)"
+                success: true
+                message: "Successfully created 11 entities for scenario 'xSpeed Velocity Program'"
+                createdEntities:
+                  - type: "BadgeSeries"
+                    id: "673f..."
+                    name: "Velocity Tiers"
+                    status: "Active"
+                  - type: "Badge"
+                    id: "673f..."
+                    name: "Ignition Badge"
+                    status: "Active"
+                  - type: "Mission"
+                    id: "673f..."
+                    name: "The Daily Driver"
+                    status: "Active"
+                  - type: "Jackpot"
+                    id: "673f..."
+                    name: "Hourly Prize Drop"
+                    status: "Active"
+        '400':
+          description: Invalid request or setup failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Operator context not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /demo/setup/xspeed-phase-1:
+    post:
+      tags:
+        - Demo Setup
+      summary: Setup xSpeed Phase 1 (Soft Launch)
+      description: |
+        Creates Phase 1 entities only:
+        - Velocity Tiers 1-2 (Ignition, Cruiser badges)
+        - Daily Driver mission (Level 1+)
+
+        Use this for demonstrating soft launch configuration.
+      operationId: setupXSpeedPhase1
+      parameters:
+        - name: activate
+          in: query
+          description: If true, activate all created entities immediately
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Phase 1 setup completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoSetupResultDto'
+              example:
+                scenarioId: "xspeed-phase-1"
+                scenarioName: "xSpeed Phase 1 (Soft Launch)"
+                success: true
+                message: "Successfully created 3 entities for scenario 'xSpeed Phase 1'"
+                createdEntities:
+                  - type: "Badge"
+                    id: "673f..."
+                    name: "Ignition Badge"
+                    status: "Active"
+                  - type: "Badge"
+                    id: "673f..."
+                    name: "Cruiser Badge"
+                    status: "Active"
+                  - type: "Mission"
+                    id: "673f..."
+                    name: "The Daily Driver"
+                    status: "Active"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /demo/setup/xspeed-phase-2:
+    post:
+      tags:
+        - Demo Setup
+      summary: Setup xSpeed Phase 2 (Expansion)
+      description: |
+        Creates Phase 2 entities:
+        - All 4 Velocity Tier badges
+        - Table Tactician mission (Level 3+)
+        - Hourly Prize Drop jackpot
+
+        Use this after Phase 1 to demonstrate expansion.
+      operationId: setupXSpeedPhase2
+      parameters:
+        - name: activate
+          in: query
+          description: If true, activate all created entities immediately
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Phase 2 setup completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoSetupResultDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /demo/setup/xspeed-phase-3:
+    post:
+      tags:
+        - Demo Setup
+      summary: Setup xSpeed Phase 3 (Full Velocity)
+      description: |
+        Creates Phase 3 entities to complete the journey:
+        - All missions including Explorer and Whale Challenge
+        - All jackpots (Hourly, Daily, Mega)
+        - Cross-sell missions for Keno/Lottery
+
+        Use this after Phase 2 for full velocity rollout.
+      operationId: setupXSpeedPhase3
+      parameters:
+        - name: activate
+          in: query
+          description: If true, activate all created entities immediately
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Phase 3 setup completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoSetupResultDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    DemoScenarioDto:
+      type: object
+      description: Represents a demo scenario definition
+      properties:
+        id:
+          type: string
+          description: Unique scenario identifier
+          example: "xspeed-velocity-program"
+        name:
+          type: string
+          description: Display name
+          example: "xSpeed Velocity Program (Complete)"
+        description:
+          type: string
+          description: Scenario description
+          example: "Complete xSpeed gamification journey"
+        category:
+          type: string
+          description: Scenario category
+          enum:
+            - Mission
+            - Jackpot
+            - Badge
+            - Complete
+          example: "Complete"
+        entities:
+          type: array
+          items:
+            type: string
+          description: List of entity types created
+          example:
+            - "4 Velocity Tier Badges"
+            - "4 Level-Gated Missions"
+        expectedOutcome:
+          type: string
+          description: Expected business outcome
+          example: "Full xSpeed gamification system ready"
+      required:
+        - id
+        - name
+        - category
+
+    DemoSetupResultDto:
+      type: object
+      description: Result of setting up a demo scenario
+      properties:
+        scenarioId:
+          type: string
+          description: ID of the scenario that was set up
+          example: "xspeed-velocity-program"
+        scenarioName:
+          type: string
+          description: Name of the scenario
+          example: "xSpeed Velocity Program (Complete)"
+        success:
+          type: boolean
+          description: Whether setup was successful
+          example: true
+        message:
+          type: string
+          description: Result message
+          example: "Successfully created 11 entities"
+        createdEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreatedEntityDto'
+          description: List of created entities
+      required:
+        - scenarioId
+        - success
+        - message
+
+    CreatedEntityDto:
+      type: object
+      description: A created entity from demo setup
+      properties:
+        type:
+          type: string
+          description: Entity type
+          enum:
+            - Mission
+            - Jackpot
+            - Badge
+            - BadgeSeries
+          example: "Mission"
+        id:
+          type: string
+          description: Entity ID (MongoDB ObjectId)
+          example: "673f1234567890abcdef1234"
+        name:
+          type: string
+          description: Entity name
+          example: "The Daily Driver"
+        status:
+          type: string
+          description: Entity status
+          enum:
+            - Draft
+            - Active
+            - Archived
+          example: "Active"
+      required:
+        - type
+        - id
+        - name
+        - status
+
+    ProblemDetails:
+      type: object
+      description: RFC 7807 problem details
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request or setup failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 400
+            title: "Scenario setup failed"
+            detail: "Scenario 'invalid-id' not found"
+
+    Unauthorized:
+      description: Operator context not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 401
+            title: "Operator context not found"
+            detail: "Unable to determine operator context from request"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 500
+            title: "Internal server error"
+            detail: "An error occurred while setting up the demo scenario"

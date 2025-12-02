@@ -35,6 +35,7 @@ public class DemoController : ControllerBase
     /// - Jackpot scenarios (Progressive, Daily Drop, Amount-Based, Split Winners)
     /// - Badge scenarios (Slots Master, High Roller, Loyalty Legend)
     /// - Complete starter pack
+    /// - **xSpeed Velocity Program** scenarios (Complete, Phase 1, Phase 2, Phase 3)
     /// </remarks>
     [HttpGet("scenarios")]
     [ProducesResponseType(typeof(IEnumerable<DemoScenarioDto>), StatusCodes.Status200OK)]
@@ -110,6 +111,12 @@ public class DemoController : ControllerBase
     ///
     /// **Complete:**
     /// - `complete-starter-pack` - Sets up ALL of the above (3 missions, 4 jackpots, 3 badge series with 12 badges)
+    ///
+    /// **xSpeed Velocity Program:**
+    /// - `xspeed-velocity-program` - Complete xSpeed journey: 4 badges, 4 missions, 3 jackpots, 2 tournaments
+    /// - `xspeed-phase-1` - Soft Launch: 2 tier badges (Ignition, Cruiser), Daily Driver mission
+    /// - `xspeed-phase-2` - Expansion: 4 tier badges, 2 missions, Hourly jackpot
+    /// - `xspeed-phase-3` - Full Velocity: All entities including tournaments (Slot Sprint, High Roller Table Wars)
     /// </remarks>
     [HttpPost("setup/{scenarioId}")]
     [ProducesResponseType(typeof(DemoSetupResultDto), StatusCodes.Status200OK)]
@@ -172,6 +179,9 @@ public class DemoController : ControllerBase
     /// - 3 Missions (New Game Launch, Weekend Warrior, VIP Retention)
     /// - 4 Jackpots (Progressive, Daily Drop, Amount-Based, Split Winners)
     /// - 3 Badge Series with 12 Badges total (Slots Master, High Roller, Loyalty Legend)
+    ///
+    /// **Note:** This does NOT include xSpeed scenarios. Use `POST /api/demo/setup/xspeed-velocity-program`
+    /// to set up the complete xSpeed Velocity Program (4 badges, 4 missions, 3 jackpots, 2 tournaments).
     ///
     /// Use this for new operator onboarding or comprehensive demonstrations.
     /// </remarks>

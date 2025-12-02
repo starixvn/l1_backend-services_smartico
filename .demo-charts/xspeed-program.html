@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xSpeed Velocity Program | Gamification Strategy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Palette: Electric Blue & Neon Purple -->
+    <!-- 
+         Primary: #4361EE (Blue)
+         Secondary: #7209B7 (Purple)
+         Accent: #F72585 (Pink/Red)
+         Background: #F8F9FA
+         Text: #1F2937
+    -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        velocity: {
+                            blue: '#4361EE',
+                            purple: '#7209B7',
+                            pink: '#F72585',
+                            dark: '#1F2937',
+                            light: '#F8F9FA'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #1F2937; }
+        
+        /* Chart Container Rules - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            /* Height Management */
+            height: 350px; 
+            max-height: 400px;
+            /* Width Management */
+            max-width: 650px; 
+        }
+
+        /* Responsive adjustments for Chart Containers */
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-top: 4px solid #4361EE;
+        }
+
+        .section-title {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: #1F2937;
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(to right, #4361EE, #F72585);
+        }
+
+        /* Timeline CSS (No SVG) */
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            border-left: 2px solid #E5E7EB;
+            padding-bottom: 2rem;
+        }
+        .timeline-item:last-child {
+            border-left: none;
+        }
+        .timeline-marker {
+            position: absolute;
+            left: -0.6rem;
+            top: 0;
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 50%;
+            background-color: #4361EE;
+            border: 2px solid white;
+        }
+    </style>
+    <!-- 
+        HTML Comment: Source Analysis & Plan
+        1. Source: "gamification_strategy_xspeed.md".
+        2. Theme: Retention, Tiers, Missions, Tournaments, Jackpots, Risk.
+        3. Narrative:
+           - Intro: What is Velocity?
+           - Foundation: The Tier System (Chart: Rewards vs Effort).
+           - Mechanics: Missions & Tournaments (Chart: Unlock potential, Radar: Sprint vs Wars).
+           - Hooks: Jackpots (Chart: Prize Drops).
+           - Safety: Risk Controls (Chart: 3D Plotly of Velocity/Abuse).
+           - Roadmap: Timeline.
+    -->
+</head>
+<body class="bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-velocity-blue to-velocity-purple text-white py-12 px-4 shadow-lg">
+        <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-5xl font-extrabold tracking-tight mb-4">THE VELOCITY PROGRAM</h1>
+            <p class="text-xl font-light opacity-90 max-w-2xl mx-auto">
+                xSpeed's Strategic Roadmap for Player Retention, LTV Growth, and Risk-Managed Gamification.
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- SECTION 1: INTRODUCTION & CORE METRICS -->
+        <section class="mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-velocity-pink">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">Strategy Overview</h2>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        The <strong>Velocity Program</strong> is designed to transform casual xSpeed players into loyal VIPs. By leveraging a permanent tier system, we incentivize play across our top revenue drivers (Slots & Tables) while systematically cross-selling secondary categories like Keno.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-4 bg-gray-50 rounded-lg">
+                            <div class="text-3xl font-bold text-velocity-blue">100+</div>
+                            <div class="text-sm text-gray-500 font-semibold uppercase">Titles Covered</div>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg">
+                            <div class="text-3xl font-bold text-velocity-pink">4</div>
+                            <div class="text-sm text-gray-500 font-semibold uppercase">Velocity Tiers</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chart: Revenue Focus Distribution -->
+                <!-- Goal: Inform (Composition) -> Donut Chart -> Chart.js -->
+                <div class="card flex flex-col items-center justify-center">
+                    <h3 class="text-xl font-bold mb-2 text-center text-velocity-purple">Revenue Focus & Cross-Sell</h3>
+                    <p class="text-sm text-gray-500 text-center mb-4 px-4">
+                        The strategy focuses on Core Revenue (Slots/Tables) while using missions to drive traffic to Keno/Lottery.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="revenueFocusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: VELOCITY TIERS (PROGRESSION) -->
+        <section class="mb-16">
+            <h2 class="section-title">The "Velocity" Tier System</h2>
+            <p class="text-gray-600 mb-8 max-w-3xl">
+                The backbone of our retention strategy. Players earn XP based on wager volume ($10 Slots = 1 XP). Higher tiers unlock multipliers, exclusive tournaments, and manual withdrawal reviews for security.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Text Detail -->
+                <div class="space-y-4">
+                    <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border-l-4 border-gray-300">
+                        <span class="text-2xl mr-4">🏁</span>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Ignition (Level 1)</h4>
+                            <p class="text-sm text-gray-500">The Hook. Simple "Daily Driver" missions. Max Reward: $5.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border-l-4 border-velocity-blue">
+                        <span class="text-2xl mr-4">🚤</span>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Cruiser (Level 2)</h4>
+                            <p class="text-sm text-gray-500">Unlocks "Daily Drop" & Cross-sell missions. Requires 500 XP.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border-l-4 border-velocity-purple">
+                        <span class="text-2xl mr-4">🏎️</span>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Turbo (Level 3)</h4>
+                            <p class="text-sm text-gray-500">The Revenue Driver. 1.2x Multiplier. Unlocks Table Missions. Requires 5,000 XP.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border-l-4 border-velocity-pink">
+                        <span class="text-2xl mr-4">🚀</span>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Supersonic (Level 4)</h4>
+                            <p class="text-sm text-gray-500">VIP Status. Private Tournaments. Requires 25,000 XP.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart: Progression Scaling -->
+                <!-- Goal: Compare (Attributes across tiers) -> Mixed Chart -> Chart.js -->
+                <div class="card">
+                    <h3 class="text-xl font-bold mb-2 text-center text-velocity-blue">Mission Capacity vs. Reward Multiplier</h3>
+                    <p class="text-sm text-gray-500 text-center mb-4">
+                        As players level up, they unlock more simultaneous missions and higher reward multipliers.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="tierProgressionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: TOURNAMENT DYNAMICS -->
+        <section class="mb-16">
+            <h2 class="section-title">Segmented Tournaments</h2>
+            <p class="text-gray-600 mb-8 max-w-3xl">
+                We separate "Luck" from "Skill" to ensure fair competition. Slot players chase multipliers (Track A), while VIP Table players compete on volume (Track B).
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Chart: Radar Comparison -->
+                <!-- Goal: Compare (Multiple Variables) -> Radar Chart -> Chart.js -->
+                <div class="card">
+                    <h3 class="text-xl font-bold mb-2 text-center text-velocity-pink">Tournament Profile Comparison</h3>
+                    <p class="text-sm text-gray-500 text-center mb-4">
+                        Visualizing the difference between Slot Sprints (Mass Market) and Table Wars (VIP/High Roller).
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="tournamentRadarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Text Context -->
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h3 class="font-bold text-xl mb-4 border-b pb-2">Track A: Slot Sprint</h3>
+                    <ul class="mb-6 space-y-2 text-sm text-gray-600">
+                        <li><strong>Mechanic:</strong> Highest Win Multiplier (e.g., 100x).</li>
+                        <li><strong>Audience:</strong> Low & High Budget players equalized.</li>
+                        <li><strong>Risk Control:</strong> Flag score jumps >500% in 1 minute.</li>
+                    </ul>
+
+                    <h3 class="font-bold text-xl mb-4 border-b pb-2">Track B: Table Wars</h3>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><strong>Mechanic:</strong> Total Turnover/Wager.</li>
+                        <li><strong>Audience:</strong> Blackjack & Baccarat VIPs.</li>
+                        <li><strong>Risk Control:</strong> Exclude risk-free bets (Red+Black).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: THE JACKPOT ECOSYSTEM -->
+        <section class="mb-16 bg-gray-100 rounded-xl p-8 border border-gray-200">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-extrabold text-gray-800">The "Mystery Drop" Ecosystem</h2>
+                <p class="text-gray-600 mt-2">Using "Must Drop" mechanics to engineer traffic spikes.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <!-- Hourly Drop -->
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-velocity-blue">
+                    <div class="text-4xl mb-2">⏱️</div>
+                    <h3 class="font-bold text-lg">Hourly Prize Drop</h3>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-4">Engagement</p>
+                    <p class="text-sm text-gray-700">Random cash drop every 60 mins.</p>
+                    <div class="mt-4 bg-red-50 text-red-700 text-xs py-1 px-2 rounded font-mono">
+                        Rule: Wager >$10 in last 15m
+                    </div>
+                </div>
+
+                <!-- Daily Pot -->
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-velocity-purple">
+                    <div class="text-4xl mb-2">🌙</div>
+                    <h3 class="font-bold text-lg">Daily Prime Pot</h3>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-4">Retention</p>
+                    <p class="text-sm text-gray-700">Guaranteed drop 20:00 - 22:00.</p>
+                    <div class="mt-4 bg-red-50 text-red-700 text-xs py-1 px-2 rounded font-mono">
+                        RNG Distribution Review
+                    </div>
+                </div>
+
+                <!-- Mega Pot -->
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-velocity-pink">
+                    <div class="text-4xl mb-2">💎</div>
+                    <h3 class="font-bold text-lg">Mega Jackpot</h3>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-4">Acquisition</p>
+                    <p class="text-sm text-gray-700">Life-changing sums ($50k+).</p>
+                    <div class="mt-4 bg-red-50 text-red-700 text-xs py-1 px-2 rounded font-mono">
+                        Monitor Growth Rate >20%
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: RISK & VELOCITY CONTROLS -->
+        <section class="mb-16">
+            <h2 class="section-title">Risk Analysis: Velocity & Abuse</h2>
+            <p class="text-gray-600 mb-8">
+                We implement strict velocity controls to distinguish human players from bots. The chart below visualizes the "Safe Zone" versus "Abuse Zone" based on bet frequency and win rates.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 card">
+                    <h3 class="text-xl font-bold mb-2 text-center text-velocity-dark">Player Behavior Analysis (3D)</h3>
+                    <p class="text-sm text-gray-500 text-center mb-4">
+                        Comparing Wager Speed (X), Win Rate (Y), and Session Length (Z).
+                    </p>
+                    <!-- Goal: Relationship (Complex) -> Scatter 3D -> Plotly (WebGL/Canvas) -->
+                    <!-- Constraint: NO SVG. Plotly config must use webgl. -->
+                    <div id="riskPlotlyChart" class="w-full h-96"></div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="font-bold text-lg text-velocity-pink">Risk Configuration</h3>
+                    
+                    <div class="bg-white p-4 rounded shadow border-l-4 border-red-500">
+                        <h4 class="font-bold text-sm">🛑 Slot Velocity Cap</h4>
+                        <p class="text-2xl font-mono font-bold text-gray-800">60 <span class="text-xs font-normal text-gray-500">spins/min</span></p>
+                        <p class="text-xs text-red-600 mt-1">Action: Flag Potential Bot</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded shadow border-l-4 border-red-500">
+                        <h4 class="font-bold text-sm">🛑 Table Velocity Cap</h4>
+                        <p class="text-2xl font-mono font-bold text-gray-800">10 <span class="text-xs font-normal text-gray-500">hands/min</span></p>
+                        <p class="text-xs text-red-600 mt-1">Action: Pause Missions</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded shadow border-l-4 border-green-500">
+                        <h4 class="font-bold text-sm">💰 Monthly Player Cap</h4>
+                        <p class="text-2xl font-mono font-bold text-gray-800">$500</p>
+                        <p class="text-xs text-green-600 mt-1">Max Bonus Earnings</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: IMPLEMENTATION TIMELINE -->
+        <section>
+            <h2 class="section-title">Rollout Timeline</h2>
+            <div class="bg-white p-8 rounded-xl shadow-lg mt-8">
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <h3 class="font-bold text-lg text-velocity-blue">Phase 1: Soft Launch (Week 1-2)</h3>
+                    <p class="text-gray-600 mt-1 text-sm">Focus: Testing Risk Controls.</p>
+                    <ul class="list-disc list-inside mt-2 text-sm text-gray-500">
+                        <li>Enable Levels 1 & 2 (Ignition/Cruiser)</li>
+                        <li>Launch "Daily Driver" Slot Mission</li>
+                        <li>Calibrate Velocity Triggers</li>
+                    </ul>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker" style="background-color: #7209B7;"></div>
+                    <h3 class="font-bold text-lg text-velocity-purple">Phase 2: Expansion (Week 3-4)</h3>
+                    <p class="text-gray-600 mt-1 text-sm">Focus: Cross-Sell & Engagement.</p>
+                    <ul class="list-disc list-inside mt-2 text-sm text-gray-500">
+                        <li>Enable Table Game Missions</li>
+                        <li>Launch "Hourly Prize Drop" (Qualification Rules Active)</li>
+                        <li>Monitor "Risk-Free Betting" on Tables</li>
+                    </ul>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker" style="background-color: #F72585;"></div>
+                    <h3 class="font-bold text-lg text-velocity-pink">Phase 3: Full Velocity (Month 2+)</h3>
+                    <p class="text-gray-600 mt-1 text-sm">Focus: High-Value Retention.</p>
+                    <ul class="list-disc list-inside mt-2 text-sm text-gray-500">
+                        <li>Unlock Tournaments (Sprint & Table Wars)</li>
+                        <li>Enable Keno/Lottery "Explorer" Missions</li>
+                        <li>Full Dashboard Monitoring (ROI/LTV)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-8 mt-12">
+        <p class="text-sm opacity-60">&copy; 2025 xSpeed Operations. Internal Use Only.</p>
+        <p class="text-xs opacity-40 mt-2">Generated based on SabaONE Risk Controls & Operator Guide.</p>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. HELPER: Label Wrapping (>16 chars)
+        // Splits strings into arrays of strings for Chart.js
+        function wrapLabel(str, maxLen = 16) {
+            if (str.length <= maxLen) return str;
+            const words = str.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                if ((currentLine + " " + words[i]).length < maxLen) {
+                    currentLine += " " + words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        // 2. HELPER: Common Chart Options
+        // Includes the MANDATORY Tooltip Configuration
+        const commonChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        font: { family: 'Inter', size: 12 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                    titleFont: { family: 'Inter', size: 14, weight: 'bold' },
+                    bodyFont: { family: 'Inter', size: 13 },
+                    padding: 12,
+                    callbacks: {
+                        // MANDATORY TOOLTIP CONFIGURATION FROM PROMPT
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                                return label.join(' ');
+                            } else {
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // ---------------------------------------------------------
+        // CHART 1: Revenue Focus (Donut)
+        // ---------------------------------------------------------
+        const revenueCtx = document.getElementById('revenueFocusChart').getContext('2d');
+        // Labels wrapped just in case, though short here
+        const revLabels = ["Core: Slots", "Core: Table Games", "Cross-Sell: Keno", "Cross-Sell: Lottery"].map(l => wrapLabel(l));
+        
+        new Chart(revenueCtx, {
+            type: 'doughnut',
+            data: {
+                labels: revLabels,
+                datasets: [{
+                    data: [50, 35, 10, 5], // Estimated split based on strategy
+                    backgroundColor: ['#4361EE', '#3A0CA3', '#F72585', '#4CC9F0'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                ...commonChartOptions,
+                cutout: '60%',
+                plugins: {
+                    ...commonChartOptions.plugins,
+                    legend: { position: 'right' }
+                }
+            }
+        });
+
+        // ---------------------------------------------------------
+        // CHART 2: Tier Progression (Mixed Bar/Line)
+        // ---------------------------------------------------------
+        const tierCtx = document.getElementById('tierProgressionChart').getContext('2d');
+        const tierLabels = ["Ignition (Lvl 1)", "Cruiser (Lvl 2)", "Turbo (Lvl 3)", "Supersonic (Lvl 4)"].map(l => wrapLabel(l));
+
+        new Chart(tierCtx, {
+            type: 'bar',
+            data: {
+                labels: tierLabels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Active Missions',
+                        data: [1, 2, 3, 4], // 1, 2, 3, 3+VIP
+                        backgroundColor: '#4361EE',
+                        borderRadius: 4,
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Reward Multiplier (x)',
+                        data: [1.0, 1.0, 1.2, 1.5], // Estimated 1.5 for VIP
+                        borderColor: '#F72585',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#F72585',
+                        pointRadius: 6,
+                        tension: 0.3,
+                        yAxisID: 'y1',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                ...commonChartOptions,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Simultaneous Missions' },
+                        grid: { display: false }
+                    },
+                    y1: {
+                        beginAtZero: false,
+                        position: 'right',
+                        title: { display: true, text: 'Reward Multiplier' },
+                        grid: { borderDash: [5, 5] } // Dashed grid for secondary axis
+                    }
+                }
+            }
+        });
+
+        // ---------------------------------------------------------
+        // CHART 3: Tournament Radar
+        // ---------------------------------------------------------
+        const radarCtx = document.getElementById('tournamentRadarChart').getContext('2d');
+        // Labels > 16 chars check
+        const radarLabels = ["Luck Dependence", "Skill/Strategy", "Win Frequency", "Entry Barrier", "Risk Monitor Level"].map(l => wrapLabel(l));
+
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: radarLabels,
+                datasets: [{
+                    label: 'Slot Sprint',
+                    data: [90, 10, 80, 20, 50], // High luck, Low skill
+                    fill: true,
+                    backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                    borderColor: '#4361EE',
+                    pointBackgroundColor: '#4361EE'
+                }, {
+                    label: 'Table Wars',
+                    data: [20, 80, 40, 90, 90], // High Skill, High Entry, High Risk Monitor
+                    fill: true,
+                    backgroundColor: 'rgba(247, 37, 133, 0.2)',
+                    borderColor: '#F72585',
+                    pointBackgroundColor: '#F72585'
+                }]
+            },
+            options: {
+                ...commonChartOptions,
+                scales: {
+                    r: {
+                        angleLines: { color: '#E5E7EB' },
+                        grid: { color: '#E5E7EB' },
+                        pointLabels: {
+                            font: { size: 11, family: 'Inter' }
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+
+        // ---------------------------------------------------------
+        // CHART 4: Risk Analysis (Plotly 3D Scatter)
+        // ---------------------------------------------------------
+        // Simulating data for 3 groups: Normal, Grinder, Bot/Abuser
+        const normalPlayers = {
+            x: [10, 15, 12, 18, 20], // Spins per min
+            y: [45, 48, 52, 47, 50], // Win Rate %
+            z: [30, 45, 20, 60, 40], // Session Mins
+            mode: 'markers',
+            type: 'scatter3d',
+            name: 'Normal Players',
+            marker: { color: '#4361EE', size: 5 }
+        };
+
+        const grinders = {
+            x: [40, 45, 38, 50, 42], // High velocity but under limit
+            y: [49, 49.5, 48, 51, 50], // Very consistent win rate
+            z: [120, 180, 200, 150, 240], // Long sessions
+            mode: 'markers',
+            type: 'scatter3d',
+            name: 'Pro/Grinders',
+            marker: { color: '#7209B7', size: 5 }
+        };
+
+        const bots = {
+            x: [65, 70, 80, 62, 75], // Over limit (>60)
+            y: [85, 90, 88, 82, 95], // Suspicious win rate
+            z: [5, 10, 8, 12, 6],    // Short, efficient bursts
+            mode: 'markers',
+            type: 'scatter3d',
+            name: 'Flagged Bots',
+            marker: { color: '#F72585', size: 8, symbol: 'diamond' }
+        };
+
+        const layout = {
+            margin: {l: 0, r: 0, b: 0, t: 0},
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            scene: {
+                xaxis: { title: 'Velocity (Actions/Min)' },
+                yaxis: { title: 'Win Rate (%)' },
+                zaxis: { title: 'Session (Mins)' },
+                camera: { eye: {x: 1.5, y: 1.5, z: 1.5} }
+            },
+            legend: { x: 0, y: 1 }
+        };
+
+        // Render Plotly (WebGL enabled by default for 3D)
+        Plotly.newPlot('riskPlotlyChart', [normalPlayers, grinders, bots], layout, {responsive: true, displayModeBar: false});
+
+    </script>
+</body>
+</html>

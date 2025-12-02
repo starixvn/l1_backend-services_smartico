@@ -1,4 +1,5 @@
 using MongoDB.Bson;
+using Smartico.BackOffice.Application.Demo.Configuration;
 using Smartico.BackOffice.Application.Demo.DTOs;
 using Smartico.BackOffice.Application.Demo.Interfaces;
 using Smartico.BackOffice.Application.Missions.Commands;
@@ -12,6 +13,8 @@ using Smartico.BackOffice.Application.Badges.DTOs;
 using Smartico.BackOffice.Application.Badges.Interfaces;
 using Smartico.BackOffice.Application.BadgeSeries.Commands;
 using Smartico.BackOffice.Application.BadgeSeries.Interfaces;
+using Smartico.BackOffice.Application.Tournaments.Commands;
+using Smartico.BackOffice.Application.Tournaments.Interfaces;
 using Smartico.BackOffice.Domain.Entities;
 using Smartico.BackOffice.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -28,6 +31,7 @@ public class DemoScenarioService : IDemoScenarioService
     private readonly IJackpotService _jackpotService;
     private readonly IBadgeService _badgeService;
     private readonly IBadgeSeriesService _badgeSeriesService;
+    private readonly ITournamentService _tournamentService;
     private readonly ILogger<DemoScenarioService> _logger;
 
     private static readonly List<DemoScenarioDto> _scenarios = new()
@@ -142,6 +146,65 @@ public class DemoScenarioService : IDemoScenarioService
                 "3 Badge Series (Slots, High Roller, Loyalty)"
             },
             ExpectedOutcome = "Full gamification system ready for demonstration or production use."
+        },
+
+        // xSpeed Velocity Program Scenarios
+        new DemoScenarioDto
+        {
+            Id = "xspeed-velocity-program",
+            Name = "xSpeed Velocity Program (Complete)",
+            Description = "Complete xSpeed gamification journey with Velocity Tiers, level-gated missions, Mystery Drop jackpots, tournaments, and achievement badges.",
+            Category = "Complete",
+            Entities = new List<string>
+            {
+                "4 Velocity Tier Badges (Ignition, Cruiser, Turbo, Supersonic)",
+                "4 Level-Gated Missions (Daily Driver, Explorer, Table Tactician, Whale)",
+                "3 xSpeed Mystery Drop Jackpots (Hourly, Daily, Mega)",
+                "2 Tournaments (Slot Sprint, High Roller Table Wars)"
+            },
+            ExpectedOutcome = "Full xSpeed Velocity Program ready for demonstration with tier progression."
+        },
+        new DemoScenarioDto
+        {
+            Id = "xspeed-phase-1",
+            Name = "xSpeed Phase 1 (Soft Launch)",
+            Description = "Phase 1 soft launch: Levels 1-2 (Ignition, Cruiser), Daily Driver mission, and 2 tier badges.",
+            Category = "Complete",
+            Entities = new List<string>
+            {
+                "2 Velocity Tier Badges (Ignition, Cruiser)",
+                "1 Mission (Daily Driver - Level 1+)"
+            },
+            ExpectedOutcome = "Soft launch configuration for testing basic progression."
+        },
+        new DemoScenarioDto
+        {
+            Id = "xspeed-phase-2",
+            Name = "xSpeed Phase 2 (Expansion)",
+            Description = "Phase 2 expansion: All 4 tiers, Table Tactician mission, and Hourly Prize Drop jackpot.",
+            Category = "Complete",
+            Entities = new List<string>
+            {
+                "4 Velocity Tier Badges (all tiers)",
+                "2 Missions (Daily Driver + Table Tactician)",
+                "1 Jackpot (Hourly Prize Drop)"
+            },
+            ExpectedOutcome = "Expanded configuration with table game missions and hourly jackpot."
+        },
+        new DemoScenarioDto
+        {
+            Id = "xspeed-phase-3",
+            Name = "xSpeed Phase 3 (Full Velocity)",
+            Description = "Phase 3 full velocity: Complete journey with all missions, jackpots, tournaments, and cross-sell features.",
+            Category = "Complete",
+            Entities = new List<string>
+            {
+                "4 Velocity Tier Badges",
+                "4 Missions (all including Explorer and Whale)",
+                "3 Jackpots (Hourly, Daily, Mega)",
+                "2 Tournaments (Slot Sprint, High Roller Table Wars)"
+            },
+            ExpectedOutcome = "Complete xSpeed journey with tournaments and cross-sell missions."
         }
     };
 
@@ -151,6 +214,7 @@ public class DemoScenarioService : IDemoScenarioService
         IJackpotService jackpotService,
         IBadgeService badgeService,
         IBadgeSeriesService badgeSeriesService,
+        ITournamentService tournamentService,
         ILogger<DemoScenarioService> logger)
     {
         _missionService = missionService;
@@ -158,6 +222,7 @@ public class DemoScenarioService : IDemoScenarioService
         _jackpotService = jackpotService;
         _badgeService = badgeService;
         _badgeSeriesService = badgeSeriesService;
+        _tournamentService = tournamentService;
         _logger = logger;
     }
 
@@ -243,6 +308,20 @@ public class DemoScenarioService : IDemoScenarioService
                 // Complete Scenarios
                 case "complete-starter-pack":
                     await SetupCompleteStarterPack(operatorId, result, activateEntities);
+                    break;
+
+                // xSpeed Velocity Program Scenarios
+                case "xspeed-velocity-program":
+                    await SetupXSpeedVelocityProgram(operatorId, result, activateEntities);
+                    break;
+                case "xspeed-phase-1":
+                    await SetupXSpeedPhase1(operatorId, result, activateEntities);
+                    break;
+                case "xspeed-phase-2":
+                    await SetupXSpeedPhase2(operatorId, result, activateEntities);
+                    break;
+                case "xspeed-phase-3":
+                    await SetupXSpeedPhase3(operatorId, result, activateEntities);
                     break;
 
                 default:
@@ -1266,6 +1345,388 @@ public class DemoScenarioService : IDemoScenarioService
         await SetupSlotsMasterBadges(operatorId, result, activate);
         await SetupHighRollerBadges(operatorId, result, activate);
         await SetupLoyaltyLegendBadges(operatorId, result, activate);
+    }
+
+    #endregion
+
+    #region xSpeed Velocity Program Setup Methods
+
+    /// <summary>
+    /// Sets up the complete xSpeed Velocity Program with all tiers, missions, jackpots, and badges.
+    /// </summary>
+    private async Task SetupXSpeedVelocityProgram(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        _logger.LogInformation("Setting up xSpeed Velocity Program for operator {OperatorId}", operatorId);
+
+        // Setup Velocity Tier badges (all 4 tiers)
+        await SetupXSpeedVelocityTierBadges(operatorId, result, activate, XSpeedConfiguration.Tiers);
+
+        // Setup all missions
+        await SetupXSpeedDailyDriverMission(operatorId, result, activate);
+        await SetupXSpeedExplorerMission(operatorId, result, activate);
+        await SetupXSpeedTableTacticianMission(operatorId, result, activate);
+        await SetupXSpeedWhaleMission(operatorId, result, activate);
+
+        // Setup all jackpots
+        await SetupXSpeedHourlyJackpot(operatorId, result, activate);
+        await SetupXSpeedDailyPotJackpot(operatorId, result, activate);
+        await SetupXSpeedMegaPotJackpot(operatorId, result, activate);
+
+        // Setup tournaments
+        await SetupXSpeedSlotSprintTournament(operatorId, result, activate);
+        await SetupXSpeedHighRollerTournament(operatorId, result, activate);
+    }
+
+    /// <summary>
+    /// Sets up xSpeed Phase 1 (Soft Launch): Tiers 1-2, Daily Driver mission, 2 badges.
+    /// </summary>
+    private async Task SetupXSpeedPhase1(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        _logger.LogInformation("Setting up xSpeed Phase 1 (Soft Launch) for operator {OperatorId}", operatorId);
+
+        // Setup only tiers 1-2 (Ignition, Cruiser)
+        var phase1Tiers = XSpeedConfiguration.Tiers.Take(2).ToArray();
+        await SetupXSpeedVelocityTierBadges(operatorId, result, activate, phase1Tiers);
+
+        // Setup Daily Driver mission only
+        await SetupXSpeedDailyDriverMission(operatorId, result, activate);
+    }
+
+    /// <summary>
+    /// Sets up xSpeed Phase 2 (Expansion): All tiers, Table Tactician mission, Hourly jackpot.
+    /// </summary>
+    private async Task SetupXSpeedPhase2(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        _logger.LogInformation("Setting up xSpeed Phase 2 (Expansion) for operator {OperatorId}", operatorId);
+
+        // Setup all 4 tiers
+        await SetupXSpeedVelocityTierBadges(operatorId, result, activate, XSpeedConfiguration.Tiers);
+
+        // Setup Daily Driver and Table Tactician missions
+        await SetupXSpeedDailyDriverMission(operatorId, result, activate);
+        await SetupXSpeedTableTacticianMission(operatorId, result, activate);
+
+        // Setup Hourly jackpot
+        await SetupXSpeedHourlyJackpot(operatorId, result, activate);
+    }
+
+    /// <summary>
+    /// Sets up xSpeed Phase 3 (Full Velocity): All missions, all jackpots.
+    /// </summary>
+    private async Task SetupXSpeedPhase3(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        _logger.LogInformation("Setting up xSpeed Phase 3 (Full Velocity) for operator {OperatorId}", operatorId);
+
+        // Setup all tiers
+        await SetupXSpeedVelocityTierBadges(operatorId, result, activate, XSpeedConfiguration.Tiers);
+
+        // Setup all missions
+        await SetupXSpeedDailyDriverMission(operatorId, result, activate);
+        await SetupXSpeedExplorerMission(operatorId, result, activate);
+        await SetupXSpeedTableTacticianMission(operatorId, result, activate);
+        await SetupXSpeedWhaleMission(operatorId, result, activate);
+
+        // Setup all jackpots
+        await SetupXSpeedHourlyJackpot(operatorId, result, activate);
+        await SetupXSpeedDailyPotJackpot(operatorId, result, activate);
+        await SetupXSpeedMegaPotJackpot(operatorId, result, activate);
+
+        // Setup tournaments
+        await SetupXSpeedSlotSprintTournament(operatorId, result, activate);
+        await SetupXSpeedHighRollerTournament(operatorId, result, activate);
+    }
+
+    /// <summary>
+    /// Creates the Velocity Tier badge series and badges for the specified tiers.
+    /// </summary>
+    private async Task SetupXSpeedVelocityTierBadges(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate,
+        XSpeedConfiguration.VelocityTier[] tiers)
+    {
+        // Create the series first
+        var seriesCommand = new CreateBadgeSeriesCommand
+        {
+            Name = "xSpeed Velocity Tiers",
+            Description = "Progress through the Velocity Program: Ignition → Cruiser → Turbo → Supersonic!",
+            DisplayOrder = 10
+        };
+
+        var series = await _badgeSeriesService.CreateAsync(seriesCommand, operatorId);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "BadgeSeries",
+            Id = series.Id,
+            Name = series.Name,
+            Status = series.Status.ToString()
+        });
+
+        // Create badges for each tier
+        foreach (var tier in tiers)
+        {
+            var badgeCommand = XSpeedConfiguration.CreateVelocityTierBadge(tier, series.Id);
+            var badge = await _badgeService.CreateAsync(badgeCommand, operatorId);
+
+            result.CreatedEntities.Add(new CreatedEntityDto
+            {
+                Type = "Badge",
+                Id = badge.Id,
+                Name = badge.Name,
+                Status = badge.Status.ToString()
+            });
+
+            if (activate)
+            {
+                await _badgeService.PublishAsync(badge.Id, operatorId);
+                result.CreatedEntities[^1].Status = "Active";
+            }
+        }
+
+        if (activate)
+        {
+            await _badgeSeriesService.PublishAsync(series.Id, operatorId);
+            // Update series status (first entity added for this method)
+            var seriesEntity = result.CreatedEntities.FirstOrDefault(e => e.Id == series.Id);
+            if (seriesEntity != null) seriesEntity.Status = "Active";
+        }
+    }
+
+    /// <summary>
+    /// Creates the Daily Driver mission (Level 1+).
+    /// </summary>
+    private async Task SetupXSpeedDailyDriverMission(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateDailyDriverMission();
+        var mission = await _missionService.CreateMissionAsync(operatorId, command);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Mission",
+            Id = mission.Id,
+            Name = mission.Name,
+            Status = mission.Status.ToString()
+        });
+
+        if (activate)
+        {
+            await _publishMissionHandler.ExecuteAsync(operatorId, mission.Id, CancellationToken.None);
+            result.CreatedEntities[^1].Status = "Active";
+        }
+    }
+
+    /// <summary>
+    /// Creates the Explorer mission (Level 2+).
+    /// </summary>
+    private async Task SetupXSpeedExplorerMission(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateExplorerMission();
+        var mission = await _missionService.CreateMissionAsync(operatorId, command);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Mission",
+            Id = mission.Id,
+            Name = mission.Name,
+            Status = mission.Status.ToString()
+        });
+
+        if (activate)
+        {
+            await _publishMissionHandler.ExecuteAsync(operatorId, mission.Id, CancellationToken.None);
+            result.CreatedEntities[^1].Status = "Active";
+        }
+    }
+
+    /// <summary>
+    /// Creates the Table Tactician mission (Level 3+).
+    /// </summary>
+    private async Task SetupXSpeedTableTacticianMission(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateTableTacticianMission();
+        var mission = await _missionService.CreateMissionAsync(operatorId, command);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Mission",
+            Id = mission.Id,
+            Name = mission.Name,
+            Status = mission.Status.ToString()
+        });
+
+        if (activate)
+        {
+            await _publishMissionHandler.ExecuteAsync(operatorId, mission.Id, CancellationToken.None);
+            result.CreatedEntities[^1].Status = "Active";
+        }
+    }
+
+    /// <summary>
+    /// Creates the Whale Challenge mission (Level 4+).
+    /// </summary>
+    private async Task SetupXSpeedWhaleMission(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateWhaleMission();
+        var mission = await _missionService.CreateMissionAsync(operatorId, command);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Mission",
+            Id = mission.Id,
+            Name = mission.Name,
+            Status = mission.Status.ToString()
+        });
+
+        if (activate)
+        {
+            await _publishMissionHandler.ExecuteAsync(operatorId, mission.Id, CancellationToken.None);
+            result.CreatedEntities[^1].Status = "Active";
+        }
+    }
+
+    /// <summary>
+    /// Creates the xSpeed Hourly Prize Drop jackpot.
+    /// </summary>
+    private async Task SetupXSpeedHourlyJackpot(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateHourlyPrizeDropJackpot();
+        var jackpot = await _jackpotService.CreateAsync(command, operatorId);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Jackpot",
+            Id = jackpot.Id,
+            Name = jackpot.Name,
+            Status = jackpot.Status.ToString()
+        });
+
+        if (activate)
+        {
+            await _jackpotService.ActivateAsync(jackpot.Id, operatorId);
+            result.CreatedEntities[^1].Status = "Active";
+        }
+    }
+
+    /// <summary>
+    /// Creates the xSpeed Daily Pot jackpot.
+    /// </summary>
+    private async Task SetupXSpeedDailyPotJackpot(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateDailyPotJackpot();
+        var jackpot = await _jackpotService.CreateAsync(command, operatorId);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Jackpot",
+            Id = jackpot.Id,
+            Name = jackpot.Name,
+            Status = jackpot.Status.ToString()
+        });
+
+        if (activate)
+        {
+            await _jackpotService.ActivateAsync(jackpot.Id, operatorId);
+            result.CreatedEntities[^1].Status = "Active";
+        }
+    }
+
+    /// <summary>
+    /// Creates the xSpeed Mega Pot jackpot.
+    /// </summary>
+    private async Task SetupXSpeedMegaPotJackpot(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateMegaPotJackpot();
+        var jackpot = await _jackpotService.CreateAsync(command, operatorId);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Jackpot",
+            Id = jackpot.Id,
+            Name = jackpot.Name,
+            Status = jackpot.Status.ToString()
+        });
+
+        if (activate)
+        {
+            await _jackpotService.ActivateAsync(jackpot.Id, operatorId);
+            result.CreatedEntities[^1].Status = "Active";
+        }
+    }
+
+    /// <summary>
+    /// Creates the xSpeed Slot Sprint tournament (Level 2+).
+    /// Track A: Highest Single Spin Win Multiplier.
+    /// </summary>
+    private async Task SetupXSpeedSlotSprintTournament(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateSlotSprintTournament();
+        var tournament = await _tournamentService.CreateTournamentAsync(operatorId, command);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Tournament",
+            Id = tournament.Id,
+            Name = tournament.Name,
+            Status = tournament.Status.ToString()
+        });
+    }
+
+    /// <summary>
+    /// Creates the xSpeed High Roller Table Wars tournament (Level 3+).
+    /// Track B: Total Wager Amount on table games.
+    /// </summary>
+    private async Task SetupXSpeedHighRollerTournament(
+        ObjectId operatorId,
+        DemoSetupResultDto result,
+        bool activate)
+    {
+        var command = XSpeedConfiguration.CreateHighRollerTableWarsTournament();
+        var tournament = await _tournamentService.CreateTournamentAsync(operatorId, command);
+
+        result.CreatedEntities.Add(new CreatedEntityDto
+        {
+            Type = "Tournament",
+            Id = tournament.Id,
+            Name = tournament.Name,
+            Status = tournament.Status.ToString()
+        });
     }
 
     #endregion
